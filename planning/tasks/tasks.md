@@ -21,7 +21,7 @@
 - [x] Log every installed package in `wiki/installed.md`; pin exact versions in [[TECH]]
 
 ## Before phase 1 (decisions needed)
-- [ ] ORM (SQLAlchemy + Alembic) vs plain SQL with psycopg
+- [x] ORM (SQLAlchemy + Alembic) vs plain SQL with psycopg → plain SQL ([[2026-10-21-database-access-plain-sql]])
 - [ ] Notes data model (fields, Markdown or plain text, tags?)
 - [ ] Write `notes_spec.md` and `voice-notes_spec.md`
 

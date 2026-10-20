@@ -77,7 +77,7 @@ The template may pin slightly different versions; whatever it installs is what g
 | monaco-editor / @monaco-editor/react | 0.57.0 / 4.7.0 | Code editor module (later phase) |
 | faster-whisper | 1.2.1 | Transcription (phase 2) |
 
-Open: ORM (SQLAlchemy 2.1 + Alembic for migrations) vs plain SQL with psycopg — to decide before phase 1. See [[tasks]].
+Database access: plain SQL with psycopg, numbered `.sql` migrations applied by our own script, no ORM — see [[2026-10-21-database-access-plain-sql]].
 
 ## Dev setup
 
