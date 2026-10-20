@@ -55,7 +55,7 @@ Latest versions as of 2026-10-20. **Pinned for real when installed** — the exa
 | @tauri-apps/cli | 2.12.3 (installed) | Build/dev commands, Android init |
 | @tauri-apps/api | 2.12.4 (installed) | JS ↔ Rust bridge |
 | @tauri-apps/plugin-opener | 2.7.2 (installed) | Opens links/files with the system app; added by the template, not used by the prototype |
-| @tauri-apps/plugin-fs | 2.7.1 | Save recordings to app storage |
+| @tauri-apps/plugin-fs (+ Rust crate tauri-plugin-fs) | 2.7.1 (installed) | Save recordings to app storage |
 | react, react-dom | 19.3.1 (installed) | UI |
 | @types/react, @types/react-dom | 19.3.0 (installed) | React types |
 | vite | 8.3.4 (installed) | Dev server / bundler |
