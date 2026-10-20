@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+target/
+src-tauri/gen/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+.venv/
+
+# Obsidian / editor
+.obsidian/
+.DS_Store
+
+# Local Claude instructions (personal paths, not for the public repo)
+CLAUDE.md
