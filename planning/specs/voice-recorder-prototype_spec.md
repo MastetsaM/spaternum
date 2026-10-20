@@ -60,7 +60,7 @@ Tested 2026-10-20 on the Xiaomi 14T (Android 16), release APK signed with the de
 
 **Edge cases:**
 - App in background mid-recording → keeps recording.
-- Phone call mid-recording → doesn't record during the call.
+- Phone call mid-recording → the recording keeps going but is silent while the call has the mic (Mihail's reading of it — not checked in a file); audio resumes after the call.
 - Permission denied, then allowed from settings → not tested yet.
 
 **Findings:**
