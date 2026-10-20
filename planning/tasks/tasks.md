@@ -11,8 +11,8 @@
 - [x] Install Tauri Linux prerequisites, Rust, Android target; set Android env vars ([[TECH]])
 - [x] Connect phone with USB debugging (main space)
 - [x] Document the project: PRD, TECH, decisions, risks, prototype spec
-- [ ] Scaffold `src/prototypes/voice-recorder` with create-tauri-app (React + TS)
-- [ ] `pnpm tauri android init`; add `RECORD_AUDIO` to the Android manifest
+- [x] Scaffold `src/prototypes/voice-recorder` with create-tauri-app (React + TS)
+- [x] `pnpm tauri android init`; add `RECORD_AUDIO` to the Android manifest
 - [ ] Build the single screen: Record / Stop / list / Play / Delete
 - [ ] Save recordings with `@tauri-apps/plugin-fs` to app storage
 - [ ] Run on the phone with `pnpm tauri android dev`
