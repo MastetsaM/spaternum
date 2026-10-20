@@ -150,8 +150,12 @@ function App() {
             <br />
             <small>Documents copy: {r.docsCopy}</small>
             <br />
-            <button onClick={() => play(r)}>Play</button>{" "}
-            <button onClick={() => del(r)}>Delete</button>
+            <button onClick={() => play(r).catch((e) => setError(`Play failed: ${e}`))}>
+              Play
+            </button>{" "}
+            <button onClick={() => del(r).catch((e) => setError(`Delete failed: ${e}`))}>
+              Delete
+            </button>
           </li>
         ))}
       </ul>
