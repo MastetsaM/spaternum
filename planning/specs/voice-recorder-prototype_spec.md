@@ -50,9 +50,9 @@ Tested 2026-10-20 on the Xiaomi 14T (Android 16), release APK signed with the de
 |---|---|---|
 | 1 | Installs and opens | ✅ (installed from APK, not `tauri android dev`) |
 | 2 | Mic permission prompt, then recording | ✅ — after adding `MODIFY_AUDIO_SETTINGS` (see below) |
-| 3 | 1-minute recording plays back clearly | ⚠️ Plays, but not very clear |
+| 3 | 1-minute recording plays back clearly | ✅ After turning off voice processing — first build (defaults) was not very clear, second sounds better |
 | 4 | Persists after reopening | ✅ |
-| 5 | File size | ⚠️ 1004 KB for 1:04 (~940 KB/min, ~125 kbps) — about 10× the expected 0.1 MB/min. No bitrate was set, so this is the webview default |
+| 5 | File size | ✅ At `audioBitsPerSecond: 32000`: 64 KB for 0:18, 33 KB for 0:08 (~200–250 KB/min). Webview default was 1004 KB for 1:04 (~940 KB/min, ~125 kbps). The spec's 0.1 MB/min guess assumed a lower bitrate |
 | 6 | 5 minutes of recording | ✅ Kept recording even after the screen turned off |
 | 7 | `Documents/Spaternum` copy | ❌ `failed to create directory at path: /storage/emulated/0/Documents/Spaternum with error: Permission denied (os error 13)` — Android's scoped storage blocks direct path writes there |
 
@@ -61,12 +61,12 @@ Tested 2026-10-20 on the Xiaomi 14T (Android 16), release APK signed with the de
 **Edge cases:**
 - App in background mid-recording → keeps recording.
 - Phone call mid-recording → the recording keeps going but is silent while the call has the mic (Mihail's reading of it — not checked in a file); audio resumes after the call.
-- Permission denied, then allowed from settings → not tested yet.
+- Permission denied from settings → Record shows `Microphone not available: NotAllowedError: Permission denied`, no crash, Android doesn't ask again. Allowed again from settings → recording works.
 
 **Findings:**
 - Tauri forwards the webview's mic request to Android out of the box, but its `RustWebChromeClient` asks for **both** `RECORD_AUDIO` and `MODIFY_AUDIO_SETTINGS`. With only `RECORD_AUDIO` in the manifest, `getUserMedia` fails with `NotAllowedError: Permission denied` and no prompt.
 - Writing to shared storage by path doesn't work without extra permission. Options for phase 1: "All files access" (`MANAGE_EXTERNAL_STORAGE`), the Storage Access Framework (user picks the folder), or MediaStore.
-- Unclear audio is likely the webview's default voice processing (echo cancellation, noise suppression, auto gain) — not yet confirmed.
+- The webview's default voice processing (echo cancellation, noise suppression, auto gain) made recordings unclear. Turning all three off in `getUserMedia` and setting 32 kbps gave clearer audio at about a quarter of the size.
 - A debug APK is ~134 MB; a release APK is ~6.5 MB.
 
 ## Related
