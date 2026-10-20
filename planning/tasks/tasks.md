@@ -13,12 +13,12 @@
 - [x] Document the project: PRD, TECH, decisions, risks, prototype spec
 - [x] Scaffold `src/prototypes/voice-recorder` with create-tauri-app (React + TS)
 - [x] `pnpm tauri android init`; add `RECORD_AUDIO` to the Android manifest
-- [ ] Build the single screen: Record / Stop / list / Play / Delete
-- [ ] Save recordings with `@tauri-apps/plugin-fs` to app storage
-- [ ] Run on the phone with `pnpm tauri android dev`
-- [ ] Test against the acceptance criteria and edge cases in [[voice-recorder-prototype_spec]]
-- [ ] Write results in the spec; decide go / fallback with Mihail
-- [ ] Log every installed package in `wiki/installed.md`; pin exact versions in [[TECH]]
+- [x] Build the single screen: Record / Stop / list / Play / Delete
+- [x] Save recordings with `@tauri-apps/plugin-fs` to app storage
+- [x] Run on the phone — done with a signed release APK sent to the phone instead of `pnpm tauri android dev`
+- [x] Test against the acceptance criteria and edge cases in [[voice-recorder-prototype_spec]]
+- [x] Write results in the spec; decide go / fallback with Mihail → **go** ([[2026-10-20-prototype-go-tauri-android]])
+- [x] Log every installed package in `wiki/installed.md`; pin exact versions in [[TECH]]
 
 ## Before phase 1 (decisions needed)
 - [ ] ORM (SQLAlchemy + Alembic) vs plain SQL with psycopg

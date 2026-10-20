@@ -4,6 +4,7 @@
 - **Likelihood:** medium · **Impact:** high
 - Tauri on Android is younger than on desktop; the webview's mic permission request may not reach Android's runtime prompt.
 - **Mitigation:** phase 0 prototype tests this first ([[voice-recorder-prototype_spec]]). Fallbacks: small native permission plugin, PWA served by the server, or a native recorder.
+- **Status (2026-10-20): resolved** — works once the manifest declares `RECORD_AUDIO` and `MODIFY_AUDIO_SETTINGS` ([[2026-10-20-prototype-go-tauri-android]]).
 
 ## Scope creep
 - **Likelihood:** high · **Impact:** high
