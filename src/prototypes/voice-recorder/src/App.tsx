@@ -67,12 +67,16 @@ function App() {
     if (!MIME) return setError("No Opus format supported by this webview.");
     let stream: MediaStream;
     try {
-      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // The defaults are tuned for calls and can make recordings sound muffled
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+      });
     } catch (e) {
       return setError(`Microphone not available: ${e}`);
     }
     const chunks: Blob[] = [];
-    const rec = new MediaRecorder(stream, { mimeType: MIME });
+    // 32 kbps is plenty for speech; the webview default was ~125 kbps
+    const rec = new MediaRecorder(stream, { mimeType: MIME, audioBitsPerSecond: 32000 });
     const started = Date.now();
     rec.ondataavailable = (e) => chunks.push(e.data);
     rec.onstop = () => {
