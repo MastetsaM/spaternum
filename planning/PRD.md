@@ -70,6 +70,7 @@ All free software.
 - Risks: [[risks]]
 - Current work and pending decisions: [[tasks]]
 - Phase 0 spec: [[voice-recorder-prototype_spec]]
+- Agile dashboard spec (phase 4): [[agile-dashboard_spec]]
 
 ## Related
 [[CLAUDE]] · [[portfolio]] · [[projects]] · [[TECH]] · [[risks]] · [[tasks]]
