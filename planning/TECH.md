@@ -51,16 +51,18 @@ Latest versions as of 2026-10-20. **Pinned for real when installed** — the exa
 ### Phase 0 — prototype (decided)
 | Package | Version | Purpose |
 |---|---|---|
-| create-tauri-app | 4.7.5 | Scaffolds the app (run once via `pnpm create`, not a dependency) |
-| @tauri-apps/cli | 2.12.3 | Build/dev commands, Android init |
-| @tauri-apps/api | 2.12.4 | JS ↔ Rust bridge |
+| create-tauri-app | 4.7.5 (installed) | Scaffolds the app (run once via `pnpm dlx`, not a dependency) |
+| @tauri-apps/cli | 2.12.3 (installed) | Build/dev commands, Android init |
+| @tauri-apps/api | 2.12.4 (installed) | JS ↔ Rust bridge |
+| @tauri-apps/plugin-opener | 2.7.2 (installed) | Opens links/files with the system app; added by the template, not used by the prototype |
 | @tauri-apps/plugin-fs | 2.7.1 | Save recordings to app storage |
-| react, react-dom | 19.3.1 | UI |
-| vite | 8.3.4 | Dev server / bundler |
-| @vitejs/plugin-react | 6.1.2 | React support for Vite |
-| typescript | 7.0.2 | Types |
+| react, react-dom | 19.3.1 (installed) | UI |
+| @types/react, @types/react-dom | 19.3.0 (installed) | React types |
+| vite | 8.3.4 (installed) | Dev server / bundler |
+| @vitejs/plugin-react | 6.1.2 (installed) | React support for Vite |
+| typescript | 6.0.3 (installed) | Types — the template pins `~6.0.3`; 7.0.2 is the latest |
 
-The template may pin slightly different versions; whatever it installs is what gets recorded.
+The template may pin slightly different versions; whatever it installs is what gets recorded. Exact versions live in the prototype's `pnpm-lock.yaml`.
 
 ### Phase 1 — server and real clients (proposed, not yet decided)
 | Package | Version | Purpose |
