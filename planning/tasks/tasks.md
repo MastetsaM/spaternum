@@ -3,8 +3,8 @@
 ## Before the first commit
 - [x] Repo lives on **GitHub, public** (decided 2026-10-20)
 - [x] License: **AGPL-3.0** ([[2026-10-20-license-agpl]])
-- [ ] `git init` in `projects/spaternum`, add `.gitignore` (node_modules, build output, `.env`) and `LICENSE` (AGPL-3.0 text), first commit on `main`
-- [ ] Create the public GitHub repo and push `main`
+- [x] `git init` in `projects/spaternum`, add `.gitignore` (node_modules, build output, `.env`) and `LICENSE` (AGPL-3.0 text), first commit on `main`
+- [x] Create the public GitHub repo and push `main` (github.com/MastetsaM/spaternum)
 - [ ] Workflow: [[2026-10-20-git-workflow]]
 
 ## Phase 0 — voice recorder prototype
