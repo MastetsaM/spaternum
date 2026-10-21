@@ -14,12 +14,15 @@ CREATE TABLE items (
     text        text NOT NULL DEFAULT '',
     created_at  timestamptz NOT NULL,
     updated_at  timestamptz NOT NULL,   -- latest write wins
-    archived_at timestamptz
+    archived_at timestamptz,
+    seq         bigint NOT NULL     -- assigned by the server from a sequence on every write
 );
 ```
 
-- **Server:** FastAPI + psycopg + plain SQL. `GET /items/pull?updated_at=…&id=…&limit=…` returns changes after the checkpoint; `POST /items/push` applies client changes with the latest-write-wins upsert. API token header as planned.
-- **Client:** one screen — list of items, add, edit text, archive; an online/offline indicator.
+- **Server:** FastAPI + psycopg + plain SQL. `GET /items/pull?seq=…&limit=…` returns changes after the last `seq` the client saw (pulling by the client's `updated_at` would miss old offline edits pushed late — see [[2026-10-21-sync-rxdb]]); `POST /items/push` applies client changes with the latest-write-wins upsert. API token header as planned.
+- **Server migrations:** `migrate.py` applies `migrations/NNN_*.sql` once each, in order, forward-only — an early trial of the phase 1 pattern ([[2026-10-21-database-access-plain-sql]]). Added during the build and kept with Mihail's OK.
+- **Client:** one screen — list of items, add, edit text, archive; an online/offline indicator; sync errors shown.
+- **No live stream from the server:** the client pulls every 5 s and as soon as the network returns. Good enough for the test; a server push (SSE/websocket) is a phase 1 question.
 - Runs on both the **phone** (APK) and the **PC** (`pnpm tauri dev`), so both webviews are tested.
 
 ## Inputs and outputs
@@ -44,7 +47,7 @@ CREATE TABLE items (
 
 ## Out of scope
 - Real notes data model, folders, tags.
-- Schema migrations (client or server).
+- Client schema migrations (RxDB schema versions). Server migrations are in scope — see above.
 - Docker Compose / deploying to the Pi.
 - Audio files.
 - Styling beyond usable.
