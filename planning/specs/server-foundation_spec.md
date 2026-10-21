@@ -1,9 +1,7 @@
 # Spec — Server foundation (phase 1, block 1)
 
-> **Draft (2026-10-21).** Open questions at the end need answers before coding.
-
 ## What and why
-The shared base every server module builds on: the FastAPI app, settings, the API token check, a Postgres for development, the migration runner, the **sync helper** (pull/push endpoints for any synced table) and the **live update stream** (SSE). No feature tables yet — notes and voice notes come in their own blocks ([[tasks]]). Most of it is the sync spike's server, cleaned up and made reusable ([[sync-spike_spec]], [[2026-10-21-sync-rxdb]]).
+The shared base every server module builds on: the FastAPI app, settings, logging, the API token check, a database connection pool, a Postgres for development, the migration runner, the **sync helper** (pull/push endpoints for any synced table) and the **live update stream** (SSE). No feature tables yet — notes and voice notes come in their own blocks ([[tasks]]). Most of it is the sync spike's server, cleaned up and made reusable ([[sync-spike_spec]], [[2026-10-21-sync-rxdb]]).
 
 ## Layout
 ```
@@ -13,7 +11,8 @@ src/server/
     main.py        # creates the app, mounts each module's routes
     config.py      # reads settings from environment variables
     auth.py        # API token check
-    db.py          # database connections
+    db.py          # connection pool
+    logs.py        # logging setup
     migrate.py     # migration runner
     sync.py        # pull/push helper
     events.py      # SSE stream
@@ -26,7 +25,20 @@ ops/docker-compose.yml   # `db` service now; `api` added in block 2
 ## Behaviour
 
 ### Settings
-Read from environment variables only: `DATABASE_URL`, `API_TOKEN`, `DATA_DIR`. Locally they come from `src/server/.env` (`uv run --env-file .env …`); in Docker from compose. Missing value → the server refuses to start with a clear message. `.env.example` is committed, `.env` never.
+Read from environment variables only: `DATABASE_URL`, `API_TOKEN`, `DATA_DIR`, and optional `LOG_LEVEL` (default `INFO`). Locally they come from `src/server/.env` (`uv run --env-file .env …`); in Docker from compose. Missing value → the server refuses to start with a clear message. `.env.example` is committed, `.env` never.
+
+### Database connections
+A connection pool (`psycopg_pool`), opened when the server starts and closed when it stops. Connections are checked before use, so a Postgres restart doesn't leave dead ones behind. The SSE stream uses its own dedicated connection per open stream (`LISTEN` needs one), outside the pool.
+
+### Logging
+Python's built-in `logging`, **plain text, one line per event, to stdout** (Docker keeps it; `docker logs` and Portainer show it). Level from `LOG_LEVEL`.
+- Every request: method, path, status, duration.
+- Every error, with its traceback.
+- Startup: settings in use (never the token), migrations applied.
+- Sync push: table, documents received, conflicts lost.
+- SSE stream connects and disconnects.
+- **Never logged:** the token, note text, audio.
+- Log size limits (rotation) are set in Docker compose in block 2.
 
 ### API token
 - Every route needs `Authorization: Bearer <token>` except `GET /health`.
@@ -78,7 +90,8 @@ A module describes a table once (name, columns, which columns are server-owned) 
    - never overwrites a server-owned column.
 6. A write to a synced table produces an SSE event naming that table within a second.
 7. The `Date` header is readable from a browser (exposed through CORS).
-8. All of the above are covered by pytest tests against a real Postgres, and they pass.
+8. Each request, error, migration and push shows as one plain-text line on stdout; the token never appears in logs.
+9. All of the above are covered by pytest tests against a real Postgres, and they pass.
 
 ## Edge cases and failure modes
 - Database down at start → the server still starts; `/health` reports the database as down; API calls answer `503`.
@@ -90,14 +103,11 @@ A module describes a table once (name, columns, which columns are server-owned) 
 ## Out of scope
 - Notes, voice notes and archive tables and routes (blocks 3–5).
 - Docker image for the server, `install.sh`, backups (block 2).
-- A connection pool, logging setup, metrics.
+- Metrics, log files on disk, JSON logs.
 - Rate limiting — single user over Tailscale.
 
-## Open questions
-1. **Database connections:** a new connection per request (what the spike did — simplest, fast enough for one user), or a connection pool (`psycopg_pool`, one more package)? *Recommendation: per request now*, add a pool only if the Pi shows it's slow.
-2. **Test packages:** pytest and httpx (FastAPI's test client needs httpx) as development-only dependencies — latest versions at install time, logged in `wiki/installed.md`. OK?
-3. **NOTIFY by trigger** (above) or by the server code after each write? *Recommendation: trigger* — can't be forgotten by a module; costs one line of SQL per synced table.
-4. **One SSE stream for all tables** (above) or one per table? *Recommendation: one* — fewer open connections from the phone; the client routes events by table name.
+## Decided 2026-10-21
+Connection pool from the start · pytest + httpx as dev-only packages · NOTIFY by trigger · one SSE stream for all tables · logging in block 1: plain text to stdout.
 
 ## Related
 [[tasks]] · [[TECH]] · [[PRD]] · [[sync-spike_spec]] · [[notes_spec]] · [[voice-notes_spec]] · [[2026-10-21-sync-rxdb]] · [[2026-10-21-database-access-plain-sql]] · [[2026-10-20-auth-tailscale-api-token]] · [[2026-10-20-architecture-modular-monolith]] · [[2026-10-20-git-workflow]]
