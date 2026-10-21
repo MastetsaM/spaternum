@@ -41,12 +41,12 @@
 ## Phase 1 — notes + voice notes
 Specs: [[notes_spec]], [[voice-notes_spec]]. One branch per block (name in brackets), merged when its tests pass ([[2026-10-20-git-workflow]]).
 
-### Open questions (answer before starting)
+### Decided before starting (2026-10-21)
 - [x] Folders: `src/server/` and `src/client/` (one client codebase for PC and Android)
 - [x] Tests: server — pytest against a real Postgres in Docker; client — Vitest for logic, manual checks on the phone and PC for UI
-- [ ] How the client gets the server URL + API token — a settings screen on first start, stored on the device?
+- [x] Server URL + API token: a settings screen on first start, stored on the device, editable later in settings
 - [x] Layout: Teams / VS Code style — a left rail with the main categories (Notes, Voice notes, Archive, later modules), a side panel with that category's sub-categories (e.g. the folder tree), the main content, and a panel on the other side for tool-specific settings/details
-- [ ] Layout on the phone — the parts can't all sit side by side on a narrow screen
+- [x] Phone layout: the left rail becomes a bottom tab bar, the sub-category panel slides in from the left, the tool panel opens from a button
 - [x] Pi: deploy as early as possible (right after the server foundation). The Pi is updated **only from `main`, after the change is fully tested on the PC**. Day to day, the server runs on the PC and the phone reaches it over Tailscale (as in the sync spike)
 
 ### 1. Server foundation (`feature/server-skeleton`)
@@ -89,9 +89,9 @@ Specs: [[notes_spec]], [[voice-notes_spec]]. One branch per block (name in brack
 ### 6. Client foundation (`feature/client-skeleton`)
 - [ ] Scaffold `src/client/` (Tauri 2 + React + TS), Android init, manifest `RECORD_AUDIO` + `MODIFY_AUDIO_SETTINGS`, plugin-fs
 - [ ] Client types generated from the server's OpenAPI with `openapi-typescript`
-- [ ] Server URL + token setup (per the open question)
+- [ ] First-start settings screen: server URL + API token, stored on the device, editable later
 - [ ] RxDB opened once; replication helper (pull, push, SSE stream); clock offset from the `Date` header; online indicator from the last sync
-- [ ] App shell: left rail (categories) → side panel (sub-categories) → main content → tool panel on the other side; phone layout per the open question
+- [ ] App shell: left rail (categories) → side panel (sub-categories) → main content → tool panel on the other side; on the phone: bottom tab bar, slide-in side panel, tool panel behind a button
 - [ ] Release APK build and install on the phone (steps in [[TECH]])
 
 ### 7. Notes client (`feature/notes-client`)
