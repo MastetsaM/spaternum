@@ -1,7 +1,7 @@
 ---
 type: portfolio
 created: 2026-09-29
-updated: 2026-10-17
+updated: 2026-10-21
 ---
 
 # spaternum
@@ -14,7 +14,7 @@ First release: notes + voice notes (mic recording, offline-first). Later: transc
 coming-soon
 
 ## Links
-- Repo:
+- Repo: https://github.com/MastetsaM/spaternum
 - Live:
 
 ## Related

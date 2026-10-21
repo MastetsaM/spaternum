@@ -12,7 +12,7 @@ Personal workspace ecosystem: a self-hosted server (Postgres, API, later AI) wit
 Full picture — architecture, stack, phases, what's cut: [[PRD]]. How it's built: [[TECH]].
 
 ## Status
-Planning done; no code yet. Current phase and next steps: [[tasks]].
+Phase 0 (voice recorder prototype) done — Tauri on Android works. Before phase 1: sync spike and open notes questions. Current state and next steps: [[tasks]].
 
 ## Workspaces
 | Folder | Read first |

@@ -3,7 +3,9 @@
 Decided 2026-10-17 in conversation with Mihail.
 
 ## Decision
-Only modules that need offline (voice notes first) keep a local copy and an outbox of pending changes. Conflicts resolve by newest `updated_at`. Other modules are online-only.
+Only modules that need offline keep a local copy and an outbox of pending changes: **voice notes and notes** (notes added 2026-10-21). Conflicts resolve by newest `updated_at`. Other modules are online-only.
+
+How sync is built: [[2026-10-21-sync-rxdb]].
 
 ## Why
 - Mihail accepts that some features stop working offline.
@@ -18,4 +20,4 @@ Only modules that need offline (voice notes first) keep a local copy and an outb
 - Harder: an edit made on two devices at once can be lost (accepted).
 
 ## Related
-[[PRD]] · [[TECH]]
+[[PRD]] · [[TECH]] · [[2026-10-21-sync-rxdb]] · [[notes_spec]]

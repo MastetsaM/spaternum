@@ -16,20 +16,25 @@ Technical reference. The *why* behind each choice lives in [[PRD]] and the decis
               └─ /data on HDD — audio files (Opus)
 ```
 
-- **Modules:** each server module owns its folder, its tables (prefixed or in its own schema) and its routes under `/api/<module>/…`. Modules don't import each other's internals; if one needs another's data, it goes through that module's public functions.
+- **Modules:** each server module owns its folder, its tables (prefixed or in its own schema) and its routes under `/api/<module>/…`. Modules don't import each other's internals; if one needs another's data, it goes through that module's public functions. Cross-module references are IDs only, with no foreign keys between modules ([[2026-10-20-architecture-modular-monolith]]).
 - **Clients** hold no business logic. Online-only modules call the API directly. Offline modules keep a local copy + outbox (see below).
 - **Files on PC** (code editor module, later): every file operation goes through one interface — `list / read / write / watch` — never direct `fs` calls from UI code.
 
 ## Key implementation patterns
 
-### Offline (only for modules that need it — voice notes first)
-- Every record has `id` (UUID, generated on the client so it exists before upload), `created_at`, `updated_at`.
-- Client writes locally first, then adds the change to an **outbox**.
-- Outbox is flushed when the server is reachable; failed sends stay and retry.
+### Offline (only for modules that need it — voice notes and notes)
+- Every record has `id` (UUID, generated on the client so it exists before upload), `created_at`, `updated_at`, `archived_at` (archive, never delete — archived rows tell other devices a record is gone).
+- Client: **RxDB** collection per module, free IndexedDB (Dexie) storage, HTTP replication. Writes go to the local DB first; RxDB queues and retries them.
+- Server: per synced table, `GET` **pull** (changes after a checkpoint `(updated_at, id)`, ordered, limited) and `POST` **push** (latest-write-wins upsert: `ON CONFLICT (id) DO UPDATE … WHERE excluded.updated_at > t.updated_at`). One reusable helper; SQL stays in each module.
+- Schema change = SQL migration on the server **and** a bumped RxDB schema version with a migration function on the client.
 - Conflicts: **latest `updated_at` wins**. Single user, so acceptable.
+- Pending the sync spike — see [[2026-10-21-sync-rxdb]].
 
 ### Audio
-- Recorded with the browser `MediaRecorder` API, Opus codec (`audio/webm;codecs=opus`; fall back to `audio/ogg;codecs=opus` if unsupported).
+- Recorded with the browser `MediaRecorder` API, Opus codec (`audio/webm;codecs=opus` — confirmed on the phone; `audio/ogg;codecs=opus` as fallback).
+- Settings proven in phase 0 ([[voice-recorder-prototype_spec]]): `getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } })` and `audioBitsPerSecond: 32000` → clear speech at ~200–250 KB/min. The webview defaults sound muffled and use ~125 kbps.
+- Android manifest needs **both** `RECORD_AUDIO` and `MODIFY_AUDIO_SETTINGS` — Tauri's `RustWebChromeClient` requests both, and fails with `NotAllowedError` if either is missing.
+- Android shared storage (`/storage/emulated/0/Documents/…`) can't be written by path (`os error 13`); where local files live on Android is still open ([[tasks]]).
 - Server stores the file on the HDD at `/data/audio/<uuid>.<ext>`; the DB row keeps id, timestamps, duration, path, size, and later transcript.
 
 ### API contract
@@ -76,6 +81,7 @@ The template may pin slightly different versions; whatever it installs is what g
 | openapi-typescript | 7.13.0 | Generate client types |
 | monaco-editor / @monaco-editor/react | 0.57.0 / 4.7.0 | Code editor module (later phase) |
 | faster-whisper | 1.2.1 | Transcription (phase 2) |
+| rxdb (+ Dexie storage) | pinned at the sync spike | Client local DB + replication for offline modules ([[2026-10-21-sync-rxdb]]) |
 
 Database access: plain SQL with psycopg, numbered `.sql` migrations applied by our own script, no ORM — see [[2026-10-21-database-access-plain-sql]].
 
@@ -112,14 +118,29 @@ adb devices        # phone must show as "device"
 - USB debugging + "Install via USB" are on in the **main space** — Second Space can't enable debugging.
 - Dev builds install to the main space. Stable builds go to **Second Space** (work profile): `adb shell pm list users` → `adb install --user <id> app.apk`, or copy the `.apk` and install from inside Second Space.
 
-### Phase 0 commands (planned)
+### Phase 0 commands (used)
 ```bash
 cd projects/spaternum/src/prototypes
-pnpm create tauri-app voice-recorder   # React + TypeScript template
+pnpm dlx create-tauri-app@4.7.5 voice-recorder --template react-ts --manager pnpm \
+  --identifier com.mastetsam.voicerecorder --tauri-version 2 --yes
 cd voice-recorder && pnpm install
-pnpm tauri android init
-pnpm tauri android dev                 # builds, installs and runs on the phone
+pnpm tauri android init --ci           # also installs the other 3 Android Rust targets
+pnpm tauri add fs                      # JS package + Rust crate + capability
 ```
+`src-tauri/gen/android/` is tracked in git (it holds the manifest); its own `.gitignore` skips build output.
+
+### Build an APK and send it to the phone
+Used when Mihail tests from his phone over Remote Control (no USB). A debug APK is ~134 MB, too big to send (30 MiB limit); a release APK is ~6.5 MB. Sign it with the Android debug key — fine for personal testing, not for publishing.
+```bash
+BT=$ANDROID_HOME/build-tools/37.0.0
+OUT=src-tauri/gen/android/app/build/outputs/apk/universal/release
+pnpm tauri android build --apk --target aarch64
+$BT/zipalign -f -p 4 $OUT/app-universal-release-unsigned.apk aligned.apk
+$BT/apksigner sign --ks ~/.android/debug.keystore --ks-pass pass:android \
+  --ks-key-alias androiddebugkey --key-pass pass:android --out app.apk aligned.apk
+$BT/apksigner verify app.apk
+```
+Same key every time, so a new APK installs over the old one.
 
 ## What not to use, and why
 - **Microservices** — one feature per service is harder to run and debug; modular monolith instead.
@@ -129,6 +150,9 @@ pnpm tauri android dev                 # builds, installs and runs on the phone
 - **Building a code editor from scratch** — use Monaco.
 - **Direct `fs` calls in UI code** — breaks the plan to move files to the server later.
 - **AI models on the Pi** — no GPU; deferred to the home server.
+- **An ORM (SQLAlchemy)** — data is simple and SQL is clearer; see [[2026-10-21-database-access-plain-sql]].
+- **PowerSync / ElectricSQL** — not free software / read-path only; see [[2026-10-21-sync-rxdb]].
+- **Foreign keys between modules** — couple module schemas and break offline sync ordering.
 
 ## Related
-[[PRD]] · [[CLAUDE]] · [[risks]] · [[tasks]] · [[voice-recorder-prototype_spec]] · [[installed]]
+[[PRD]] · [[CLAUDE]] · [[risks]] · [[tasks]] · [[voice-recorder-prototype_spec]] · [[notes_spec]] · [[installed]] · [[2026-10-21-sync-rxdb]] · [[2026-10-21-database-access-plain-sql]]

@@ -28,7 +28,8 @@ Hub and spoke.
 - **Server:** modular monolith — one program, one folder per module, each module owns its tables and API routes and never reaches into another's internals. One thing to deploy and debug; modules can still be split out later.
 - **Clients:** thin. Show data, send changes; logic lives on the server.
 - **Network:** Tailscale. Only Mihail's devices reach the server; a single API token on top. No user accounts.
-- **Offline:** only where it matters (voice notes first). Offline-capable modules keep a local copy plus a queue of pending changes; conflicts resolve as **latest write wins** (`updated_at`). Other modules are online-only.
+- **Offline:** only where it matters — voice notes and notes. Offline-capable modules keep a local copy plus a queue of pending changes; conflicts resolve as **latest write wins** (`updated_at`). Other modules are online-only. Sync: RxDB on the clients, pull/push endpoints on the server, pending a spike ([[2026-10-21-sync-rxdb]]).
+- **Cross-module data:** modules read each other's data through public functions and reference each other by ID; no foreign keys between modules ([[2026-10-20-architecture-modular-monolith]]).
 - **Files for the code editor:** live on the PC, accessed only through a small file interface (`list / read / write / watch`) so they can move to the server later without rewriting the UI.
 
 ## Stack
@@ -53,7 +54,7 @@ All free software.
 
 ## Phases
 0. **Prototype (throwaway):** Tauri 2 app on the Xiaomi 14T (Android 16) that records mic audio as Opus, saves it locally and plays it back. Proves the risky part before anything is built around it.
-1. **Notes + voice notes:** server, Postgres, Docker install, desktop + Android clients. Voice notes = mic recording only, offline-first with upload queue.
+1. **Notes + voice notes:** server, Postgres, Docker install, desktop + Android clients. Both offline-capable. Voice notes = mic recording only, offline-first with upload queue. Notes: [[notes_spec]].
 2. **Transcription:** faster-whisper background worker on the server.
 3. **Transcript analysis / RAG.**
 4. Further modules, one at a time: project manager, agile dashboard, clients, code editor (file explorer + Monaco + Claude Code panel).
@@ -71,6 +72,7 @@ All free software.
 - Current work and pending decisions: [[tasks]]
 - Phase 0 spec: [[voice-recorder-prototype_spec]]
 - Agile dashboard spec (phase 4): [[agile-dashboard_spec]]
+- Notes spec (phase 1): [[notes_spec]]
 
 ## Related
-[[CLAUDE]] · [[portfolio]] · [[projects]] · [[TECH]] · [[risks]] · [[tasks]]
+[[CLAUDE]] · [[portfolio]] · [[projects]] · [[TECH]] · [[risks]] · [[tasks]] · [[notes_spec]]

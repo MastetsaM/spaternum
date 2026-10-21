@@ -1,6 +1,6 @@
 # CONTEXT — src
 
-Application code. Nothing here yet — phase 0 starts with the prototype.
+Application code. So far only `prototypes/voice-recorder/` (phase 0, done). Next: `prototypes/sync-spike/`.
 
 ## Planned layout
 | Path | Contents |
