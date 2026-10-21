@@ -21,7 +21,7 @@ One file per recording, named `<uuid>.webm`.
 - **Crash-safe:** `MediaRecorder` hands over audio every ~5 s (`timeslice`) and each piece is appended to the local file at once. A crash loses at most the last few seconds.
 - The metadata row is created when recording **stops**, so an unfinished recording never syncs to other devices.
 - **Recovery:** on app start, a local audio file with no row is an interrupted recording → the app creates its row (duration read from the file) and it uploads like any other.
-- **Maximum length: 1 hour** *(what happens at the limit — open Q 3)*.
+- **Maximum length: 1 hour.** At the limit the app stops the recording and starts a new one right away, so nothing is cut; the parts show as separate recordings next to each other.
 
 ## Data model
 Owned by the voice notes module. Plain SQL ([[2026-10-21-database-access-plain-sql]]).
@@ -44,7 +44,7 @@ CREATE TABLE voice_notes (
 ```
 
 Choices:
-- **The server path isn't stored** — it's always `/data/audio/<id>.webm`, derived from the id *(open Q 5)*.
+- **The server path isn't stored** — it's always `/data/audio/<id>.webm`, derived from the id. Nothing can drift; changing the folder layout later means a code change, not a data change.
 - **`uploaded_at` is server-owned.** The push upsert never writes it, so a device can't reset it to NULL. Devices learn about uploads through normal pull.
 - **Title:** optional, and Mihail can type or edit it. Empty → the list shows the recording's date-time. Phase 2 processing sets the title from the transcript and treats a typed title as advice, not a fixed value.
 - **Tags as `text[]`**, same as notes. No folders — they can be added later as one nullable column without changing existing data.
@@ -103,7 +103,7 @@ Same rules as [[notes_spec]]: archives live only on the server, shown on the sha
 - **Size mismatch on upload** → server rejects, `uploaded_at` stays NULL, client retries; if it keeps failing, the list shows the error.
 - **Server disk full** → upload fails with an error the client shows; local file kept.
 - **Local file missing but row says not uploaded** (e.g. app data cleared) → the recording is lost; the list shows it as "audio missing" instead of retrying forever.
-- **Recording reaches 1 hour** → *(open Q 3)*.
+- **Recording reaches 1 hour** → stopped and a new one started at once (see Recording).
 - **Two devices record at the same time** → separate UUIDs, no conflict.
 
 ## Out of scope
@@ -117,12 +117,10 @@ Same rules as [[notes_spec]]: archives live only on the server, shown on the sha
 - Visible audio files on Android (Storage Access Framework — planned upgrade, [[2026-10-21-local-files-location]]).
 
 ## Open questions
-3. **At the 1-hour limit:** stop with a warning shortly before, or stop and start a new recording right away so nothing is cut?
-4. **PC recording — first test failed (2026-10-21).** The phase 0 prototype on the PC: `NotAllowedError: The request is not allowed by the user agent or the platform in the current context`. No permission prompt appeared. Likely cause: WebKitGTK keeps media capture off by default and Tauri doesn't answer its permission request; needs a small Rust change to test further. GStreamer's `gst-plugins-good` is also not installed, which webm recording probably needs.
-5. **Server path column:** [[TECH]] says the row keeps the file path; this draft drops it and derives the path from the id. Not confirmed yet.
+1. **PC recording — first test failed (2026-10-21); retest with the fix in progress.** The phase 0 prototype on the PC: `NotAllowedError: The request is not allowed by the user agent or the platform in the current context`. No permission prompt appeared. Likely cause: WebKitGTK keeps media capture off by default and Tauri doesn't answer its permission request; fix added to the prototype (`src-tauri/src/lib.rs`: turn on media capture, allow mic requests only). GStreamer's `gst-plugins-good` is also not installed, which webm recording probably needs.
 
 ## Decided 2026-10-21
-Title optional, editable by Mihail, used as advice by phase 2 processing · tags only, no folders · max length 1 hour · archiving doesn't touch the local file, nothing deleted in phase 1 · crash safety: write audio to disk every ~5 s, recover interrupted recordings on start.
+Title optional, editable by Mihail, used as advice by phase 2 processing · tags only, no folders · max length 1 hour, then a new recording starts automatically · no server path column · archiving doesn't touch the local file, nothing deleted in phase 1 · crash safety: write audio to disk every ~5 s, recover interrupted recordings on start.
 
 ## Related
 [[PRD]] · [[TECH]] · [[tasks]] · [[notes_spec]] · [[voice-recorder-prototype_spec]] · [[sync-spike_spec]] · [[2026-10-21-sync-rxdb]] · [[2026-10-21-local-files-location]] · [[2026-10-20-audio-opus-files-on-disk]] · [[2026-10-20-local-files-behind-interface]] · [[2026-10-20-architecture-modular-monolith]] · [[2026-10-21-database-access-plain-sql]] · [[2026-10-20-offline-latest-write-wins]]

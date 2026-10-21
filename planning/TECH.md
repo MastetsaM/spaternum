@@ -42,7 +42,7 @@ Technical reference. The *why* behind each choice lives in [[PRD]] and the decis
 - Android manifest needs **both** `RECORD_AUDIO` and `MODIFY_AUDIO_SETTINGS` — Tauri's `RustWebChromeClient` requests both, and fails with `NotAllowedError` if either is missing.
 - Android shared storage (`/storage/emulated/0/Documents/…`) can't be written by path (`os error 13`).
 - Local audio: Android app storage; PC `~/Documents/Spaternum/voice-notes/`. Deleted from the device only after upload + transcription + Mihail's validation of the transcript; then played by streaming from the server ([[2026-10-21-local-files-location]]).
-- Server stores the file on the HDD at `/data/audio/<uuid>.<ext>`; the DB row keeps id, timestamps, duration, path, size, and later transcript.
+- Server stores the file on the HDD at `/data/audio/<uuid>.webm`; the path is derived from the id, not stored. The DB row keeps id, timestamps, duration, size, upload time, and later transcript ([[voice-notes_spec]]).
 
 ### API contract
 - FastAPI publishes an OpenAPI schema at `/openapi.json`.
