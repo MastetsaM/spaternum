@@ -27,7 +27,7 @@
 - [x] Sync approach → RxDB + pull/push endpoints, pending spike ([[2026-10-21-sync-rxdb]])
 - [x] Cross-module data rules → read via public functions, IDs only, no cross-module foreign keys ([[2026-10-20-architecture-modular-monolith]])
 - [x] Write `notes_spec.md`
-- [ ] **Sync spike** (throwaway, `src/prototypes/sync-spike`): one RxDB collection in the Tauri app + pull/push endpoints in FastAPI + Postgres. Test: offline edit on the phone → back online → reaches the PC. Also check IndexedDB persistence on Android and the RxDB license file. Write a short spec first.
+- [~] **Sync spike** — spec: [[sync-spike_spec]] (throwaway, `src/prototypes/sync-spike`): one RxDB collection in the Tauri app + pull/push endpoints in FastAPI + Postgres. Test: offline edit on the phone → back online → reaches the PC. Also check IndexedDB persistence on Android and the RxDB license file.
 - [ ] Answer the open questions in [[notes_spec]] (archiving folders, empty notes, search, sort order, …)
 - [ ] Decide where local files live on Android (app storage only / All files access / SAF / MediaStore) — see [[risks]]
 - [ ] Write `voice-notes_spec.md`
