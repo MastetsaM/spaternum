@@ -50,12 +50,11 @@ CREATE TABLE items (
 - Styling beyond usable.
 - More than one table.
 
-## Open questions
-- **Where the spike server runs:** on the PC (fast to change; the PC must be on during tests) or on the Pi (closer to the real setup, slower to iterate)?
-- **Postgres on the PC:** Docker (same as the real deployment; phase 1 needs it anyway) or the Arch `postgresql` package (no Docker yet)? Either needs installing with `sudo`.
-- **uv** isn't installed yet — needed for the Python server ([[TECH]]).
-- **HTTP vs HTTPS from the phone:** Android blocks plain `http://` by default. Options: `tailscale serve` (HTTPS with a Tailscale certificate) or allowing cleartext for the spike. Unsure which works more simply with Tauri's Android webview.
-- **Phone on Tailscale:** the phone's Tailscale must be connected during tests.
+## Setup (decided 2026-10-21)
+- **Server runs on the PC** — throwaway, fastest to iterate; the PC must be on while testing from the phone.
+- **Postgres in Docker** (`pgvector/pgvector` image, same as the real deployment) — Docker is needed for phase 1 anyway.
+- **Phone → server over HTTPS with `tailscale serve`** — Tailscale gives the PC an `https://<machine>.<tailnet>.ts.net` address with a valid certificate, so the Android app needs no cleartext exception.
+- Needs installing on the PC first: Docker, uv. The phone's Tailscale must be connected during tests.
 
 ## Results
 _To be filled in after testing._
