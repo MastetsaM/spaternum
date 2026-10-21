@@ -1,14 +1,12 @@
 # Spec — Voice notes (phase 1)
 
-> **Draft (2026-10-21).** The open questions at the end need answers before building. Parts that depend on them are marked *(open Q n)*.
-
 ## What and why
-Record speech from the microphone on Android and the PC, keep it safe on the server, play it back. Works **offline**: a recording made with no connection uploads when the server is reachable. Phase 1 is recording only; transcription comes in phase 2 and analysis/RAG in phase 3 ([[PRD]]). Voice notes are the main raw material for those later phases, so the job of phase 1 is to make sure every recording reaches the server intact.
+Record speech from the microphone on **Android**, keep it safe on the server, play it back. The **PC views and listens only** — no recording on the PC (decided 2026-10-21; test results under Out of scope). Works **offline**: a recording made with no connection uploads when the server is reachable. Phase 1 is recording only; transcription comes in phase 2 and analysis/RAG in phase 3 ([[PRD]]). Voice notes are the main raw material for those later phases, so the job of phase 1 is to make sure every recording reaches the server intact.
 
 ## How it fits together
 - **Metadata** (one row per recording) syncs through RxDB like notes ([[2026-10-21-sync-rxdb]]).
 - **Audio** does not go through RxDB. It is a file: saved locally while recording, then uploaded to the server by a separate upload step ([[2026-10-20-audio-opus-files-on-disk]]).
-- Local audio lives in Android app storage, and on the PC in `~/Documents/Spaternum/voice-notes/`. All file access goes through the one file interface ([[2026-10-21-local-files-location]], [[2026-10-20-local-files-behind-interface]]).
+- Local audio lives in Android app storage. The PC keeps no local audio — it streams from the server. All file access goes through the one file interface ([[2026-10-21-local-files-location]], [[2026-10-20-local-files-behind-interface]]).
 - Server audio lives on the HDD at `/data/audio/<uuid>.webm`.
 
 ## Recording
@@ -57,15 +55,15 @@ Choices:
 - **Same request twice is safe:** if the file is already there with the right size, the server answers success and changes nothing.
 - If the metadata row hasn't reached the server yet (RxDB push still pending), the server answers `404` and the client retries later.
 - The client retries pending uploads: on app start, when sync comes back online, and after each new recording. A pending upload = a local file whose row has `uploaded_at` NULL.
-- Uploads only run from the device that holds the file. The other device just sees the row as "not uploaded yet".
+- Uploads only run from the phone. The PC just sees the row as "not uploaded yet".
 
 ## Local audio lifecycle
 Per [[2026-10-21-local-files-location]], the local copy is deleted only when **uploaded + transcribed + transcript validated by Mihail**. Phase 1 has no transcripts, so **in phase 1 local audio is never deleted automatically**.
 
 ## Playback
 - Local file present → play it (works offline).
-- No local file (recorded on the other device, or deleted later) → stream from `GET /voice-notes/{id}/audio` (online only).
-- No local file and offline, or not uploaded yet from the other device → Play disabled, with a short reason ("offline" / "not uploaded yet").
+- No local file (always on the PC; on the phone once deleted later) → stream from `GET /voice-notes/{id}/audio` (online only).
+- No local file and offline, or not uploaded yet from the phone → Play disabled, with a short reason ("offline" / "not uploaded yet").
 
 ## Archiving
 Same rules as [[notes_spec]]: archives live only on the server, shown on the shared Archive page; the module provides `list_archived()` and `restore(id)` ([[2026-10-20-architecture-modular-monolith]]).
@@ -85,15 +83,16 @@ Same rules as [[notes_spec]]: archives live only on the server, shown on the sha
 - **Output:** Opus files on the device and the server, one metadata row per recording synced to every device, a list with upload state, playback.
 
 ## Acceptance criteria (done when…)
-1. A recording can be made on Android and on the PC; it shows in the list right after Stop, with duration and size.
-2. With no connection, recording and local playback work; the recording shows as "not uploaded".
-3. Once the connection returns, the file uploads without any action, the row shows as uploaded on both devices, and the file on the server has the expected size and plays.
-4. A recording made on one device can be played on the other (streamed) once uploaded.
-5. Uploading the same file twice doesn't duplicate or damage anything.
-6. Killing the app during an upload → the upload completes on next start; no half-written file on the server.
-7. Archiving removes the voice note from every device's list; the row and the server file stay; restoring from the Archive page brings it back.
-8. In phase 1 no local audio file is deleted by the app.
-9. Tests for the module's API, the upload endpoint (size check, repeat upload, missing row), sync endpoints, `list_archived()` and `restore()` pass.
+1. A recording can be made on Android; it shows in the list right after Stop, with duration and size.
+2. The PC shows the same list (synced) and can play, tag, retitle and archive recordings, but has no Record button.
+3. With no connection, recording and local playback work on the phone; the recording shows as "not uploaded".
+4. Once the connection returns, the file uploads without any action, the row shows as uploaded on the phone and the PC, and the file on the server has the expected size and plays.
+5. Once uploaded, a recording plays on the PC (streamed).
+6. Uploading the same file twice doesn't duplicate or damage anything.
+7. Killing the app during an upload → the upload completes on next start; no half-written file on the server.
+8. Archiving removes the voice note from every device's list; the row and the server file stay; restoring from the Archive page brings it back.
+9. In phase 1 no local audio file is deleted by the app.
+10. Tests for the module's API, the upload endpoint (size check, repeat upload, missing row), sync endpoints, `list_archived()` and `restore()` pass.
 
 ## Edge cases and failure modes
 - **App killed or crashes mid-recording** → audio up to the last ~5 s piece is on disk; recovered on next start (see Recording).
@@ -114,16 +113,14 @@ Same rules as [[notes_spec]]: archives live only on the server, shown on the sha
 - Call recording ([[2026-10-20-park-call-recording]]).
 - Editing or trimming audio.
 - Resumable / chunked uploads — whole-file upload is enough at ~2.5 MB per 10 min.
+- **Recording on the PC.** Tested 2026-10-21 and dropped: WebKitGTK needed a Rust change for mic permission, then `MediaRecorder` failed without GStreamer's `gst-plugins-good`, and the dev laptop's built-in mic isn't detected by Linux. Notes for a future attempt: the permission fix is in the phase 0 prototype (`src-tauri/src/lib.rs`).
 - Visible audio files on Android (Storage Access Framework — planned upgrade, [[2026-10-21-local-files-location]]).
 
 ## Open questions
-1. **PC recording — not working yet (2026-10-21).**
-   - Test 1: `NotAllowedError` from `getUserMedia`, no prompt. Cause: WebKitGTK keeps media capture off and Tauri doesn't answer its permission request. **Fixed** in the prototype (`src-tauri/src/lib.rs`: turn on media capture, allow mic requests only).
-   - Test 2: permission passes, then `MediaRecorder.start()` fails with `NotSupportedError: The MediaRecorder is unsupported on this platform`. WebKitGTK records through GStreamer; `gst-plugins-good` (webm muxer) is not installed.
-   - Also found: the laptop has **no microphone input at all** in PipeWire (no source; the built-in mic on the AMD audio coprocessor isn't detected by Linux). A laptop/driver issue, not Spaternum's — any PC recording needs a working input first (headset or USB mic, or fixing the built-in mic).
+None — ready to build.
 
 ## Decided 2026-10-21
-Title optional, editable by Mihail, used as advice by phase 2 processing · tags only, no folders · max length 1 hour, then a new recording starts automatically · no server path column · archiving doesn't touch the local file, nothing deleted in phase 1 · crash safety: write audio to disk every ~5 s, recover interrupted recordings on start.
+Title optional, editable by Mihail, used as advice by phase 2 processing · tags only, no folders · max length 1 hour, then a new recording starts automatically · no server path column · archiving doesn't touch the local file, nothing deleted in phase 1 · crash safety: write audio to disk every ~5 s, recover interrupted recordings on start · recording on Android only; the PC views and listens (PC test results under Out of scope).
 
 ## Related
 [[PRD]] · [[TECH]] · [[tasks]] · [[notes_spec]] · [[voice-recorder-prototype_spec]] · [[sync-spike_spec]] · [[2026-10-21-sync-rxdb]] · [[2026-10-21-local-files-location]] · [[2026-10-20-audio-opus-files-on-disk]] · [[2026-10-20-local-files-behind-interface]] · [[2026-10-20-architecture-modular-monolith]] · [[2026-10-21-database-access-plain-sql]] · [[2026-10-20-offline-latest-write-wins]]

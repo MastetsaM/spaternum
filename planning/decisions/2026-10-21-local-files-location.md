@@ -5,7 +5,7 @@ Decided 2026-10-21 in conversation with Mihail.
 ## Decision
 - **What counts as a "file":** voice-note audio, exports, later code-editor files. Notes and all metadata are not files — they live in RxDB's local database, which the webview keeps in its own storage (location not ours to choose).
 - **Android:** files go in the app's **private storage**. No permissions, not visible in the file manager, deleted on uninstall.
-- **PC:** files go in **`~/Documents/Spaternum/`**, one sub-folder per module (`voice-notes/`, `exports/`, …), so they're visible and usable outside the app.
+- **PC:** files go in **`~/Documents/Spaternum/`**, one sub-folder per module (`exports/`, …), so they're visible and usable outside the app. (Voice notes are recorded on Android only — the PC keeps no audio, it streams; [[voice-notes_spec]], 2026-10-21.)
 - **Voice-note audio on a device is temporary.** The local copy is deleted only when all three are true:
   1. the server has the file (upload confirmed),
   2. the server has transcribed it (phase 2),

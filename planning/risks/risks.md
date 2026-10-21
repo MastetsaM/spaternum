@@ -47,6 +47,7 @@
 - **Likelihood:** medium · **Impact:** medium
 - Phase 0 only tested recording on Android. WebKitGTK records through GStreamer; webm/Opus may be unsupported, or the mic permission request may not be granted inside Tauri.
 - **Mitigation:** run the phase 0 prototype on the PC before building voice notes ([[voice-notes_spec]]). Fallbacks: ogg/Opus on the PC, install the missing GStreamer plugin, or no PC recording in phase 1.
+- **Status (2026-10-21): avoided** — recording is Android-only; the PC views and listens ([[voice-notes_spec]]).
 
 ## Claude Code automation terms
 - **Likelihood:** unknown · **Impact:** medium

@@ -41,7 +41,7 @@ Technical reference. The *why* behind each choice lives in [[PRD]] and the decis
 - Settings proven in phase 0 ([[voice-recorder-prototype_spec]]): `getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } })` and `audioBitsPerSecond: 32000` → clear speech at ~200–250 KB/min. The webview defaults sound muffled and use ~125 kbps.
 - Android manifest needs **both** `RECORD_AUDIO` and `MODIFY_AUDIO_SETTINGS` — Tauri's `RustWebChromeClient` requests both, and fails with `NotAllowedError` if either is missing.
 - Android shared storage (`/storage/emulated/0/Documents/…`) can't be written by path (`os error 13`).
-- Local audio: Android app storage; PC `~/Documents/Spaternum/voice-notes/`. Deleted from the device only after upload + transcription + Mihail's validation of the transcript; then played by streaming from the server ([[2026-10-21-local-files-location]]).
+- Recording on Android only; the PC streams from the server ([[voice-notes_spec]]). Local audio: Android app storage. Deleted from the device only after upload + transcription + Mihail's validation of the transcript; then played by streaming from the server ([[2026-10-21-local-files-location]]).
 - Server stores the file on the HDD at `/data/audio/<uuid>.webm`; the path is derived from the id, not stored. The DB row keeps id, timestamps, duration, size, upload time, and later transcript ([[voice-notes_spec]]).
 
 ### API contract
