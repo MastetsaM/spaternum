@@ -15,6 +15,7 @@ Details and reasoning: [[TECH]] (Deployment) and `planning/decisions/2026-10-20-
 ## Target machines
 - **Now:** Raspberry Pi 4, 8 GB, ARM64, Docker + Portainer, Tailscale; data on an attached HDD.
 - **Later:** dedicated home server, likely x86_64. Images are built for both.
+- **Dev PC:** Docker + uv installed (2026-10-21). A stopped container `spike-db` (Postgres + pgvector) is left from the sync spike — safe to remove with `docker rm spike-db`. `tailscale serve` is off.
 
 ## Rules
 - Never commit secrets (`.env`, tokens).

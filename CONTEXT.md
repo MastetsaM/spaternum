@@ -12,7 +12,7 @@ Personal workspace ecosystem: a self-hosted server (Postgres, API, later AI) wit
 Full picture — architecture, stack, phases, what's cut: [[PRD]]. How it's built: [[TECH]].
 
 ## Status
-Phase 0 (voice recorder prototype) done — Tauri on Android works. Sync spike done — RxDB sync works on PC and phone. Before phase 1: open notes questions, Android file location, voice-notes spec. Current state and next steps: [[tasks]].
+Phase 0 (voice recorder prototype) done — Tauri on Android works. Sync spike done — RxDB sync works on PC and phone. Notes spec complete; local-file locations decided. Last step before phase 1: the voice-notes spec. Current state and next steps: [[tasks]].
 
 ## Workspaces
 | Folder | Read first |
