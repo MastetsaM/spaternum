@@ -16,5 +16,7 @@ The code editor module works on files on the PC. All file access goes through on
 - Easier: moving files to the server later = one new implementation of the interface.
 - Harder: must avoid direct `fs` calls in UI code.
 
+Where files live (2026-10-21): [[2026-10-21-local-files-location]].
+
 ## Related
 [[PRD]] · [[TECH]]

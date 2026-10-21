@@ -41,6 +41,7 @@
 - **Likelihood:** high (confirmed) · **Impact:** low
 - Direct path writes to shared storage (`Documents/`) are blocked by scoped storage; files in app storage are deleted on uninstall.
 - **Mitigation:** server is the source of truth, so app storage is only a cache. Decide before voice notes: app storage only, "All files access", Storage Access Framework, or MediaStore ([[voice-recorder-prototype_spec]] Results).
+- **Status (2026-10-21): decided** — app storage on Android, `~/Documents/Spaternum` on the PC; the app shows which recordings aren't uploaded yet ([[2026-10-21-local-files-location]]).
 
 ## Claude Code automation terms
 - **Likelihood:** unknown · **Impact:** medium

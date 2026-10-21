@@ -92,6 +92,7 @@ Notes work offline on both clients; changes sync when the server is reachable, l
 - Merging simultaneous edits (CRDTs) — latest write wins.
 - Server-side full-text search (Postgres `tsvector`) — device search covers phase 1; RAG later.
 - Searching archived notes on the device.
+- **Markdown export to the PC (later):** write a `.md` copy of each note to `~/Documents/Spaternum/notes/`, so notes are visible and usable outside the app (Obsidian-style). Requested by Mihail 2026-10-21; not phase 1.
 
 ## Decided 2026-10-21 (former open questions)
 Archiving a folder → archives its contents · note in an archived folder → top level · empty notes → never saved · search → device "contains" + tags · archive view → shared Archive page, server only · sort → last edited · archive vs. later edit → latest write wins.
