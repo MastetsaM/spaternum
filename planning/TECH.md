@@ -25,7 +25,7 @@ Technical reference. The *why* behind each choice lives in [[PRD]] and the decis
 ### Offline (only for modules that need it — voice notes and notes)
 - Every record has `id` (UUID, generated on the client so it exists before upload), `created_at`, `updated_at`, `archived_at` (archive, never delete — archived rows tell other devices a record is gone).
 - Client: **RxDB** collection per module, free IndexedDB (Dexie) storage, HTTP replication. Writes go to the local DB first; RxDB queues and retries them.
-- Server: per synced table, `GET` **pull** (changes after a checkpoint `(updated_at, id)`, ordered, limited) and `POST` **push** (latest-write-wins upsert: `ON CONFLICT (id) DO UPDATE … WHERE excluded.updated_at > t.updated_at`). One reusable helper; SQL stays in each module.
+- Server: per synced table, `GET` **pull** (changes after a checkpoint `seq`, ordered, limited — `seq` is assigned by the server from a sequence on every write; never pull by the client's `updated_at`, which would miss late pushes of old offline edits) and `POST` **push** (latest-write-wins upsert: `ON CONFLICT (id) DO UPDATE … WHERE excluded.updated_at > t.updated_at`). One reusable helper; SQL stays in each module.
 - Schema change = SQL migration on the server **and** a bumped RxDB schema version with a migration function on the client.
 - Conflicts: **latest `updated_at` wins**. Single user, so acceptable.
 - Pending the sync spike — see [[2026-10-21-sync-rxdb]].
@@ -81,7 +81,7 @@ The template may pin slightly different versions; whatever it installs is what g
 | openapi-typescript | 7.13.0 | Generate client types |
 | monaco-editor / @monaco-editor/react | 0.57.0 / 4.7.0 | Code editor module (later phase) |
 | faster-whisper | 1.2.1 | Transcription (phase 2) |
-| rxdb (+ Dexie storage) | pinned at the sync spike | Client local DB + replication for offline modules ([[2026-10-21-sync-rxdb]]) |
+| rxdb (+ Dexie storage), rxjs | 17.6.0, 7.8.2 (installed in the spike) | Client local DB + replication for offline modules ([[2026-10-21-sync-rxdb]]). Apache 2.0 per its LICENSE.txt; Dexie storage and the CRDT plugin are in the free package |
 
 Database access: plain SQL with psycopg, numbered `.sql` migrations applied by our own script, no ORM — see [[2026-10-21-database-access-plain-sql]].
 

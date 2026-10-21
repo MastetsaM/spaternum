@@ -13,7 +13,8 @@ CREATE TABLE note_folders (
     name        text NOT NULL,
     created_at  timestamptz NOT NULL,
     updated_at  timestamptz NOT NULL,              -- latest write wins
-    archived_at timestamptz                        -- NULL = active
+    archived_at timestamptz,                       -- NULL = active
+    seq         bigint NOT NULL                    -- server-assigned on every write; sync pulls by this
 );
 
 CREATE TABLE notes (
@@ -24,7 +25,8 @@ CREATE TABLE notes (
     pinned      boolean NOT NULL DEFAULT false,
     created_at  timestamptz NOT NULL,
     updated_at  timestamptz NOT NULL,              -- latest write wins
-    archived_at timestamptz                        -- NULL = active
+    archived_at timestamptz,                       -- NULL = active
+    seq         bigint NOT NULL                    -- server-assigned on every write; sync pulls by this
 );
 ```
 
