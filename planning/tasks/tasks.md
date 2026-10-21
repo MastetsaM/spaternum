@@ -30,10 +30,10 @@
 - [x] **Sync spike** → passed, RxDB confirmed — spec and results: [[sync-spike_spec]] (throwaway, `src/prototypes/sync-spike`): one RxDB collection in the Tauri app + pull/push endpoints in FastAPI + Postgres. Test: offline edit on the phone → back online → reaches the PC. Also check IndexedDB persistence on Android and the RxDB license file.
 - [x] Answer the open questions in [[notes_spec]] → all decided; archives live only on the server, one shared Archive page
 - [x] Decide where local files live → Android app storage, PC `~/Documents/Spaternum/` ([[2026-10-21-local-files-location]])
-- [ ] Write `voice-notes_spec.md` — **next.** Inputs to carry in:
+- [x] Write `voice-notes_spec.md` → [[voice-notes_spec]], all questions answered; recording on Android only, PC views and listens. Inputs carried in:
   - Audio settings proven in phase 0: Opus/webm, 32 kbps, voice processing off, `RECORD_AUDIO` + `MODIFY_AUDIO_SETTINGS` ([[TECH]] Audio, [[voice-recorder-prototype_spec]])
   - Metadata syncs through RxDB; audio uploads separately ([[2026-10-21-sync-rxdb]])
-  - Local audio: Android app storage, PC `~/Documents/Spaternum/voice-notes/`; deleted only after upload + transcription + Mihail's transcript validation; app shows not-yet-uploaded recordings ([[2026-10-21-local-files-location]])
+  - Local audio: Android app storage; deleted only after upload + transcription + Mihail's transcript validation; app shows not-yet-uploaded recordings ([[2026-10-21-local-files-location]])
   - Archives server-only, shared Archive page, `list_archived()` / `restore()` ([[2026-10-20-architecture-modular-monolith]])
   - Use [[notes_spec]] as the model for structure
 - [ ] Then: phase 1 task list (server skeleton, migrations, notes, voice notes, archive module, clients)
