@@ -18,6 +18,7 @@ Technical reference. The *why* behind each choice lives in [[PRD]] and the decis
 
 - **Modules:** each server module owns its folder, its tables (prefixed or in its own schema) and its routes under `/api/<module>/…`. Modules don't import each other's internals; if one needs another's data, it goes through that module's public functions. Cross-module references are IDs only, with no foreign keys between modules ([[2026-10-20-architecture-modular-monolith]]).
 - **Clients** hold no business logic. Online-only modules call the API directly. Offline modules keep a local copy + outbox (see below).
+- **Archive module** (no tables of its own): `GET /archive` collects from each module's public `list_archived()`, `POST /archive/{module}/{id}/restore` calls its `restore(id)`. One shared Archive page in the client, online only ([[2026-10-20-architecture-modular-monolith]]).
 - **Files on PC** (code editor module, later): every file operation goes through one interface — `list / read / write / watch` — never direct `fs` calls from UI code.
 
 ## Key implementation patterns
@@ -32,6 +33,7 @@ Technical reference. The *why* behind each choice lives in [[PRD]] and the decis
 - Clock drift: correct `updated_at` with the offset from the server's `Date` header.
 - Online/offline indicator comes from the last sync's result — `navigator.onLine` stays true in airplane mode on Android.
 - Open the RxDB database once (React StrictMode runs effects twice in development).
+- **Archives stay on the server:** archiving = RxDB remove (`_deleted: true` on push → server sets `archived_at`, keeps the row); pull sends archived rows as `_deleted: true`; RxDB cleanup plugin clears deletion markers. Restore only on the server.
 - Proven in the sync spike — see [[sync-spike_spec]] and [[2026-10-21-sync-rxdb]].
 
 ### Audio

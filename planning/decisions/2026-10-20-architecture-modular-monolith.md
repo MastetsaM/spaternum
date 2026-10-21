@@ -12,6 +12,11 @@ One server is the single source of truth (data, API, later AI). PC and Android a
 - Modules reference each other **by ID only** (`card.project_id`); data is never copied between modules.
 - **No foreign keys between modules** in Postgres (foreign keys inside a module are fine). Reasons: they'd tie module schemas together, and with offline sync a record can arrive before the one it points to. Code handles "not found"; archive-instead-of-delete keeps that rare.
 
+## Shared Archive (added 2026-10-21)
+- One **Archive page** in the client for everything archived, from every module, with a filter by type and a Restore button. Online only — archives are not stored on devices ([[2026-10-21-sync-rxdb]]).
+- On the server, an **`archive` module that owns no tables**: `GET /archive` gathers items from each module's public `list_archived()`; `POST /archive/{module}/{id}/restore` calls that module's `restore(id)`.
+- A module joins the Archive page by providing those two functions; nothing else changes.
+
 ## Why
 - Mihail wants independent features that converge in one place.
 - He prioritizes designs that are easy to understand, debug and change.

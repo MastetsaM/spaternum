@@ -54,7 +54,7 @@ All free software.
 
 ## Phases
 0. **Prototype (throwaway):** Tauri 2 app on the Xiaomi 14T (Android 16) that records mic audio as Opus, saves it locally and plays it back. Proves the risky part before anything is built around it.
-1. **Notes + voice notes:** server, Postgres, Docker install, desktop + Android clients. Both offline-capable. Voice notes = mic recording only, offline-first with upload queue. Notes: [[notes_spec]].
+1. **Notes + voice notes:** server, Postgres, Docker install, desktop + Android clients. Both offline-capable. Voice notes = mic recording only, offline-first with upload queue. Notes: [[notes_spec]]. Also the shared **Archive page** — archived items from every module, kept only on the server.
 2. **Transcription:** faster-whisper background worker on the server.
 3. **Transcript analysis / RAG.**
 4. Further modules, one at a time: project manager, agile dashboard, clients, code editor (file explorer + Monaco + Claude Code panel).

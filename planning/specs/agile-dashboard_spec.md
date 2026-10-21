@@ -43,6 +43,7 @@ Each card has a list of comments, for taking notes on the topic as it moves alon
 Nothing is deleted — things are archived.
 - **Cards:** an Archive button on the card. Archived cards leave the board but stay stored.
 - **Projects:** a project is archived, never deleted; its board and cards are archived with it.
+- Archived cards are viewed and restored on the app's **shared Archive page** — the module provides `list_archived()` and `restore(id)` ([[2026-10-20-architecture-modular-monolith]]).
 
 ## Inputs and outputs
 - **Input:** create, edit, move and archive cards; set or clear the blocked flag; set a due date; add comments.
@@ -83,7 +84,6 @@ Nothing is deleted — things are archived.
 - **Ordering — second key:** longest total duration first (oldest work surfaces) or shortest first?
 - **Ordering — no due date:** do cards without a due date go below all dated ones?
 - **Overdue cards:** highlighted in some way?
-- **Archived cards:** can they be viewed and restored, and from where?
 - **Comments:** Markdown or plain text? Can a comment be edited after posting?
 - **Durations — under a day:** show `0d`, or hours (`5h`)?
 - **Durations — total starts when:** the card is created (enters Backlog), or when work starts (leaves Backlog/Analysis)?

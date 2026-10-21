@@ -36,32 +36,52 @@ Choices:
 - **Tags as `text[]`** with a GIN index — one column, simple queries; renaming a tag means updating every note that has it (acceptable for one user).
 - **Folders nest to any depth**, and belong to the notes module only — other modules have their own.
 - **Pinned** — unlimited; pinned notes show at the top of their folder.
-- **Archive, never delete** — also tells other devices a note is gone during sync.
+- **Sort order** inside a folder: pinned first, then **last edited first**.
+- **Archive, never delete** — `archived_at` marks an archived row; the server keeps it.
 - **Client-generated UUIDs** — notes can be created offline.
 - **`[[wikilinks]]`** — allowed in the body as plain text from day one. No links table in phase 1; one can be built later by parsing existing notes (backlinks, RAG context).
 
+## Empty notes
+An empty body is never saved.
+- **New note** left empty → never created, locally or on the server.
+- **Existing note** cleared to empty → the change is discarded and the note goes back to what it was. To get rid of a note, archive it.
+
+## Archiving
+Archives live **only on the server**, never on the devices ([[2026-10-21-sync-rxdb]]).
+- Archiving a note removes it from the device's local database; the server sets `archived_at` and keeps the row.
+- **Archiving a folder** archives everything inside it — notes and sub-folders, any depth — all with the same `archived_at`.
+- **Restoring a folder** restores everything that was archived with it (same `archived_at`); items archived separately before stay archived.
+- Archived items are viewed and restored on the app's **shared Archive page** (online only), not inside the notes screens. Restored items sync back to every device as a normal change.
+- The notes module provides `list_archived()` and `restore(id)` for the archive module ([[2026-10-20-architecture-modular-monolith]]).
+
+## Search
+On the device, over local (non-archived) notes: **"contains this text"** on the body, plus **filter by tag**. Works offline; no server code. Archived notes aren't searched locally. Smarter search comes with RAG later.
+
 ## Offline and sync
 Notes work offline on both clients; changes sync when the server is reachable, latest `updated_at` wins ([[2026-10-20-offline-latest-write-wins]]). Sync tool: RxDB on the client with pull/push endpoints on the server, proven by the sync spike ([[2026-10-21-sync-rxdb]], [[sync-spike_spec]]).
+- Archived rows reach devices as RxDB deletions (`_deleted: true`), so devices drop them.
+- **Archive vs. a later edit from another device:** latest write wins — a later edit brings the note back. The worst case is an archived note reappearing (one tap to fix), never lost writing.
 
 ## Inputs and outputs
-- **Input:** create, edit, move (between folders), tag, pin/unpin, archive notes; create, rename, move, archive folders.
-- **Output:** folder tree, note list per folder (pinned first), note editor; data stored on the server, cached on each device.
+- **Input:** create, edit, move (between folders), tag, pin/unpin, archive notes; create, rename, move, archive folders; search text and tags.
+- **Output:** folder tree, note list per folder (pinned first, then last edited), note editor, search results; data stored on the server, active items cached on each device.
 
 ## Acceptance criteria (done when…)
 1. Notes can be created, edited, moved, tagged, pinned and archived on PC and Android.
 2. Folders can be nested to any depth, renamed, moved and archived.
-3. The note list shows the first line of each note as its title, pinned notes first.
-4. Notes can be found by tag.
+3. The note list shows the first line of each note as its title — pinned first, then last edited first.
+4. Notes can be found by text ("contains") and by tag, offline too.
 5. With no connection, notes can still be created and edited; once the connection returns, the changes reach the server and the other device.
 6. The same note edited on two devices: the later edit wins, nothing crashes.
-7. Archived notes and folders disappear from the lists but stay in the database.
-8. Tests for the module's API and sync endpoints pass.
+7. A new note left empty is never created; clearing an existing note and leaving restores its previous text.
+8. Archiving a note or folder removes it from every device's local storage; the row stays in the database with `archived_at` set.
+9. Archiving a folder archives everything inside it; restoring it from the Archive page brings all of them back, and only them.
+10. Tests for the module's API, sync endpoints, `list_archived()` and `restore()` pass.
 
 ## Edge cases and failure modes
-- Folder archived while it still holds notes or sub-folders → see open questions.
-- A note moved into a folder that another device archived meanwhile → see open questions.
+- A note moved into a folder that another device archived meanwhile → the folder isn't on the device any more, so the note shows at the **top level**; data unchanged — restoring the folder puts it back.
+- A note restored while its folder is still archived → shows at the top level, same rule.
 - Moving a folder into its own sub-folder → rejected (would create a loop).
-- Empty note (no text) → see open questions.
 - Very long note → no limit planned; note if performance suffers.
 
 ## Out of scope
@@ -70,16 +90,11 @@ Notes work offline on both clients; changes sync when the server is reachable, l
 - Rendered Markdown preview (can come later; data doesn't change).
 - Attachments and images in notes.
 - Merging simultaneous edits (CRDTs) — latest write wins.
-- Full-text search beyond tags — see open questions.
+- Server-side full-text search (Postgres `tsvector`) — device search covers phase 1; RAG later.
+- Searching archived notes on the device.
 
-## Open questions
-- **Archiving a folder:** archive everything inside it too, or block until it's empty?
-- **Archived folder as a move target:** if a note lands in an archived folder after sync, move it to the top level, or restore the folder?
-- **Empty notes:** keep them, or discard a note with no text when the editor closes?
-- **Search:** is tag filtering enough for phase 1, or is full-text search (Postgres `tsvector`) needed too?
-- **Archived notes:** viewable and restorable from where?
-- **Sort order** inside a folder (after pinned): last edited, created, or alphabetical?
-- **Archive vs. a later edit from another device:** with latest-write-wins, an edit made after an archive brings the note back (seen in the sync spike). Keep that (no edit is ever lost), or make archive win (archived stays archived; the late edit is lost or kept elsewhere)?
+## Decided 2026-10-21 (former open questions)
+Archiving a folder → archives its contents · note in an archived folder → top level · empty notes → never saved · search → device "contains" + tags · archive view → shared Archive page, server only · sort → last edited · archive vs. later edit → latest write wins.
 
 ## Related
-[[PRD]] · [[TECH]] · [[tasks]] · [[2026-10-21-sync-rxdb]] · [[2026-10-21-database-access-plain-sql]] · [[2026-10-20-offline-latest-write-wins]] · [[2026-10-20-architecture-modular-monolith]]
+[[PRD]] · [[TECH]] · [[tasks]] · [[2026-10-21-sync-rxdb]] · [[2026-10-21-database-access-plain-sql]] · [[2026-10-20-offline-latest-write-wins]] · [[2026-10-20-architecture-modular-monolith]] · [[sync-spike_spec]]
