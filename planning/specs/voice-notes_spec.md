@@ -117,7 +117,10 @@ Same rules as [[notes_spec]]: archives live only on the server, shown on the sha
 - Visible audio files on Android (Storage Access Framework — planned upgrade, [[2026-10-21-local-files-location]]).
 
 ## Open questions
-1. **PC recording — first test failed (2026-10-21); retest with the fix in progress.** The phase 0 prototype on the PC: `NotAllowedError: The request is not allowed by the user agent or the platform in the current context`. No permission prompt appeared. Likely cause: WebKitGTK keeps media capture off by default and Tauri doesn't answer its permission request; fix added to the prototype (`src-tauri/src/lib.rs`: turn on media capture, allow mic requests only). GStreamer's `gst-plugins-good` is also not installed, which webm recording probably needs.
+1. **PC recording — not working yet (2026-10-21).**
+   - Test 1: `NotAllowedError` from `getUserMedia`, no prompt. Cause: WebKitGTK keeps media capture off and Tauri doesn't answer its permission request. **Fixed** in the prototype (`src-tauri/src/lib.rs`: turn on media capture, allow mic requests only).
+   - Test 2: permission passes, then `MediaRecorder.start()` fails with `NotSupportedError: The MediaRecorder is unsupported on this platform`. WebKitGTK records through GStreamer; `gst-plugins-good` (webm muxer) is not installed.
+   - Also found: the laptop has **no microphone input at all** in PipeWire (no source; the built-in mic on the AMD audio coprocessor isn't detected by Linux). A laptop/driver issue, not Spaternum's — any PC recording needs a working input first (headset or USB mic, or fixing the built-in mic).
 
 ## Decided 2026-10-21
 Title optional, editable by Mihail, used as advice by phase 2 processing · tags only, no folders · max length 1 hour, then a new recording starts automatically · no server path column · archiving doesn't touch the local file, nothing deleted in phase 1 · crash safety: write audio to disk every ~5 s, recover interrupted recordings on start.
