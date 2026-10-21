@@ -55,6 +55,7 @@ Technical reference. The *why* behind each choice lives in [[PRD]] and the decis
 - Data folders are bind mounts on the HDD; containers are disposable.
 - `install.sh`: install Docker if missing → create data folders → generate API token → `docker compose up -d`.
 - Backups: `pg_dump` + copy of the audio folder.
+- **Release flow:** the server runs on the PC during development (phone reaches it over Tailscale). The Pi runs `main` only, and is updated only after a change is fully tested on the PC: pull → rebuild → migrate → restart.
 
 ## Packages
 

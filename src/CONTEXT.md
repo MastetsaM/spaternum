@@ -9,7 +9,7 @@ Application code. So far only throwaway prototypes: `prototypes/voice-recorder/`
 | `server/` | FastAPI app, one folder per module (phase 1) |
 | `client/` | Tauri 2 + React app for PC and Android (phase 1) |
 
-Folder names for `server/` and `client/` are a proposal — confirm with Mihail when phase 1 starts.
+Folder names confirmed 2026-10-21. `client/` is one codebase for both PC and Android.
 
 ## Rules for code here
 - Follow the patterns in [[TECH]]: modules don't reach into each other's internals; client types are generated from OpenAPI, never hand-written; UI code never calls `fs` directly.
