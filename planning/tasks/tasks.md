@@ -49,7 +49,7 @@ Specs: [[notes_spec]], [[voice-notes_spec]]. One branch per block (name in brack
 - [x] Phone layout: the left rail becomes a bottom tab bar, the sub-category panel slides in from the left, the tool panel opens from a button
 - [x] Pi: deploy as early as possible (right after the server foundation). The Pi is updated **only from `main`, after the change is fully tested on the PC**. Day to day, the server runs on the PC and the phone reaches it over Tailscale (as in the sync spike)
 
-### 1. Server foundation (`feature/server-skeleton`)
+### 1. Server foundation (`feature/server-skeleton`) — spec: [[server-foundation_spec]]
 - [ ] uv project in `src/server/`, FastAPI app, `GET /health`, one folder per module
 - [ ] Settings from `.env`: database URL, API token, data folder
 - [ ] API token check on every route except `/health`
