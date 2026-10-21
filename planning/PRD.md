@@ -28,7 +28,7 @@ Hub and spoke.
 - **Server:** modular monolith — one program, one folder per module, each module owns its tables and API routes and never reaches into another's internals. One thing to deploy and debug; modules can still be split out later.
 - **Clients:** thin. Show data, send changes; logic lives on the server.
 - **Network:** Tailscale. Only Mihail's devices reach the server; a single API token on top. No user accounts.
-- **Offline:** only where it matters — voice notes and notes. Offline-capable modules keep a local copy plus a queue of pending changes; conflicts resolve as **latest write wins** (`updated_at`). Other modules are online-only. Sync: RxDB on the clients, pull/push endpoints on the server, pending a spike ([[2026-10-21-sync-rxdb]]).
+- **Offline:** only where it matters — voice notes and notes. Offline-capable modules keep a local copy plus a queue of pending changes; conflicts resolve as **latest write wins** (`updated_at`). Other modules are online-only. Sync: RxDB on the clients, pull/push endpoints on the server, proven by a spike ([[2026-10-21-sync-rxdb]]).
 - **Cross-module data:** modules read each other's data through public functions and reference each other by ID; no foreign keys between modules ([[2026-10-20-architecture-modular-monolith]]).
 - **Files for the code editor:** live on the PC, accessed only through a small file interface (`list / read / write / watch`) so they can move to the server later without rewriting the UI.
 

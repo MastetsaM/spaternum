@@ -28,7 +28,11 @@ Technical reference. The *why* behind each choice lives in [[PRD]] and the decis
 - Server: per synced table, `GET` **pull** (changes after a checkpoint `seq`, ordered, limited — `seq` is assigned by the server from a sequence on every write; never pull by the client's `updated_at`, which would miss late pushes of old offline edits) and `POST` **push** (latest-write-wins upsert: `ON CONFLICT (id) DO UPDATE … WHERE excluded.updated_at > t.updated_at`). One reusable helper; SQL stays in each module.
 - Schema change = SQL migration on the server **and** a bumped RxDB schema version with a migration function on the client.
 - Conflicts: **latest `updated_at` wins**. Single user, so acceptable.
-- Pending the sync spike — see [[2026-10-21-sync-rxdb]].
+- Server push: SSE endpoint fed by Postgres `LISTEN/NOTIFY` → RxDB pull stream; the `seq` pull catches up after offline periods.
+- Clock drift: correct `updated_at` with the offset from the server's `Date` header.
+- Online/offline indicator comes from the last sync's result — `navigator.onLine` stays true in airplane mode on Android.
+- Open the RxDB database once (React StrictMode runs effects twice in development).
+- Proven in the sync spike — see [[sync-spike_spec]] and [[2026-10-21-sync-rxdb]].
 
 ### Audio
 - Recorded with the browser `MediaRecorder` API, Opus codec (`audio/webm;codecs=opus` — confirmed on the phone; `audio/ogg;codecs=opus` as fallback).

@@ -60,7 +60,37 @@ CREATE TABLE items (
 - Needs installing on the PC first: Docker, uv. The phone's Tailscale must be connected during tests.
 
 ## Results
-_To be filled in after testing._
+Tested 2026-10-21: PC (`pnpm tauri dev`, WebKitGTK) and Xiaomi 14T (Android 16, release APK signed with the debug key), server on the PC behind `tailscale serve`, Postgres 18 + pgvector in Docker. RxDB 17.6.0 with the free Dexie storage.
+
+| # | Criterion | Result |
+|---|---|---|
+| 1 | Item added on one device appears on the other | ✅ both directions, within ~5 s (the poll interval) |
+| 2 | Offline add/edit; app works after close + reopen offline | ✅ |
+| 3 | Back online → changes reach Postgres and the PC with no manual step | ✅ |
+| 4 | Same item edited on both devices → later edit wins everywhere | ✅ Also: items edited on only one side during the same offline period synced in the right direction |
+| 5 | Archive on one device hides it on the other | ✅ |
+| 6 | Local data survives app close and phone restart | ✅ IndexedDB (Dexie) persists on Android |
+| 7 | Only free (Apache 2.0) parts | ✅ `LICENSE.txt` in the npm package is Apache 2.0; Dexie storage and the CRDT plugin are in the free package |
+
+**Edge cases:**
+- Server down while the phone is online → ✅ both devices kept working locally (red sync error shown), and synced within ~5 s of the server returning; the error cleared on its own.
+- Archive on the PC vs. a later edit on the phone (offline) → the edit won and the item came back, as latest-write-wins says. A design question for notes — see [[notes_spec]] open questions.
+- Many queued edits → 5–6 at a time worked; 50 not tested (judged low value by hand).
+- Clock difference between devices → not tested. All times are UTC, so time zones don't matter; clock drift of a few seconds could pick the "wrong" winner for edits made seconds apart. Phase 1: correct for drift using the server's `Date` header.
+- App killed mid-sync → not tested (hard to time by hand). Push is safe to repeat: the same change sent twice gives the same result.
+
+**Findings:**
+- **Pull by a server-assigned `seq`, not the client's `updated_at`** — found while building; pulling by device time would miss old offline edits pushed late. Recorded in [[2026-10-21-sync-rxdb]].
+- **`navigator.onLine` is unreliable on Android** — it stayed "Online" in airplane mode (likely because Tailscale's VPN stays up; not confirmed). Phase 1: derive online/offline from whether the last sync succeeded.
+- **React StrictMode opens the database twice in development** → RxDB error DB8. Open it once and reuse it.
+- **Phone must be on Tailscale** — with it off, every request fails (`Failed to fetch`, RxDB `RC_PULL`), but the app keeps working locally.
+- **Polling every 5 s works but is slow and wasteful.** Phase 1: server push over SSE (Postgres `LISTEN/NOTIFY` → FastAPI → RxDB pull stream), keeping the `seq` pull for catching up after being offline.
+- The migration script applied `001_items.sql` once and skipped it on a second run, as intended.
+- RxDB prints a "premium storage" advert in the console; harmless.
+
+**Code vs. spec (checked 2026-10-21):** scope matches — one `items` table with `seq`, pull/push endpoints, token check, `migrate.py`, one client screen with add/edit/archive, online indicator, sync errors, 5 s polling. Nothing out of scope was built (no client schema migrations, no Compose, no audio, one table). Outside the spec but trivial: CORS allows all origins (the token is the real check).
+
+**Verdict:** the sync design works. RxDB is confirmed for phase 1 ([[2026-10-21-sync-rxdb]]).
 
 ## Related
 [[2026-10-21-sync-rxdb]] · [[notes_spec]] · [[TECH]] · [[tasks]] · [[risks]] · [[voice-recorder-prototype_spec]]

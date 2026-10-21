@@ -35,6 +35,7 @@
 - **Likelihood:** medium · **Impact:** high
 - Not yet tested in Tauri on Android or WebKitGTK; IndexedDB persistence in the Android webview unverified; licensing claims come mostly from RxDB's own site.
 - **Mitigation:** sync spike before phase 1 ([[2026-10-21-sync-rxdb]]). Fallback: own sync (SQLite via Tauri + outbox) behind the same pull/push endpoints — server side stays the same.
+- **Status (2026-10-21): resolved** — spike passed on PC and phone ([[sync-spike_spec]]).
 
 ## Local files on Android
 - **Likelihood:** high (confirmed) · **Impact:** low

@@ -41,7 +41,7 @@ Choices:
 - **`[[wikilinks]]`** — allowed in the body as plain text from day one. No links table in phase 1; one can be built later by parsing existing notes (backlinks, RAG context).
 
 ## Offline and sync
-Notes work offline on both clients; changes sync when the server is reachable, latest `updated_at` wins ([[2026-10-20-offline-latest-write-wins]]). Sync tool: RxDB on the client with pull/push endpoints on the server, **pending the sync spike** ([[2026-10-21-sync-rxdb]]).
+Notes work offline on both clients; changes sync when the server is reachable, latest `updated_at` wins ([[2026-10-20-offline-latest-write-wins]]). Sync tool: RxDB on the client with pull/push endpoints on the server, proven by the sync spike ([[2026-10-21-sync-rxdb]], [[sync-spike_spec]]).
 
 ## Inputs and outputs
 - **Input:** create, edit, move (between folders), tag, pin/unpin, archive notes; create, rename, move, archive folders.
@@ -79,6 +79,7 @@ Notes work offline on both clients; changes sync when the server is reachable, l
 - **Search:** is tag filtering enough for phase 1, or is full-text search (Postgres `tsvector`) needed too?
 - **Archived notes:** viewable and restorable from where?
 - **Sort order** inside a folder (after pinned): last edited, created, or alphabetical?
+- **Archive vs. a later edit from another device:** with latest-write-wins, an edit made after an archive brings the note back (seen in the sync spike). Keep that (no edit is ever lost), or make archive win (archived stays archived; the late edit is lost or kept elsewhere)?
 
 ## Related
 [[PRD]] · [[TECH]] · [[tasks]] · [[2026-10-21-sync-rxdb]] · [[2026-10-21-database-access-plain-sql]] · [[2026-10-20-offline-latest-write-wins]] · [[2026-10-20-architecture-modular-monolith]]
