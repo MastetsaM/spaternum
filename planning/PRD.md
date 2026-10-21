@@ -73,6 +73,7 @@ All free software.
 - Phase 0 spec: [[voice-recorder-prototype_spec]]
 - Agile dashboard spec (phase 4): [[agile-dashboard_spec]]
 - Notes spec (phase 1): [[notes_spec]]
+- Voice notes spec (phase 1, draft): [[voice-notes_spec]]
 
 ## Related
 [[CLAUDE]] · [[portfolio]] · [[projects]] · [[TECH]] · [[risks]] · [[tasks]] · [[notes_spec]]
