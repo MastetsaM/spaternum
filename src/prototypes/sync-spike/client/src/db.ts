@@ -37,7 +37,14 @@ async function call(path: string, init?: RequestInit) {
   return res.json();
 }
 
-export async function openDb() {
+// React's StrictMode runs effects twice in development; open the database only once
+let opened: ReturnType<typeof open> | null = null;
+export function openDb() {
+  opened ??= open();
+  return opened;
+}
+
+async function open() {
   const db = await createRxDatabase<{ items: RxCollection<Item> }>({
     name: "syncspike",
     storage: getRxStorageDexie(),
