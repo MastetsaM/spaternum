@@ -25,6 +25,6 @@ docker compose up -d --wait db
 docker compose run --rm api python -m spaternum.migrate
 
 say "Restarting the server"
-docker compose up -d api
+docker compose up -d --wait api
 
 say "Done — now at $(git log --oneline -1)"

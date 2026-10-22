@@ -54,7 +54,7 @@ say "Applying migrations"
 docker compose run --rm api python -m spaternum.migrate
 
 say "Starting the server"
-docker compose up -d api
+docker compose up -d --wait api
 
 say "Done"
 cat <<EOF

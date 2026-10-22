@@ -47,6 +47,10 @@ services:
         target: /data
         bind:
           create_host_path: false
+    healthcheck:  # lets `up --wait` report a server that doesn't come up
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+      interval: 5s
+      retries: 10
     depends_on:
       db:
         condition: service_healthy
