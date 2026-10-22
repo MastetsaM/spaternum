@@ -1,6 +1,6 @@
 # CONTEXT — src
 
-Application code. So far only throwaway prototypes: `prototypes/voice-recorder/` (phase 0, done) and `prototypes/sync-spike/` (done). Next: phase 1 — `server/` and `client/`.
+Application code. Throwaway prototypes: `prototypes/voice-recorder/` (phase 0) and `prototypes/sync-spike/`. Phase 1: `server/` (foundation done — [[server-foundation_spec]]; run and test commands at the top of `spaternum/main.py`, `spaternum/migrate.py` and `tests/conftest.py`), `client/` next.
 
 ## Planned layout
 | Path | Contents |

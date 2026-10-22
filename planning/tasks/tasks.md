@@ -49,15 +49,16 @@ Specs: [[notes_spec]], [[voice-notes_spec]]. One branch per block (name in brack
 - [x] Phone layout: the left rail becomes a bottom tab bar, the sub-category panel slides in from the left, the tool panel opens from a button
 - [x] Pi: deploy as early as possible (right after the server foundation). The Pi is updated **only from `main`, after the change is fully tested on the PC**. Day to day, the server runs on the PC and the phone reaches it over Tailscale (as in the sync spike)
 
-### 1. Server foundation (`feature/server-skeleton`)
-- [ ] uv project in `src/server/`, FastAPI app, `GET /health`, one folder per module
-- [ ] Settings from `.env`: database URL, API token, data folder
-- [ ] API token check on every route except `/health`
-- [ ] `ops/docker-compose.yml` with the `db` service (Postgres + pgvector) for development
-- [ ] Migration runner: numbered `.sql` files per module, applied in order, recorded in a `schema_migrations` table
-- [ ] Sync helper: builds pull (by `seq`) and push (latest `updated_at` wins) endpoints for a table; `_deleted: true` ↔ `archived_at`; columns marked server-owned are never written by push
-- [ ] SSE stream fed by Postgres `LISTEN/NOTIFY`, used as RxDB's pull stream
-- [ ] Tests: migrations, token check, sync helper (conflict, late offline push, archive)
+### 1. Server foundation (`feature/server-skeleton`) — spec: [[server-foundation_spec]]
+- [x] uv project in `src/server/`, FastAPI app, `GET /health`, one folder per module
+- [x] Settings from `.env`: database URL, API token, data folder
+- [x] API token check on every route except `/health`
+- [x] `ops/docker-compose.yml` with the `db` service (Postgres + pgvector) for development
+- [x] Migration runner: numbered `.sql` files per module, applied in order, recorded in a `schema_migrations` table
+- [x] Sync helper: builds pull (by `seq`) and push (latest `updated_at` wins) endpoints for a table; `_deleted: true` ↔ `archived_at`; columns marked server-owned are never written by push
+- [x] SSE stream fed by Postgres `LISTEN/NOTIFY`, used as RxDB's pull stream
+- [x] Plain-text logging to stdout
+- [x] Tests: migrations, token check, sync helper (conflict, late offline push, archive)
 
 ### 2. First deployment to the Pi (`feature/deploy`)
 - [ ] Server Dockerfile, built for arm64 + amd64 with `docker buildx`
