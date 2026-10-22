@@ -45,6 +45,25 @@ Run the server on the Raspberry Pi as early as possible, so ARM problems show up
 - Monitoring and alerts.
 - Notes/voice notes tables — they arrive through `update.sh` once their blocks are merged.
 
+## Results
+**PC (2026-10-23)** — `install.sh` run in a fresh clone with its own `DATA_ROOT`, under a separate Compose project name:
+
+| # | Criterion | Result |
+|---|---|---|
+| 1 | Fresh install; re-run changes nothing, keeps token and password | ✅ |
+| 2 | `/health` over Tailscale from phone and PC | ⏳ Pi |
+| 3 | `/api/…` without token → 401 | ✅ locally; ⏳ over Tailscale |
+| 4 | Containers back after a reboot | ⏳ Pi |
+| 5 | Database files under `DATA_ROOT` | ✅ on the PC; ⏳ on the HDD |
+| 6 | `update.sh`: new migration applied, `api` restarted; broken build leaves the old `api` running | ✅ |
+| 7 | Backup restores into an empty database | ✅ (row + migrations + audio file present); keeps the last 7 ✅ |
+| 8 | Same `install.sh` on x86_64 | ✅ |
+
+Found while testing:
+- `install.sh` set a strict file mask for `.env` and it leaked into the data folders it created; now limited to `.env`.
+- Right after a restart the server needs ~2 s to answer, and the scripts said "Done" too early. `api` now has a health check and the scripts wait for it (`up --wait`).
+- The PC has no `buildx`; Compose falls back to the classic builder, which works.
+
 ## Decided 2026-10-22
 Mihail runs the commands on the Pi; Claude prepares the scripts and guides (no SSH access) · images built on the Pi itself, no registry · deploy with the scripts, Portainer only for viewing · backups by hand to the same HDD for now · HDD at `/mnt/hdd`, `DATA_ROOT=/mnt/hdd/spaternum`.
 

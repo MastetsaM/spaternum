@@ -61,11 +61,11 @@ Specs: [[notes_spec]], [[voice-notes_spec]]. One branch per block (name in brack
 - [x] Tests: migrations, token check, sync helper (conflict, late offline push, archive)
 
 ### 2. First deployment to the Pi (`feature/deploy`) — spec: [[deploy_spec]]
-- [ ] Server Dockerfile, built for arm64 + amd64 with `docker buildx`
-- [ ] `docker-compose.yml` with `api` + `db`, data folders as bind mounts on the HDD
-- [ ] `install.sh`, `.env.example`, backup script (`pg_dump` + audio folder)
+- [x] Server Dockerfile, built on the machine that runs it (no `buildx`, no registry)
+- [x] `docker-compose.yml` with `api` + `db`, data folders as bind mounts on the HDD
+- [x] `install.sh`, `.env.example`, backup script (`pg_dump` + audio folder) — tested on the PC
 - [ ] Install on the Pi, reach `/health` over Tailscale from the phone and the PC
-- [ ] Update steps for the Pi: pull `main` → rebuild → migrate → restart (only after PC testing)
+- [x] Update steps for the Pi: `update.sh` — pull `main` → rebuild → migrate → restart (only after PC testing)
 
 ### 3. Notes server (`feature/notes-server`)
 - [ ] Migration: `note_folders`, `notes`, `seq` sequence, GIN index on tags
