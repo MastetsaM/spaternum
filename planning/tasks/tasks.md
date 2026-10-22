@@ -60,7 +60,7 @@ Specs: [[notes_spec]], [[voice-notes_spec]]. One branch per block (name in brack
 - [x] Plain-text logging to stdout
 - [x] Tests: migrations, token check, sync helper (conflict, late offline push, archive)
 
-### 2. First deployment to the Pi (`feature/deploy`)
+### 2. First deployment to the Pi (`feature/deploy`) — spec: [[deploy_spec]]
 - [ ] Server Dockerfile, built for arm64 + amd64 with `docker buildx`
 - [ ] `docker-compose.yml` with `api` + `db`, data folders as bind mounts on the HDD
 - [ ] `install.sh`, `.env.example`, backup script (`pg_dump` + audio folder)
