@@ -49,10 +49,15 @@
 - **Mitigation:** run the phase 0 prototype on the PC before building voice notes ([[voice-notes_spec]]). Fallbacks: ogg/Opus on the PC, install the missing GStreamer plugin, or no PC recording in phase 1.
 - **Status (2026-10-21): avoided** — recording is Android-only; the PC views and listens ([[voice-notes_spec]]).
 
+## Backups on the same disk as the data
+- **Likelihood:** low · **Impact:** high
+- Database, audio and backups all live on the Pi's one HDD. Backups protect against mistakes and bad updates, not against the disk dying or the Pi being lost.
+- **Mitigation:** for now, accepted (only hardware available). Later: copy backups to a second disk or the PC, then schedule them ([[deploy_spec]]).
+
 ## Claude Code automation terms
 - **Likelihood:** unknown · **Impact:** medium
 - Calling Claude Code headless from the server on a Pro subscription may not be allowed.
 - **Mitigation:** check Anthropic's terms before building on it; for now Claude Code runs interactively on the PC only.
 
 ## Related
-[[PRD]] · [[TECH]] · [[tasks]] · [[voice-notes_spec]]
+[[PRD]] · [[TECH]] · [[tasks]] · [[voice-notes_spec]] · [[deploy_spec]]
