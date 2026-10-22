@@ -1,4 +1,13 @@
-# Development: `docker compose up -d db`. The `api` service is added in block 2.
+# Server: ops/install.sh once, then ops/update.sh. Development: `docker compose up -d db`.
+# Settings come from ops/.env (see .env.example).
+name: spaternum
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: "5"
+
 services:
   db:
     image: pgvector/pgvector:0.8.7-pg18
@@ -9,8 +18,37 @@ services:
     ports:
       - "127.0.0.1:5432:5432"  # this machine only
     volumes:
-      - db-data:/var/lib/postgresql  # Postgres 18 images keep data under this folder
+      # Not created if missing: with the HDD unmounted, start fails instead of using the SD card
+      - type: bind
+        source: ${DATA_ROOT:?set it in ops/.env}/postgres
+        target: /var/lib/postgresql  # Postgres 18 images keep data under this folder
+        bind:
+          create_host_path: false
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "spaternum"]
+      interval: 5s
+      retries: 10
     restart: unless-stopped
+    logging: *logging
 
-volumes:
-  db-data:
+  api:
+    build: ../src/server
+    image: spaternum-api
+    environment:
+      DATABASE_URL: postgresql://spaternum:${POSTGRES_PASSWORD}@db:5432/spaternum
+      API_TOKEN: ${API_TOKEN:-}
+      DATA_DIR: /data
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    ports:
+      - "127.0.0.1:8000:8000"  # other devices come in through tailscale serve
+    volumes:
+      - type: bind
+        source: ${DATA_ROOT}/files
+        target: /data
+        bind:
+          create_host_path: false
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    logging: *logging
