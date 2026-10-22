@@ -1,11 +1,11 @@
 # CONTEXT — ops
 
-Deployment and operations for the Spaternum server. Empty until phase 1.
+Deployment and operations for the Spaternum server.
 
 ## Planned contents
 | File | Purpose |
 |---|---|
-| `docker-compose.yml` | `api` (FastAPI) + `db` (Postgres + pgvector) |
+| `docker-compose.yml` | `db` (Postgres + pgvector) for development now — `docker compose up -d db`, password in `ops/.env`; `api` (FastAPI) added in block 2 |
 | `install.sh` | Sets up any machine: install Docker if missing → create data folders → generate API token → `docker compose up -d` |
 | `.env.example` | Variables the server needs (token, DB credentials, data paths) — the real `.env` is never committed |
 | Backup script | `pg_dump` + copy of the audio folder |

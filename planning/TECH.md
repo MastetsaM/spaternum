@@ -77,15 +77,17 @@ Latest versions as of 2026-10-20. **Pinned for real when installed** — the exa
 
 The template may pin slightly different versions; whatever it installs is what gets recorded. Exact versions live in the prototype's `pnpm-lock.yaml`.
 
-### Phase 1 — server and real clients (proposed, not yet decided)
+### Phase 1 — server and real clients (installed ones marked; the rest proposed)
 | Package | Version | Purpose |
 |---|---|---|
-| uv | 0.13.3 | Python package/venv manager |
-| fastapi | 0.150.0 | API framework |
-| uvicorn | 0.54.0 | ASGI server |
-| psycopg | 3.3.6 | Postgres driver |
+| uv | 0.13.4 (installed) | Python package/venv manager |
+| fastapi | 0.150.0 (installed) | API framework |
+| uvicorn | 0.54.0 (installed) | ASGI server |
+| psycopg[binary] | 3.3.6 (installed) | Postgres driver |
+| psycopg-pool | 3.3.3 (installed) | Connection pool ([[server-foundation_spec]]) |
+| pytest, httpx | 9.1.1, 0.28.1 (installed, dev only) | Server tests; httpx is needed by FastAPI's test client |
 | pgvector (Python) | 0.5.1 | Vector type support |
-| Docker image `pgvector/pgvector` | 0.8.7-pg18 | Postgres 18 + pgvector |
+| Docker image `pgvector/pgvector` | 0.8.7-pg18 (in use) | Postgres 18 + pgvector |
 | openapi-typescript | 7.13.0 | Generate client types |
 | monaco-editor / @monaco-editor/react | 0.57.0 / 4.7.0 | Code editor module (later phase) |
 | faster-whisper | 1.2.1 | Transcription (phase 2) |
