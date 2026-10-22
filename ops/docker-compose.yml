@@ -1,0 +1,16 @@
+# Development: `docker compose up -d db`. The `api` service is added in block 2.
+services:
+  db:
+    image: pgvector/pgvector:0.8.7-pg18
+    environment:
+      POSTGRES_USER: spaternum
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set it in ops/.env}
+      POSTGRES_DB: spaternum
+    ports:
+      - "127.0.0.1:5432:5432"  # this machine only
+    volumes:
+      - db-data:/var/lib/postgresql  # Postgres 18 images keep data under this folder
+    restart: unless-stopped
+
+volumes:
+  db-data:
