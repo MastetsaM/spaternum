@@ -1,0 +1,21 @@
+[project]
+name = "spaternum-server"
+version = "0.1.0"
+requires-python = ">=3.14"
+dependencies = [
+    "fastapi==0.150.0",
+    "psycopg-pool==3.3.3",
+    "psycopg[binary]==3.3.6",
+    "uvicorn==0.54.0",
+]
+
+[dependency-groups]
+dev = [
+    "httpx==0.28.1",
+    "pytest==9.1.1",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = [".", "tests"]
+python_files = ["*_test.py"]
