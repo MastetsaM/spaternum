@@ -20,8 +20,7 @@ if [[ -f .env ]]; then
 else
     DATA_ROOT=${1:-/mnt/hdd/spaternum}
     say "Creating ops/.env (DATA_ROOT=$DATA_ROOT)"
-    umask 077
-    cat > .env <<EOF
+    (umask 077; cat > .env) <<EOF
 POSTGRES_PASSWORD=$(random)
 API_TOKEN=$(random)
 DATA_ROOT=$DATA_ROOT
