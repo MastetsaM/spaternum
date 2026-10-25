@@ -54,7 +54,7 @@ All 8 criteria met. **PC (2026-10-23)** — `install.sh` run in a fresh clone wi
 | 2 | `/health` over Tailscale from phone and PC | ✅ Pi (2026-10-25) |
 | 3 | `/api/…` without token → 401 | ✅ locally and over Tailscale |
 | 4 | Containers back after a reboot | ✅ Pi |
-| 5 | Database files under `DATA_ROOT` | ✅ on the PC; on the Pi `DATA_ROOT=/mnt/hdd/spaternum` (ext4) — the containers can't start without those folders, so the data is there |
+| 5 | Database files under `DATA_ROOT` | ✅ on the PC; on the Pi `/mnt/hdd/spaternum/postgres/18` exists on the HDD (ext4) |
 | 6 | `update.sh`: new migration applied, `api` restarted; broken build leaves the old `api` running | ✅ |
 | 7 | Backup restores into an empty database | ✅ (row + migrations + audio file present); keeps the last 7 ✅ |
 | 8 | Same `install.sh` on x86_64 | ✅ |
