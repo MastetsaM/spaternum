@@ -162,7 +162,7 @@ Same key every time, so a new APK installs over the old one.
 - **AI models on the Pi** — no GPU; deferred to the home server.
 - **An ORM (SQLAlchemy)** — data is simple and SQL is clearer; see [[2026-10-21-database-access-plain-sql]].
 - **PowerSync / ElectricSQL** — not free software / read-path only; see [[2026-10-21-sync-rxdb]].
-- **Foreign keys between modules** — couple module schemas and break offline sync ordering.
+- **Foreign keys between modules, or between synced tables** — couple module schemas and break offline sync ordering (a row can arrive before the one it points to).
 
 ## Related
 [[PRD]] · [[CLAUDE]] · [[risks]] · [[tasks]] · [[voice-recorder-prototype_spec]] · [[notes_spec]] · [[installed]] · [[2026-10-21-sync-rxdb]] · [[2026-10-21-database-access-plain-sql]]
