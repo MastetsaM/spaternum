@@ -83,9 +83,9 @@ Specs: [[notes_spec]], [[voice-notes_spec]]. One branch per block (name in brack
 - [x] `list_archived()` and `restore(id)`
 - [x] Tests: upload (size mismatch, repeat, missing row, interrupted), streaming, archive
 
-### 5. Archive module, server (`feature/archive-server`)
-- [ ] `GET /archive` (from each module's `list_archived()`, filter by type) and `POST /archive/{module}/{id}/restore`
-- [ ] Tests
+### 5. Archive module, server (`feature/archive-server`) — spec: [[archive_spec]]
+- [x] `GET /archive` (from each module's `list_archived()`, filter by type) and `POST /archive/{module}/{id}/restore`
+- [x] Tests
 
 ### 6. Client foundation (`feature/client-skeleton`)
 - [ ] Scaffold `src/client/` (Tauri 2 + React + TS), Android init, manifest `RECORD_AUDIO` + `MODIFY_AUDIO_SETTINGS`, plugin-fs
