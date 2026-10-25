@@ -119,6 +119,13 @@ Same rules as [[notes_spec]]: archives live only on the server, shown on the sha
 ## Open questions
 None — ready to build.
 
+## Results — server (2026-10-25)
+Server side built (`src/server/spaternum/voice_notes/`); 9 tests in `tests/voice_notes_test.py` pass: metadata sync, upload (stored, marked uploaded with a new `seq`, device can't reset it), repeat upload is a no-op, upload before the metadata → 404, size mismatch refused with nothing left behind, interrupted upload leaves no file, streaming with seeking (`Range`), archive keeps the file, restore. Disk-full → `507` is coded but not tested.
+
+Notes for the client:
+- `<audio src>` can't send the token header, so the app fetches the audio with `fetch` and plays it from a blob (files are small: ≤ ~15 MB for an hour).
+- The Archive list gives `recorded_at` for untitled voice notes; the app formats it in local time.
+
 ## Decided 2026-10-21
 Title optional, editable by Mihail, used as advice by phase 2 processing · tags only, no folders · max length 1 hour, then a new recording starts automatically · no server path column · archiving doesn't touch the local file, nothing deleted in phase 1 · crash safety: write audio to disk every ~5 s, recover interrupted recordings on start · recording on Android only; the PC views and listens (PC test results under Out of scope).
 

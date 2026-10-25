@@ -76,12 +76,12 @@ Specs: [[notes_spec]], [[voice-notes_spec]]. One branch per block (name in brack
 - [x] Tests per the notes spec acceptance criteria (server side)
 
 ### 4. Voice notes server (`feature/voice-notes-server`)
-- [ ] Migration: `voice_notes` (no path column; `uploaded_at` server-owned)
-- [ ] Pull/push through the sync helper
-- [ ] `PUT /voice-notes/{id}/audio`: temp file → size check → rename → set `uploaded_at` (new `seq`); repeat upload is a no-op; missing row → 404
-- [ ] `GET /voice-notes/{id}/audio` for streaming (with seeking)
-- [ ] `list_archived()` and `restore(id)`
-- [ ] Tests: upload (size mismatch, repeat, missing row, interrupted), streaming, archive
+- [x] Migration: `voice_notes` (no path column; `uploaded_at` server-owned)
+- [x] Pull/push through the sync helper
+- [x] `PUT /voice-notes/{id}/audio`: temp file → size check → rename → set `uploaded_at` (new `seq`); repeat upload is a no-op; missing row → 404
+- [x] `GET /voice-notes/{id}/audio` for streaming (with seeking)
+- [x] `list_archived()` and `restore(id)`
+- [x] Tests: upload (size mismatch, repeat, missing row, interrupted), streaming, archive
 
 ### 5. Archive module, server (`feature/archive-server`)
 - [ ] `GET /archive` (from each module's `list_archived()`, filter by type) and `POST /archive/{module}/{id}/restore`
