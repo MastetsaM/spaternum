@@ -94,7 +94,7 @@ def test_migrations_apply_once():
     assert migrate.run(TEST_URL) == []  # core already applied by the session fixture
     with psycopg.connect(TEST_URL) as conn:
         names = [r[0] for r in conn.execute("SELECT name FROM schema_migrations")]
-    assert names == ["core/001_sync.sql"]
+    assert names[0] == "core/001_sync.sql" and "notes/001_notes.sql" in names
 
 
 def test_broken_migration_rolls_back_and_stops(tmp_path, monkeypatch):

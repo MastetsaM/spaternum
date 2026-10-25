@@ -32,6 +32,9 @@ class SyncDoc(BaseModel):
 
 # Called in the push's transaction after a row was archived: (conn, id, archived_at)
 ArchiveHook = Callable[[Connection, UUID, datetime], None]
+# Called before writing a document that already exists on the server; True = refuse it
+# and send the server's row back, so the device returns to the server's state.
+RejectHook = Callable[[Connection, SyncDoc], bool]
 
 
 @dataclass
@@ -40,6 +43,7 @@ class SyncTable:
     model: type[SyncDoc]
     server_owned: list[str] = field(default_factory=list)  # pulled, never written by push
     on_archive: ArchiveHook | None = None
+    reject: RejectHook | None = None
 
     @property
     def fields(self) -> list[str]:
@@ -115,16 +119,18 @@ def push(conn: Connection, table: SyncTable, docs: list[SyncDoc]) -> list[dict]:
     query = push_sql(table)
     now = datetime.now(timezone.utc)
     conflicts = []
+    select_row = sql.SQL("SELECT * FROM {} WHERE id = %s").format(sql.Identifier(table.name))
     for doc in docs:
+        if table.reject and table.reject(conn, doc):
+            row = conn.execute(select_row, (doc.id,)).fetchone()
+            if row is not None:
+                conflicts.append(to_doc(table, row))
+                continue
         params = doc.model_dump(include=set(table.writable))
         params["archived_at"] = now if doc.deleted else None
         taken = conn.execute(query, params).fetchone()
         if taken is None:
-            row = conn.execute(
-                sql.SQL("SELECT * FROM {} WHERE id = %s").format(sql.Identifier(table.name)),
-                (doc.id,),
-            ).fetchone()
-            conflicts.append(to_doc(table, row))
+            conflicts.append(to_doc(table, conn.execute(select_row, (doc.id,)).fetchone()))
         elif doc.deleted and table.on_archive:
             table.on_archive(conn, doc.id, taken["archived_at"])
     log.info("push %s: %d docs, %d conflicts", table.name, len(docs), len(conflicts))

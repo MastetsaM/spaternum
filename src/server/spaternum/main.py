@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from psycopg import OperationalError
 from psycopg_pool import PoolTimeout
 
-from spaternum import config, db, events, logs
+from spaternum import config, db, events, logs, notes
 from spaternum.auth import require_token
 
 log = logging.getLogger("spaternum")
@@ -63,6 +63,7 @@ def create_app(extra_routers: tuple[APIRouter, ...] = ()) -> FastAPI:
 
     api = APIRouter(prefix="/api", dependencies=[Depends(require_token)])
     api.include_router(events.router)
+    api.include_router(notes.router)
     for router in extra_routers:
         api.include_router(router)
     app.include_router(api)

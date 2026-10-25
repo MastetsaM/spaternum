@@ -10,7 +10,7 @@ One server is the single source of truth (data, API, later AI). PC and Android a
 - Other modules **read** its data through its public Python functions (in-process, not HTTP) — e.g. the agile board calls `projects.get(project_id)`, never queries `projects` directly. The AI/RAG layer reads across modules the same way.
 - On the clients, any screen may read another module's local synced collection; writes go only through the owning module's code.
 - Modules reference each other **by ID only** (`card.project_id`); data is never copied between modules.
-- **No foreign keys between modules** in Postgres (foreign keys inside a module are fine). Reasons: they'd tie module schemas together, and with offline sync a record can arrive before the one it points to. Code handles "not found"; archive-instead-of-delete keeps that rare.
+- **No foreign keys between modules** in Postgres. Inside a module they're fine, **except between synced (offline) tables** — the app pushes each table separately after being offline, so a row can arrive before the one it points to (found 2026-10-25, [[notes_spec]]). Reasons: they'd tie module schemas together, and with offline sync a record can arrive before the one it points to. Code handles "not found"; archive-instead-of-delete keeps that rare.
 
 ## Shared Archive (added 2026-10-21)
 - One **Archive page** in the client for everything archived, from every module, with a filter by type and a Restore button. Online only — archives are not stored on devices ([[2026-10-21-sync-rxdb]]).
