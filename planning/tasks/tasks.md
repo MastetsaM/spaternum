@@ -83,7 +83,7 @@ Specs: [[notes_spec]], [[voice-notes_spec]]. One branch per block (name in brack
 - [x] `list_archived()` and `restore(id)`
 - [x] Tests: upload (size mismatch, repeat, missing row, interrupted), streaming, archive
 
-### 5. Archive module, server (`feature/archive-server`)
+### 5. Archive module, server (`feature/archive-server`) — spec: [[archive_spec]]
 - [ ] `GET /archive` (from each module's `list_archived()`, filter by type) and `POST /archive/{module}/{id}/restore`
 - [ ] Tests
 
