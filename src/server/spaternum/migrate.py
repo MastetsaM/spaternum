@@ -14,7 +14,7 @@ log = logging.getLogger("spaternum.migrate")
 
 PACKAGE = Path(__file__).parent
 # Core first, then modules. Modules don't reference each other, so their order is free.
-MODULES = ["core"]
+MODULES = ["core", "notes"]
 
 
 def run(database_url: str, modules: list[str] = MODULES) -> list[str]:
