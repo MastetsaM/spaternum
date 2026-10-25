@@ -12,7 +12,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
 from psycopg import Connection, sql
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, create_model
 
 from spaternum.db import get_conn
 
@@ -137,12 +137,24 @@ def push(conn: Connection, table: SyncTable, docs: list[SyncDoc]) -> list[dict]:
     return conflicts
 
 
+class Checkpoint(BaseModel):
+    seq: int
+
+
 def router(table: SyncTable) -> APIRouter:
-    """GET /<table>/pull and POST /<table>/push. Mount it under the module's prefix."""
+    """GET /<table>/pull and POST /<table>/push. Mount it under the module's prefix.
+
+    Response shapes are declared for the OpenAPI schema only (client types are generated
+    from it); the responses themselves are the dicts built above, so timestamps keep the
+    toISOString() format.
+    """
     r = APIRouter()
     model = table.model
+    pulled = create_model(
+        f"{model.__name__}Pull", documents=(list[model], ...), checkpoint=(Checkpoint, ...)
+    )
 
-    @r.get(f"/{table.name}/pull")
+    @r.get(f"/{table.name}/pull", responses={200: {"model": pulled}})
     def pull_route(
         seq: int = 0,
         limit: int = Query(100, ge=1, le=1000),
@@ -150,7 +162,7 @@ def router(table: SyncTable) -> APIRouter:
     ):
         return pull(conn, table, seq, limit)
 
-    @r.post(f"/{table.name}/push")
+    @r.post(f"/{table.name}/push", responses={200: {"model": list[model]}})
     def push_route(docs: list[model], conn: Connection = Depends(get_conn)):  # type: ignore[valid-type]
         return push(conn, table, docs)
 

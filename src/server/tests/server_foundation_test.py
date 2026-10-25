@@ -231,3 +231,19 @@ def test_write_produces_an_event_within_a_second(live_server):
                     break
             assert line == "data: test_items"
             assert time.monotonic() - start < 1
+
+
+# --- API schema (client types are generated from it) ---------------------------
+
+
+def test_every_json_route_declares_its_response(app):
+    schema = app.openapi()
+    for path, methods in schema["paths"].items():
+        for method, op in methods.items():
+            if path in ("/api/events",) or (path.endswith("/audio") and method == "get"):
+                continue  # a stream and a file, not JSON
+            content = op["responses"]["200"].get("content", {}).get("application/json", {})
+            assert content.get("schema", {}) not in ({},), f"{method} {path} has no response shape"
+    pulled = schema["components"]["schemas"]["NotePull"]["properties"]
+    assert set(pulled) == {"documents", "checkpoint"}
+    assert "_deleted" in schema["components"]["schemas"]["Note"]["properties"]

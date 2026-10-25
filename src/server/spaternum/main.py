@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from fastapi import APIRouter, Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 from psycopg import OperationalError
 from psycopg_pool import PoolTimeout
 
@@ -13,6 +14,11 @@ from spaternum import archive, config, db, events, logs, notes, voice_notes
 from spaternum.auth import require_token
 
 log = logging.getLogger("spaternum")
+
+
+class Health(BaseModel):
+    status: str
+    database: str  # up or down
 
 
 def create_app(extra_routers: tuple[APIRouter, ...] = ()) -> FastAPI:
@@ -51,7 +57,7 @@ def create_app(extra_routers: tuple[APIRouter, ...] = ()) -> FastAPI:
         log.warning("database unavailable: %s", exc)
         return JSONResponse({"detail": "database unavailable"}, status_code=503)
 
-    @app.get("/health")
+    @app.get("/health", response_model=Health)
     def health():
         try:
             with app.state.pool.connection(timeout=2) as conn:

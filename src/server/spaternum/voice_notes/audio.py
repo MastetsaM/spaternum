@@ -10,6 +10,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import FileResponse
+from pydantic import BaseModel
 from starlette.concurrency import run_in_threadpool
 
 log = logging.getLogger("spaternum.voice_notes")
@@ -71,7 +72,20 @@ def mark_uploaded(pool, id: UUID) -> None:
         )
 
 
-@router.put("/{id}/audio")
+class Uploaded(BaseModel):
+    status: str  # "uploaded" or "already uploaded"
+
+
+# The body is the raw audio file, read as a stream, so it's described by hand for the schema
+AUDIO_BODY = {
+    "requestBody": {
+        "required": True,
+        "content": {"audio/webm": {"schema": {"type": "string", "format": "binary"}}},
+    }
+}
+
+
+@router.put("/{id}/audio", response_model=Uploaded, openapi_extra=AUDIO_BODY)
 async def upload(id: UUID, request: Request):
     pool = request.app.state.pool
     row = await run_in_threadpool(find_row, pool, id)
@@ -99,7 +113,11 @@ async def upload(id: UUID, request: Request):
     return {"status": "uploaded"}
 
 
-@router.get("/{id}/audio")
+@router.get(
+    "/{id}/audio",
+    response_class=FileResponse,
+    responses={200: {"content": {"audio/webm": {"schema": {"type": "string", "format": "binary"}}}}},
+)
 def stream(id: UUID, request: Request):
     """The whole file, or a part of it (Range requests), so players can seek."""
     path = audio_path(audio_dir(request), id)
