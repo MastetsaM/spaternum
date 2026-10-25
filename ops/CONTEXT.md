@@ -28,7 +28,7 @@ docker compose up -d --wait api
 Restoring into an empty database was tested on the PC (2026-10-23); the full sequence above hasn't been run yet.
 
 ## Machines
-- **Pi (production):** Raspberry Pi 4, 8 GB, ARM64, Docker + Portainer, Tailscale (`raspberrypi`). HDD at `/mnt/hdd`, `DATA_ROOT=/mnt/hdd/spaternum`. Runs `main` only. Portainer is for viewing containers and logs; deploying is done with the scripts.
+- **Pi (production):** Raspberry Pi 4, 8 GB, ARM64, Docker + Portainer, Tailscale (`raspberrypi`). HDD at `/mnt/hdd` (ext4), `DATA_ROOT=/mnt/hdd/spaternum`. Checkout at `~/spaternum`. API on port **8001** (`API_PORT`; 8000 is taken, probably Portainer), served over HTTPS with `tailscale serve --bg 8001`. Runs `main` only. Portainer is for viewing containers and logs; deploying is done with the scripts.
 - **Later:** a home server, likely x86_64 — same `install.sh` (tested on the PC).
 - **Dev PC:** `docker compose up -d db` with `DATA_ROOT=./data` (git-ignored); the server runs with `uv run` (see `src/server`). A stopped container `spike-db` is left from the sync spike — safe to remove with `docker rm spike-db`. `tailscale serve` is off.
 

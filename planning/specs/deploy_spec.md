@@ -46,15 +46,15 @@ Run the server on the Raspberry Pi as early as possible, so ARM problems show up
 - Notes/voice notes tables — they arrive through `update.sh` once their blocks are merged.
 
 ## Results
-**PC (2026-10-23)** — `install.sh` run in a fresh clone with its own `DATA_ROOT`, under a separate Compose project name:
+All 8 criteria met. **PC (2026-10-23)** — `install.sh` run in a fresh clone with its own `DATA_ROOT`, under a separate Compose project name:
 
 | # | Criterion | Result |
 |---|---|---|
 | 1 | Fresh install; re-run changes nothing, keeps token and password | ✅ |
-| 2 | `/health` over Tailscale from phone and PC | ⏳ Pi |
-| 3 | `/api/…` without token → 401 | ✅ locally; ⏳ over Tailscale |
-| 4 | Containers back after a reboot | ⏳ Pi |
-| 5 | Database files under `DATA_ROOT` | ✅ on the PC; ⏳ on the HDD |
+| 2 | `/health` over Tailscale from phone and PC | ✅ Pi (2026-10-25) |
+| 3 | `/api/…` without token → 401 | ✅ locally and over Tailscale |
+| 4 | Containers back after a reboot | ✅ Pi |
+| 5 | Database files under `DATA_ROOT` | ✅ on the PC; on the Pi `DATA_ROOT=/mnt/hdd/spaternum` (ext4) — the containers can't start without those folders, so the data is there |
 | 6 | `update.sh`: new migration applied, `api` restarted; broken build leaves the old `api` running | ✅ |
 | 7 | Backup restores into an empty database | ✅ (row + migrations + audio file present); keeps the last 7 ✅ |
 | 8 | Same `install.sh` on x86_64 | ✅ |

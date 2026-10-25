@@ -64,7 +64,7 @@ Specs: [[notes_spec]], [[voice-notes_spec]]. One branch per block (name in brack
 - [x] Server Dockerfile, built on the machine that runs it (no `buildx`, no registry)
 - [x] `docker-compose.yml` with `api` + `db`, data folders as bind mounts on the HDD
 - [x] `install.sh`, `.env.example`, backup script (`pg_dump` + audio folder) — tested on the PC
-- [ ] Install on the Pi, reach `/health` over Tailscale from the phone and the PC
+- [x] Install on the Pi, reach `/health` over Tailscale from the phone and the PC (2026-10-25; API on port 8001, `tailscale serve --bg 8001`)
 - [x] Update steps for the Pi: `update.sh` — pull `main` → rebuild → migrate → restart (only after PC testing)
 
 ### 3. Notes server (`feature/notes-server`)
