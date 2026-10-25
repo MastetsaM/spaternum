@@ -68,12 +68,12 @@ Specs: [[notes_spec]], [[voice-notes_spec]]. One branch per block (name in brack
 - [x] Update steps for the Pi: `update.sh` — pull `main` → rebuild → migrate → restart (only after PC testing)
 
 ### 3. Notes server (`feature/notes-server`)
-- [ ] Migration: `note_folders`, `notes`, `seq` sequence, GIN index on tags
-- [ ] Pull/push for folders and notes through the sync helper
-- [ ] Archiving a folder archives everything inside with the same `archived_at`
-- [ ] `list_archived()` and `restore(id)` — a folder restore brings back only what was archived with it
-- [ ] Reject moving a folder into its own sub-folder
-- [ ] Tests per the notes spec acceptance criteria (server side)
+- [x] Migration: `note_folders`, `notes`, `seq` sequence, GIN index on tags (no foreign keys)
+- [x] Pull/push for folders and notes through the sync helper
+- [x] Archiving a folder archives everything inside with the same `archived_at`
+- [x] `list_archived()` and `restore(id)` — a folder restore brings back only what was archived with it
+- [x] Reject moving a folder into its own sub-folder
+- [x] Tests per the notes spec acceptance criteria (server side)
 
 ### 4. Voice notes server (`feature/voice-notes-server`)
 - [ ] Migration: `voice_notes` (no path column; `uploaded_at` server-owned)

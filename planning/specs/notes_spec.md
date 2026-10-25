@@ -97,6 +97,9 @@ Notes work offline on both clients; changes sync when the server is reachable, l
 - Searching archived notes on the device.
 - **Markdown export to the PC (later):** write a `.md` copy of each note to `~/Documents/Spaternum/notes/`, so notes are visible and usable outside the app (Obsidian-style). Requested by Mihail 2026-10-21; not phase 1.
 
+## Results — server (2026-10-25)
+Server side built (`src/server/spaternum/notes/`); 8 tests in `tests/notes_test.py` pass. Covers criteria 1, 2, 5, 6, 8, 9 and the server part of 10: sync of folders and notes, a note arriving before its folder, folder archive cascade (earlier separate archives keep their own time), one Archive entry per archived folder, restore of a folder or a note, folder-loop refusal, a later edit un-archiving a note. Criteria 3, 4, 7 (list order, search, empty notes) are client work — the server doesn't refuse empty notes.
+
 ## Decided 2026-10-21 (former open questions)
 Archiving a folder → archives its contents · note in an archived folder → top level · empty notes → never saved · search → device "contains" + tags · archive view → shared Archive page, server only · sort → last edited · archive vs. later edit → latest write wins.
 
