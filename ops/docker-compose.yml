@@ -40,7 +40,8 @@ services:
       DATA_DIR: /data
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
     ports:
-      - "127.0.0.1:8000:8000"  # other devices come in through tailscale serve
+      # other devices come in through tailscale serve; API_PORT if 8000 is taken (Portainer uses it)
+      - "127.0.0.1:${API_PORT:-8000}:8000"
     volumes:
       - type: bind
         source: ${DATA_ROOT}/files

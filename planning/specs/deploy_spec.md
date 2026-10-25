@@ -63,6 +63,7 @@ Found while testing:
 - `install.sh` set a strict file mask for `.env` and it leaked into the data folders it created; now limited to `.env`.
 - Right after a restart the server needs ~2 s to answer, and the scripts said "Done" too early. `api` now has a health check and the scripts wait for it (`up --wait`).
 - The PC has no `buildx`; Compose falls back to the classic builder, which works.
+- **Pi (2026-10-25):** port 8000 was already taken on the Pi (likely Portainer's Edge agent port). The host port is now a setting, `API_PORT` in `ops/.env` (default 8000); `tailscale serve` uses the same port.
 
 ## Decided 2026-10-22
 Mihail runs the commands on the Pi; Claude prepares the scripts and guides (no SSH access) · images built on the Pi itself, no registry · deploy with the scripts, Portainer only for viewing · backups by hand to the same HDD for now · HDD at `/mnt/hdd`, `DATA_ROOT=/mnt/hdd/spaternum`.

@@ -27,6 +27,8 @@ DATA_ROOT=$DATA_ROOT
 LOG_LEVEL=INFO
 EOF
 fi
+API_PORT=$(grep '^API_PORT=' .env | cut -d= -f2-)
+API_PORT=${API_PORT:-8000}
 
 say "Checking where the data goes"
 parent=$DATA_ROOT
@@ -58,9 +60,9 @@ docker compose up -d --wait api
 
 say "Done"
 cat <<EOF
-Server: http://127.0.0.1:8000/health on this machine.
+Server: http://127.0.0.1:$API_PORT/health on this machine.
 To reach it from your devices over HTTPS, run once:
-    sudo tailscale serve --bg 8000
+    sudo tailscale serve --bg $API_PORT
 then open https://$(hostname).<your-tailnet>.ts.net/health
 
 API token for the app's settings screen:
