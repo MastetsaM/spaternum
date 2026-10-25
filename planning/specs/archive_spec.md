@@ -17,6 +17,9 @@ One place for everything archived, from every module: the shared Archive page li
 4. Unknown module or id → `404`.
 5. Tests pass.
 
+## Results (2026-10-25)
+All 5 criteria met; 4 tests in `tests/archive_test.py` pass (37 server tests in total).
+
 ## Out of scope
 - Paging (single user; revisit if the list gets long).
 - Deleting for good — archive, never delete.
