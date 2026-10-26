@@ -1,14 +1,12 @@
 # Spec — Client foundation (phase 1, block 6)
 
-> **Draft (2026-10-25).** Open questions at the end need answers before coding.
-
 ## What and why
 The base of the one app that runs on the PC and on Android: the Tauri project, the first-start settings, the local database with sync, and the empty layout the modules plug into. No notes or voice-notes screens yet — those are blocks 7 and 8 ([[tasks]]). The sync part is the spike's client, cleaned up and extended with the live stream ([[sync-spike_spec]], [[2026-10-21-sync-rxdb]]).
 
 ## What gets built
 - **Project:** `src/client/`, Tauri 2 + React + TypeScript (same template as the prototypes), app name **Spaternum**, id `com.mastetsam.spaternum`. Android: `RECORD_AUDIO` + `MODIFY_AUDIO_SETTINGS` in the manifest, `plugin-fs` for audio files later.
 - **API types:** generated from the server's `/openapi.json` with `openapi-typescript` into `src/api/schema.ts`, by one command (`pnpm gen:api`). Never edited by hand.
-- **First-start settings:** if no server address or token is saved, the app opens a settings screen: server address + API token, a **Test connection** button (calls `/health`, then an `/api` route to check the token), Save. Reachable later from the left rail. Stored on the device *(how — open Q 1)*.
+- **First-start settings:** if no server address or token is saved, the app opens a settings screen: server address + API token, a **Test connection** button (calls `/health`, then an `/api` route to check the token), Save. Reachable later from the left rail. Stored in the webview's `localStorage` (only this app can read it).
 - **Local database and sync** (`src/sync/`):
   - RxDB opened once (StrictMode runs effects twice in development).
   - One collection per synced table: `note_folders`, `notes`, `voice_notes`, schemas matching the server.
@@ -21,6 +19,8 @@ The base of the one app that runs on the PC and on Android: the Tauri project, t
   - Phone: bottom tab bar instead of the rail; the side panel slides in from the left; the tool panel opens from a button.
   - Switches by window width, so a narrow PC window behaves like the phone.
   - Modules fill in the panels in later blocks; here they show placeholders.
+  - **Screens are routes** (`react-router`): `/notes`, `/voice-notes`, `/archive`, `/settings`. Android's back gesture walks back through screens instead of closing the app; later a route can open one note directly.
+  - Plain CSS (a grid for the layout), icons from `lucide-react`.
 - **Builds:** `pnpm tauri dev` on the PC; a signed release APK installed on the phone (steps in [[TECH]]).
 
 ## Acceptance criteria (done when…)
@@ -44,11 +44,8 @@ The base of the one app that runs on the PC and on Android: the Tauri project, t
 - Release automation, app store, auto-update.
 - Monaco and the code editor.
 
-## Open questions
-1. **Where the token is stored on the device:** the webview's `localStorage` (*recommended* — no extra package; only this app can read it), or an encrypted store (Stronghold plugin — one more package and a password to unlock it)?
-2. **Styling:** plain CSS (*recommended* — no package, the layout is a simple grid), or a component library (e.g. Mantine — ready-made widgets, one big package)?
-3. **Icons for the rail and tabs:** `lucide-react` (*recommended* — small, free (ISC), only the icons used are bundled), or text labels only?
-4. **Switching between Notes / Voice notes / Archive:** plain React state (*recommended* — three screens, no package), or a router (`react-router` — URLs and back button, one more package)?
+## Decided 2026-10-26
+Token and address in `localStorage` · plain CSS · `lucide-react` icons · `react-router` for screens (Android back gesture, links to a note later).
 
 ## Related
 [[tasks]] · [[TECH]] · [[PRD]] · [[sync-spike_spec]] · [[notes_spec]] · [[voice-notes_spec]] · [[archive_spec]] · [[server-foundation_spec]] · [[2026-10-21-sync-rxdb]] · [[2026-10-20-clients-tauri-react]]
