@@ -38,7 +38,7 @@ export function SettingsScreen() {
   async function save() {
     saveSettings(settings);
     // Restart with the new settings: the database and sync open once, at start
-    window.location.hash = "#/notes";
+    window.location.hash = "#/home";
     window.location.reload();
   }
 

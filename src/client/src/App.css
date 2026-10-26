@@ -95,7 +95,22 @@ input {
   background: var(--muted);
 }
 .status.online { background: var(--ok); }
-.rail .status { margin-top: auto; margin-bottom: 8px; }
+.rail .status { margin-top: auto; margin-bottom: 4px; }
+.gear { display: inline-flex; padding: 8px; border-radius: 8px; color: var(--muted); }
+.gear.active { color: var(--accent); }
+
+.tool-list { list-style: none; margin: 0; padding: 0; }
+.tool-list a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  color: var(--text);
+  text-decoration: none;
+}
+.tool-list a.active { background: var(--bg); color: var(--accent); }
+.tool-items { padding: 4px 0 8px 36px; }
 
 .side, .tools {
   overflow: auto;
@@ -154,6 +169,7 @@ main h1 { font-size: 17px; margin: 0; flex: 1; }
   .side.open { transform: none; }
   .tools { right: 0; }
   .side .close, .tools .close { float: right; border: none; }
+  .backdrop { position: fixed; inset: 0; z-index: 5; background: rgb(0 0 0 / 0.3); }
 }
 
 /* ---- Settings ---- */

@@ -5,7 +5,15 @@ import { createHashRouter, Navigate, RouterProvider } from "react-router";
 import type { ReactNode } from "react";
 import { loadSettings } from "./api/settings";
 import { useStatus } from "./sync/status";
-import { ArchiveScreen, NotesScreen, VoiceNotesScreen } from "./screens/Placeholders";
+import {
+  ArchiveScreen,
+  ClientsScreen,
+  HomeScreen,
+  NotesScreen,
+  ProjectsScreen,
+  ToolsScreen,
+  VoiceNotesScreen,
+} from "./screens/Placeholders";
 import { SettingsScreen } from "./screens/SettingsScreen";
 import "./App.css";
 
@@ -16,13 +24,19 @@ function Connected({ children }: { children: ReactNode }) {
   return children;
 }
 
+const connected = (screen: ReactNode) => <Connected>{screen}</Connected>;
+
 const router = createHashRouter([
-  { path: "/", element: <Navigate to="/notes" replace /> },
-  { path: "/notes", element: <Connected><NotesScreen /></Connected> },
-  { path: "/voice-notes", element: <Connected><VoiceNotesScreen /></Connected> },
-  { path: "/archive", element: <Connected><ArchiveScreen /></Connected> },
+  { path: "/", element: <Navigate to="/home" replace /> },
+  { path: "/home", element: connected(<HomeScreen />) },
+  { path: "/tools", element: connected(<ToolsScreen />) },
+  { path: "/tools/notes", element: connected(<NotesScreen />) },
+  { path: "/tools/voice-notes", element: connected(<VoiceNotesScreen />) },
+  { path: "/tools/archive", element: connected(<ArchiveScreen />) },
+  { path: "/clients", element: connected(<ClientsScreen />) },
+  { path: "/projects", element: connected(<ProjectsScreen />) },
   { path: "/settings", element: <SettingsScreen /> },
-  { path: "*", element: <Navigate to="/notes" replace /> },
+  { path: "*", element: <Navigate to="/home" replace /> },
 ]);
 
 export default function App() {
