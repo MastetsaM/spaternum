@@ -45,8 +45,8 @@ Specs: [[notes_spec]], [[voice-notes_spec]]. One branch per block (name in brack
 - [x] Folders: `src/server/` and `src/client/` (one client codebase for PC and Android)
 - [x] Tests: server — pytest against a real Postgres in Docker; client — Vitest for logic, manual checks on the phone and PC for UI
 - [x] Server URL + API token: a settings screen on first start, stored on the device, editable later in settings
-- [x] Layout: Teams / VS Code style — a left rail with the main categories (Notes, Voice notes, Archive, later modules), a side panel with that category's sub-categories (e.g. the folder tree), the main content, and a panel on the other side for tool-specific settings/details
-- [x] Phone layout: the left rail becomes a bottom tab bar, the sub-category panel slides in from the left, the tool panel opens from a button
+- [x] Layout: Teams / VS Code style — left rail / bottom bar with the sections (Home, Tools, Clients, Projects; Settings as a small gear), side panel / ☰ drawer with the tools (Notes, Voice notes, Archive) and the open tool's items (e.g. folders), main content, tool panel on the right ([[client-foundation_spec]], corrected 2026-10-26)
+- [x] Phone layout: the sections go in the bottom bar, the tools in the ☰ drawer, the tool panel opens from a button
 - [x] Pi: deploy as early as possible (right after the server foundation). The Pi is updated **only from `main`, after the change is fully tested on the PC**. Day to day, the server runs on the PC and the phone reaches it over Tailscale (as in the sync spike)
 
 ### 1. Server foundation (`feature/server-skeleton`) — spec: [[server-foundation_spec]]
@@ -92,7 +92,7 @@ Specs: [[notes_spec]], [[voice-notes_spec]]. One branch per block (name in brack
 - [ ] Client types generated from the server's OpenAPI with `openapi-typescript`
 - [ ] First-start settings screen: server URL + API token, stored on the device, editable later
 - [ ] RxDB opened once; replication helper (pull, push, SSE stream); clock offset from the `Date` header; online indicator from the last sync
-- [ ] App shell: left rail (categories) → side panel (sub-categories) → main content → tool panel on the other side; on the phone: bottom tab bar, slide-in side panel, tool panel behind a button
+- [ ] App shell: rail / bottom bar (sections) → side panel / ☰ drawer (tools + the open tool's items) → main content → tool panel
 - [ ] Release APK build and install on the phone (steps in [[TECH]])
 
 ### 7. Notes client (`feature/notes-client`)

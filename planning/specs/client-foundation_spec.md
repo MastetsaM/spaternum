@@ -14,12 +14,14 @@ The base of the one app that runs on the PC and on Android: the Tauri project, t
   - **Live stream:** one `fetch` to `/api/events` (EventSource can't send the token); each event names a table → that collection pulls. Reconnects with a growing pause (1 s → 30 s) when the stream drops; on reconnect every collection pulls once to catch up.
   - **Clock drift:** the offset from the server's `Date` header is measured on each successful call; `updated_at` = device time + offset.
   - **Online indicator:** from the last sync result (stream connected, last call OK) — not `navigator.onLine`.
-- **Layout** (Teams / VS Code style, decided — [[tasks]]):
-  - PC: left rail (Notes, Voice notes, Archive, Settings) → side panel (that category's sub-items, e.g. the folder tree) → main content → tool panel on the right (can be closed).
-  - Phone: bottom tab bar instead of the rail; the side panel slides in from the left; the tool panel opens from a button.
+- **Layout** (Teams / VS Code style; structure corrected by Mihail 2026-10-26):
+  - **Sections:** Home (dashboard), **Tools**, Clients, Projects. PC: left rail; phone: bottom bar. Home, Clients and Projects are placeholders until their phases.
+  - **Settings** slightly hidden: a gear at the bottom of the rail (PC) / top-right of the header (phone).
+  - **Side panel** (PC) / **☰ drawer** (phone): for Tools, the list of tools — Notes, Voice notes, Archive; the open tool shows its own items under it (e.g. the notes folder tree).
+  - **Tool panel** on the right for tool-specific settings and details (PC, can be closed); on the phone it opens from a button.
   - Switches by window width, so a narrow PC window behaves like the phone.
   - Modules fill in the panels in later blocks; here they show placeholders.
-  - **Screens are routes** (`react-router`): `/notes`, `/voice-notes`, `/archive`, `/settings`. Android's back gesture walks back through screens instead of closing the app; later a route can open one note directly.
+  - **Screens are routes** (`react-router`): `/home`, `/tools/notes`, `/tools/voice-notes`, `/tools/archive`, `/clients`, `/projects`, `/settings`. Android's back gesture walks back through screens instead of closing the app; later a route can open one note directly.
   - Plain CSS (a grid for the layout), icons from `lucide-react`.
 - **Builds:** `pnpm tauri dev` on the PC; a signed release APK installed on the phone (steps in [[TECH]]).
 
@@ -29,7 +31,7 @@ The base of the one app that runs on the PC and on Android: the Tauri project, t
 3. Generated API types compile, and a server change shows up after `pnpm gen:api`.
 4. With two devices on: a row written through the API (e.g. a note pushed with `curl`) appears in both devices' local databases within ~2 s, without polling.
 5. Offline (airplane mode on the phone): the indicator shows offline; writes to the local database stay; back online they reach the server and the indicator turns online.
-6. The layout shows rail, side panel, main and tool panel on the PC; bottom tabs, slide-in panel and tool button on the phone.
+6. PC: rail with Home, Tools, Clients, Projects (+ gear), side panel listing the tools with the open tool's items, main, tool panel. Phone: the same sections in the bottom bar, the tools in the ☰ drawer, gear top-right, tool panel from a button.
 7. Vitest tests pass for the logic that isn't UI: clock offset, reconnect pause, event → collection routing, settings validation.
 
 ## Edge cases and failure modes
