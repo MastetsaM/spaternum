@@ -87,7 +87,7 @@ Specs: [[notes_spec]], [[voice-notes_spec]]. One branch per block (name in brack
 - [x] `GET /archive` (from each module's `list_archived()`, filter by type) and `POST /archive/{module}/{id}/restore`
 - [x] Tests
 
-### 6. Client foundation (`feature/client-skeleton`)
+### 6. Client foundation (`feature/client-skeleton`) — spec: [[client-foundation_spec]]
 - [ ] Scaffold `src/client/` (Tauri 2 + React + TS), Android init, manifest `RECORD_AUDIO` + `MODIFY_AUDIO_SETTINGS`, plugin-fs
 - [ ] Client types generated from the server's OpenAPI with `openapi-typescript`
 - [ ] First-start settings screen: server URL + API token, stored on the device, editable later
