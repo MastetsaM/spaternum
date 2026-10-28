@@ -99,13 +99,13 @@ export function Layout({ title, side, tools, actions, children }: Props) {
             </button>
           )}
           <h1>{title}</h1>
-          <span className={`status phone-only ${online ? "online" : ""}`} />
           {tools && (
             <button onClick={() => setToolsOpen(!toolsOpen)} aria-label="Tool panel">
               <PanelRight size={20} />
             </button>
           )}
           {actions}
+          <span className={`status phone-only ${online ? "online" : ""}`} />
         </header>
         <div className="content">{children}</div>
       </main>

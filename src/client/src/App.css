@@ -138,14 +138,17 @@ input {
 .tools { grid-area: tools; border-left: 1px solid var(--line); }
 
 main { grid-area: main; display: flex; flex-direction: column; min-width: 0; }
+/* Same height on every screen; a long title is cut, never wrapped */
 main header {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
+  height: 48px;
+  flex-shrink: 0;
+  padding: 0 16px;
   border-bottom: 1px solid var(--line);
 }
-main h1 { font-size: 17px; margin: 0; flex: 1; }
+main h1 { font-size: 17px; margin: 0; flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .content { flex: 1; overflow: auto; padding: 16px; }
 
 .tabs, .phone-only { display: none; }
