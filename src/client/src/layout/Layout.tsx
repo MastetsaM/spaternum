@@ -11,7 +11,6 @@ import {
   Menu,
   Mic,
   PanelRight,
-  Settings,
   Wrench,
   X,
 } from "lucide-react";
@@ -38,10 +37,11 @@ type Props = {
   title: string;
   side?: ReactNode; // the open tool's items, e.g. the folder tree
   tools?: ReactNode; // tool-specific settings and details
+  actions?: ReactNode; // buttons at the right of the header, e.g. Home's Settings gear
   children: ReactNode; // main content
 };
 
-export function Layout({ title, side, tools, children }: Props) {
+export function Layout({ title, side, tools, actions, children }: Props) {
   const { pathname, search } = useLocation();
   const inTools = pathname.startsWith("/tools");
   const [drawerOpen, setDrawerOpen] = useState(false); // phone only
@@ -57,11 +57,6 @@ export function Layout({ title, side, tools, children }: Props) {
       <span>{label}</span>
     </NavLink>
   ));
-  const gear = (
-    <NavLink to="/settings" title="Settings" className="gear" onClick={close}>
-      <Settings size={20} />
-    </NavLink>
-  );
 
   // Tools: the list of tools, with the open tool's own items under it
   const sideContent = inTools ? (
@@ -84,7 +79,6 @@ export function Layout({ title, side, tools, children }: Props) {
       <nav className="rail">
         {sections}
         <span className={`status ${online ? "online" : ""}`} title={online ? "Online" : "Offline"} />
-        {gear}
       </nav>
 
       {sideContent && (
@@ -111,7 +105,7 @@ export function Layout({ title, side, tools, children }: Props) {
               <PanelRight size={20} />
             </button>
           )}
-          <span className="phone-only">{gear}</span>
+          {actions}
         </header>
         <div className="content">{children}</div>
       </main>

@@ -56,7 +56,7 @@ export function ArchiveScreen() {
     <Layout title="Archive">
       <div className="archive-filters">
         {FILTERS.map((f) => (
-          <button key={f.type} className={f.type === type ? "active" : ""} onClick={() => setType(f.type)}>
+          <button key={f.type} className={f.type === type ? "on" : ""} onClick={() => setType(f.type)}>
             {f.label}
           </button>
         ))}

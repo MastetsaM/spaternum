@@ -72,20 +72,16 @@ export function VoiceNotesScreen() {
   }
 
   const side = (
-    <ul className="vn-tags">
-      <li>
-        <button className={shownTag === null ? "active" : ""} onClick={() => setTag(null)}>
-          All
-        </button>
-      </li>
+    <div className="tags">
+      <button className={`tag ${shownTag === null ? "on" : ""}`} onClick={() => setTag(null)}>
+        All
+      </button>
       {tags.map((t) => (
-        <li key={t}>
-          <button className={shownTag === t ? "active" : ""} onClick={() => setTag(t)}>
-            #{t}
-          </button>
-        </li>
+        <button key={t} className={`tag ${shownTag === t ? "on" : ""}`} onClick={() => setTag(t)}>
+          {t}
+        </button>
       ))}
-    </ul>
+    </div>
   );
 
   return (
@@ -205,9 +201,11 @@ function Item({ doc, state, stateKind, source, playing, onPlay, onError }: ItemP
             <span className={`vn-state vn-${stateKind}`}>{state}</span>
           </div>
           {doc.tags.length > 0 && (
-            <div className="vn-chips">
+            <div className="tags">
               {doc.tags.map((t) => (
-                <span key={t}>#{t}</span>
+                <span key={t} className="tag">
+                  {t}
+                </span>
               ))}
             </div>
           )}
