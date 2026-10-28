@@ -265,6 +265,7 @@ button.danger { color: var(--error); border-color: var(--error); }
 
 .editor { display: flex; flex-direction: column; gap: 8px; height: 100%; }
 .editor .back { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; border: none; padding: 4px 0; color: var(--muted); }
+.note-title-box { font-size: 17px; font-weight: 600; }
 .editor textarea { flex: 1; min-height: 50vh; resize: none; line-height: 1.5; }
 
 .details { display: flex; flex-direction: column; gap: 8px; }

@@ -1,7 +1,8 @@
 // The local database (RxDB) and its sync with the server: one collection per synced table,
 // pulled by the server's seq, pushed with latest-write-wins, nudged by the live stream.
 
-import { createRxDatabase, type RxCollection, type RxDatabase, type RxJsonSchema } from "rxdb";
+import { addRxPlugin, createRxDatabase, type RxCollection, type RxDatabase, type RxJsonSchema } from "rxdb";
+import { RxDBMigrationSchemaPlugin } from "rxdb/plugins/migration-schema";
 import { replicateRxCollection, type RxReplicationState } from "rxdb/plugins/replication";
 import { getRxStorageDexie } from "rxdb/plugins/storage-dexie";
 import { Subject } from "rxjs";
@@ -9,6 +10,9 @@ import { call } from "../api/client";
 import type { components } from "../api/schema";
 import type { Settings } from "../api/settings";
 import { listen } from "./events";
+
+// Schema changes on the device: each new schema version comes with a migration function
+addRxPlugin(RxDBMigrationSchemaPlugin);
 
 type Schemas = components["schemas"];
 // RxDB manages _deleted itself (it's our "archived" flag), so it's not part of the schema
@@ -37,13 +41,15 @@ const folderSchema: RxJsonSchema<Folder> = {
   required: ["id", "name", "created_at", "updated_at"],
 };
 
+// Version 1 (2026-10-28): optional title
 const noteSchema: RxJsonSchema<Note> = {
-  version: 0,
+  version: 1,
   primaryKey: "id",
   type: "object",
-  properties: { ...synced, folder_id: nullableText, body: text, tags, pinned: { type: "boolean" } },
-  required: ["id", "body", "tags", "pinned", "created_at", "updated_at"],
+  properties: { ...synced, folder_id: nullableText, title: text, body: text, tags, pinned: { type: "boolean" } },
+  required: ["id", "title", "body", "tags", "pinned", "created_at", "updated_at"],
 };
+const noteMigrations = { 1: (doc: Note) => ({ ...doc, title: "" }) };
 
 const voiceNoteSchema: RxJsonSchema<VoiceNote> = {
   version: 0,
@@ -96,7 +102,7 @@ async function open(settings: Settings): Promise<Db> {
   const db = await createRxDatabase<Collections>({ name: "spaternum", storage: getRxStorageDexie() });
   await db.addCollections({
     note_folders: { schema: folderSchema },
-    notes: { schema: noteSchema },
+    notes: { schema: noteSchema, migrationStrategies: noteMigrations },
     voice_notes: { schema: voiceNoteSchema },
   });
 

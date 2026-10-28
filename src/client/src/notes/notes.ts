@@ -8,9 +8,21 @@ export function title(body: string): string {
   return body.split("\n", 1)[0].replace(/^[# ]+/, "").trim() || "(empty)";
 }
 
-/** Only spaces and new lines count as empty: an empty body is never saved. */
-export function isEmpty(body: string): boolean {
-  return body.trim() === "";
+/** The title shown for a note: its own title, or the body's first line when that's empty. */
+export function noteTitle(note: Pick<Note, "title" | "body">): string {
+  return note.title.trim() || title(note.body);
+}
+
+/** What the editor edits and saves together. */
+export type Content = { title: string; body: string };
+
+/** Empty = no title and no body; only spaces and new lines count as empty. Never saved. */
+export function isEmpty(content: Content): boolean {
+  return content.title.trim() === "" && content.body.trim() === "";
+}
+
+export function sameContent(a: Content, b: Content | null): boolean {
+  return b !== null && a.title === b.title && a.body === b.body;
 }
 
 /** Pinned first, then last edited first. updated_at strings all use toISOString(), so they sort as text. */
@@ -25,12 +37,13 @@ export function shownFolder(folderId: string | null | undefined, folderIds: Set<
   return folderId && folderIds.has(folderId) ? folderId : null;
 }
 
-/** Notes whose body contains the text (any case) and that have every chosen tag. */
+/** Notes whose title or body contains the text (any case) and that have every chosen tag. */
 export function searchNotes(notes: Note[], text: string, tags: string[]): Note[] {
   const needle = text.trim().toLowerCase();
   return notes.filter(
     (note) =>
-      (!needle || note.body.toLowerCase().includes(needle)) && tags.every((tag) => note.tags.includes(tag)),
+      (!needle || `${note.title}\n${note.body}`.toLowerCase().includes(needle)) &&
+      tags.every((tag) => note.tags.includes(tag)),
   );
 }
 
@@ -122,21 +135,21 @@ export function moveTargets(folders: Folder[], id: string): Folder[] {
   return folders.filter((folder) => folder.id !== id && !inside.has(folder.id));
 }
 
-export type SaveAction = { kind: "none" } | { kind: "write"; body: string } | { kind: "archive" };
+export type SaveAction = { kind: "none" } | { kind: "write"; content: Content } | { kind: "archive" };
 
 /**
  * What the editor writes.
- * - text: what's in the box now
- * - saved: the body stored on the device, or null if the note has no row yet
- * - opened: the body when the editor opened, or null for a new note
+ * - now: what's in the boxes now
+ * - saved: what's stored on the device, or null if the note has no row yet
+ * - opened: what was there when the editor opened, or null for a new note
  * - leaving: true when the editor closes, false for a save while typing
  */
-export function toSave(text: string, saved: string | null, opened: string | null, leaving: boolean): SaveAction {
-  if (!isEmpty(text)) return text === saved ? { kind: "none" } : { kind: "write", body: text };
+export function toSave(now: Content, saved: Content | null, opened: Content | null, leaving: boolean): SaveAction {
+  if (!isEmpty(now)) return sameContent(now, saved) ? { kind: "none" } : { kind: "write", content: now };
   // Empty: never saved. On leaving, put back what was there before this editor changed it.
-  if (!leaving || saved === null || saved === opened) return { kind: "none" };
+  if (!leaving || saved === null || sameContent(saved, opened)) return { kind: "none" };
   // A new note written while typing and then cleared: it shouldn't exist, so it's archived
-  return opened === null ? { kind: "archive" } : { kind: "write", body: opened };
+  return opened === null ? { kind: "archive" } : { kind: "write", content: opened };
 }
 
 /**

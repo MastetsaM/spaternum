@@ -7,18 +7,21 @@ import {
   folderTree,
   hideArchivedContents,
   isEmpty,
+  noteTitle,
   moveTargets,
   searchNotes,
   shownFolder,
   sortNotes,
   title,
   toSave,
+  type Content,
 } from "./notes";
 
 const T = "2026-10-28T10:00:00.000Z";
+const c = (body: string, title = ""): Content => ({ title, body });
 
 function note(id: string, fields: Partial<Note> = {}): Note {
-  return { id, body: id, tags: [], pinned: false, folder_id: null, created_at: T, updated_at: T, ...fields };
+  return { id, title: "", body: id, tags: [], pinned: false, folder_id: null, created_at: T, updated_at: T, ...fields };
 }
 
 function folder(id: string, parent_id: string | null = null, name = id): Folder {
@@ -38,31 +41,32 @@ describe("title", () => {
 
 describe("empty notes", () => {
   it("counts only spaces and new lines as empty", () => {
-    expect(isEmpty("")).toBe(true);
-    expect(isEmpty("  \n\t ")).toBe(true);
-    expect(isEmpty(" a ")).toBe(false);
+    expect(isEmpty(c(""))).toBe(true);
+    expect(isEmpty(c("  \n\t ", " "))).toBe(true);
+    expect(isEmpty(c(" a "))).toBe(false);
+    expect(isEmpty(c("", "Only a title"))).toBe(false);
   });
 
   it("never writes a new note left empty", () => {
-    expect(toSave("", null, null, false)).toEqual({ kind: "none" });
-    expect(toSave("", null, null, true)).toEqual({ kind: "none" });
+    expect(toSave(c(""), null, null, false)).toEqual({ kind: "none" });
+    expect(toSave(c(""), null, null, true)).toEqual({ kind: "none" });
   });
 
   it("creates a new note once it has text, and saves only changes", () => {
-    expect(toSave("Idea", null, null, false)).toEqual({ kind: "write", body: "Idea" });
-    expect(toSave("Idea", "Idea", null, true)).toEqual({ kind: "none" });
+    expect(toSave(c("Idea"), null, null, false)).toEqual({ kind: "write", content: c("Idea") });
+    expect(toSave(c("Idea"), c("Idea"), null, true)).toEqual({ kind: "none" });
   });
 
   it("puts back the previous text when an existing note is cleared and left", () => {
     // Typed "Old" → "O" (saved while typing) → cleared → leaves
-    expect(toSave("", "O", "Old", false)).toEqual({ kind: "none" });
-    expect(toSave("", "O", "Old", true)).toEqual({ kind: "write", body: "Old" });
+    expect(toSave(c(""), c("O"), c("Old"), false)).toEqual({ kind: "none" });
+    expect(toSave(c(""), c("O"), c("Old"), true)).toEqual({ kind: "write", content: c("Old") });
     // Cleared without anything saved in between: nothing to undo
-    expect(toSave("", "Old", "Old", true)).toEqual({ kind: "none" });
+    expect(toSave(c(""), c("Old"), c("Old"), true)).toEqual({ kind: "none" });
   });
 
   it("archives a new note that was saved while typing and then cleared", () => {
-    expect(toSave("", "I", null, true)).toEqual({ kind: "archive" });
+    expect(toSave(c(""), c("I"), null, true)).toEqual({ kind: "archive" });
   });
 });
 
@@ -196,5 +200,23 @@ describe("childFolders", () => {
   });
   it("shows a folder whose parent isn't on the device at the top level", () => {
     expect(childFolders([folder("x", "gone")], null).map((f) => f.id)).toEqual(["x"]);
+  });
+});
+
+describe("noteTitle and the title field", () => {
+  it("uses the title, else the first line", () => {
+    expect(noteTitle({ title: "Named", body: "first\nsecond" })).toBe("Named");
+    expect(noteTitle({ title: "  ", body: "first\nsecond" })).toBe("first");
+  });
+  it("saves a title-only note and a title change", () => {
+    expect(toSave(c("", "Just a title"), null, null, false)).toEqual({ kind: "write", content: c("", "Just a title") });
+    expect(toSave(c("same", "New"), c("same", "Old"), c("same", "Old"), false)).toEqual({
+      kind: "write",
+      content: c("same", "New"),
+    });
+  });
+  it("searches the title too", () => {
+    const notes = [note("1", { title: "Dentist", body: "call" }), note("2", { body: "other" })];
+    expect(searchNotes(notes, "dentist", []).map((n) => n.id)).toEqual(["1"]);
   });
 });

@@ -15,6 +15,7 @@ class Folder(sync.SyncDoc):
 
 class Note(sync.SyncDoc):
     folder_id: UUID | None = None
+    title: str = ""  # optional; empty = the body's first line is shown
     body: str = ""
     tags: list[str] = []
     pinned: bool = False

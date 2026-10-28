@@ -73,7 +73,7 @@ Notes work offline on both clients; changes sync when the server is reachable, l
 ## Acceptance criteria (done when…)
 1. Notes can be created, edited, moved, tagged, pinned and archived on PC and Android.
 2. Folders can be nested to any depth, renamed, moved and archived.
-3. The note list shows the first line of each note as its title — pinned first, then last edited first.
+3. The note list shows each note's title, or its first line when the title is empty — pinned first, then last edited first.
 4. Notes can be found by text ("contains") and by tag, offline too.
 5. With no connection, notes can still be created and edited; once the connection returns, the changes reach the server and the other device.
 6. The same note edited on two devices: the later edit wins, nothing crashes.

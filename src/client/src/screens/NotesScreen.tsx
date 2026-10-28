@@ -11,12 +11,15 @@ import {
   childFolders,
   folderTree,
   moveTargets,
+  noteTitle,
+  sameContent,
   searchNotes,
   shownFolder,
   sortNotes,
   subFolderIds,
   title,
   toSave,
+  type Content,
   type SaveAction,
 } from "../notes/notes";
 import {
@@ -24,7 +27,7 @@ import {
   archiveNote,
   createFolder,
   newNote,
-  saveBody,
+  saveContent,
   updateFolder,
   updateNote,
   useNotesAndFolders,
@@ -174,7 +177,7 @@ function NoteRow({ note }: { note: Note }) {
     <li>
       <Link to={`/tools/notes/${note.id}`} className="note-title">
         {note.pinned && <Pin size={14} />}
-        <span>{title(note.body)}</span>
+        <span>{noteTitle(note)}</span>
       </Link>
     </li>
   );
@@ -286,18 +289,21 @@ function FolderDetails({ folder, folders, notes }: { folder: Folder; folders: Fo
 
 // ---- Editor ----
 
+const EMPTY: Content = { title: "", body: "" };
+const contentOf = (note: Note): Content => ({ title: note.title, body: note.body });
+
 function EditorView({ id }: { id: string }) {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const folders = useNotesAndFolders()?.folders ?? null;
   const [state, setState] = useState<"loading" | "ready" | "missing">("loading");
-  const [text, setText] = useState("");
+  const [content, setContent] = useState<Content>(EMPTY);
   const [note, setNote] = useState<Note | null>(null); // the stored row, live; null = none (yet)
 
   // Refs: read by the save on leaving, after the last render
-  const textRef = useRef("");
-  const opened = useRef<string | null>(null); // body when opened; null = new note
-  const saved = useRef<string | null>(null); // body stored on the device; null = no row
+  const contentRef = useRef<Content>(EMPTY);
+  const opened = useRef<Content | null>(null); // title and body when opened; null = new note
+  const saved = useRef<Content | null>(null); // title and body stored on the device; null = no row
   const last = useRef<Note | null>(null); // the row as last seen, to recreate it if it vanishes
   const archived = useRef(false);
   const queue = useRef(Promise.resolve()); // writes one after another
@@ -307,10 +313,10 @@ function EditorView({ id }: { id: string }) {
     if (archived.current || action.kind === "none" || !last.current) return;
     const base = last.current;
     if (action.kind === "write") {
-      saved.current = action.body;
+      saved.current = action.content;
       writing.current++;
       queue.current = queue.current
-        .then(() => saveBody(action.body, base))
+        .then(() => saveContent(action.content, base))
         .catch(console.error)
         .finally(() => writing.current--);
     } else {
@@ -332,9 +338,9 @@ function EditorView({ id }: { id: string }) {
         if (!loaded) {
           loaded = true;
           if (row) {
-            opened.current = saved.current = textRef.current = row.body;
+            opened.current = saved.current = contentRef.current = contentOf(row);
             last.current = row;
-            setText(row.body);
+            setContent(contentOf(row));
           } else if (params.get("new") === "1") {
             last.current = newNote(id, params.get("folder"));
           } else {
@@ -350,11 +356,11 @@ function EditorView({ id }: { id: string }) {
         // Our own writes echo back here; while one is unfinished, the box stays as typed
         if (writing.current > 0) return;
         // Show the other device's text only if nothing typed here is waiting to be saved
-        if (textRef.current === saved.current) {
-          textRef.current = row.body;
-          setText(row.body);
+        if (sameContent(contentRef.current, saved.current)) {
+          contentRef.current = contentOf(row);
+          setContent(contentRef.current);
         }
-        saved.current = row.body;
+        saved.current = contentOf(row);
       });
     });
     return () => {
@@ -366,21 +372,26 @@ function EditorView({ id }: { id: string }) {
   // Save a moment after typing stops
   useEffect(() => {
     if (state !== "ready") return;
-    const timer = setTimeout(() => run(toSave(textRef.current, saved.current, opened.current, false)), 800);
+    const timer = setTimeout(() => run(toSave(contentRef.current, saved.current, opened.current, false)), 800);
     return () => clearTimeout(timer);
-  }, [text, state]);
+  }, [content, state]);
 
   // Save when leaving the editor, and when the app goes to the background (Android may close it)
   useEffect(() => {
     const hidden = () => {
-      if (document.visibilityState === "hidden") run(toSave(textRef.current, saved.current, opened.current, false));
+      if (document.visibilityState === "hidden") run(toSave(contentRef.current, saved.current, opened.current, false));
     };
     document.addEventListener("visibilitychange", hidden);
     return () => {
       document.removeEventListener("visibilitychange", hidden);
-      run(toSave(textRef.current, saved.current, opened.current, true));
+      run(toSave(contentRef.current, saved.current, opened.current, true));
     };
   }, []);
+
+  const edit = (change: Partial<Content>) => {
+    contentRef.current = { ...contentRef.current, ...change };
+    setContent(contentRef.current);
+  };
 
   const folderId = folders ? shownFolder((note ?? last.current)?.folder_id, new Set(folders.map((f) => f.id))) : null;
   const back = () => navigate(listUrl(folderId));
@@ -414,15 +425,20 @@ function EditorView({ id }: { id: string }) {
         <button className="back" onClick={back}>
           <ArrowLeft size={16} /> Notes
         </button>
+        <input
+          className="note-title-box"
+          value={content.title}
+          disabled={state !== "ready"}
+          // Empty title: the first line shows in its place, and is the title the list uses
+          placeholder={content.body.trim() ? title(content.body) : "Title"}
+          onChange={(e) => edit({ title: e.target.value })}
+        />
         <textarea
-          value={text}
+          value={content.body}
           disabled={state !== "ready"}
           autoFocus={params.get("new") === "1"}
-          placeholder="First line is the title"
-          onChange={(e) => {
-            textRef.current = e.target.value;
-            setText(e.target.value);
-          }}
+          placeholder="Write here"
+          onChange={(e) => edit({ body: e.target.value })}
         />
       </div>
     </Layout>

@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { serverNow } from "../sync/clock";
 import type { RxCollection } from "rxdb";
 import { getDb, type Db, type Folder, type Note } from "../sync/db";
-import { hideArchivedContents } from "./notes";
+import { hideArchivedContents, type Content } from "./notes";
 
 /** Every active row of a collection, kept up to date; null while loading. */
 function useRows<T>(pick: (db: Db) => RxCollection<T>): T[] | null {
@@ -51,21 +51,21 @@ function archivedHere(): Record<string, string> {
 // ---- Notes ----
 
 /**
- * Writes the body. With no row (a new note, or one archived meanwhile on another device),
- * creates it from `last`: the new note's fields, or the note as the editor last saw it.
+ * Writes the title and body. With no row (a new note, or one archived meanwhile on another
+ * device), creates it from `last`: the new note's fields, or the note as the editor last saw it.
  */
-export async function saveBody(body: string, last: Note): Promise<void> {
+export async function saveContent({ title, body }: Content, last: Note): Promise<void> {
   const db = await getDb();
   const now = serverNow();
   const doc = await db.notes.findOne(last.id).exec();
-  if (doc) await doc.incrementalPatch({ body, updated_at: now });
-  else await db.notes.insert({ ...last, body, updated_at: now });
+  if (doc) await doc.incrementalPatch({ title, body, updated_at: now });
+  else await db.notes.insert({ ...last, title, body, updated_at: now });
 }
 
 /** A note that isn't stored yet: it gets a row at its first save with text. */
 export function newNote(id: string, folderId: string | null): Note {
   const now = serverNow();
-  return { id, body: "", folder_id: folderId, tags: [], pinned: false, created_at: now, updated_at: now };
+  return { id, title: "", body: "", folder_id: folderId, tags: [], pinned: false, created_at: now, updated_at: now };
 }
 
 /** Changes tags, pinned or folder. */
