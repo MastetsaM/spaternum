@@ -178,3 +178,85 @@ main h1 { font-size: 17px; margin: 0; flex: 1; }
 .settings { display: flex; flex-direction: column; gap: 14px; max-width: 420px; }
 .settings label { display: flex; flex-direction: column; gap: 6px; color: var(--muted); }
 .settings .buttons { display: flex; gap: 8px; }
+
+/* ---- Notes ---- */
+
+select, textarea {
+  font: inherit;
+  color: inherit;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 8px 10px;
+  width: 100%;
+}
+button.icon { border: none; padding: 2px; display: inline-flex; }
+button.danger { color: var(--error); border-color: var(--error); }
+
+.folder-tree { list-style: none; margin: 0; padding: 0; }
+.folder-tree a {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  color: var(--text);
+  text-decoration: none;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.folder-tree a.active { background: var(--bg); color: var(--accent); }
+
+.note-search { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0 8px;
+  color: var(--muted);
+}
+.search-box input { border: none; padding: 8px 0; }
+.search-box input:focus { outline: none; }
+
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 8px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.tag.on { color: var(--accent); border-color: var(--accent); }
+
+.new-note { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 12px; }
+
+.note-list { list-style: none; margin: 0; padding: 0; }
+.note-list a {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 4px;
+  border-bottom: 1px solid var(--line);
+  color: var(--text);
+  text-decoration: none;
+}
+.note-title { display: flex; align-items: center; gap: 6px; font-weight: 600; }
+.note-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 13px; }
+
+.editor { display: flex; flex-direction: column; gap: 8px; height: 100%; }
+.editor .back { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; border: none; padding: 4px 0; color: var(--muted); }
+.editor textarea { flex: 1; min-height: 50vh; resize: none; line-height: 1.5; }
+
+.details { display: flex; flex-direction: column; gap: 8px; }
+.details h2 { font-size: 15px; margin: 0; }
+.details h3 { font-size: 12px; margin: 8px 0 0; color: var(--muted); text-transform: uppercase; }
+.details > button { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; }
+.details .confirm p { margin: 0 0 8px; }
+.details .buttons { display: flex; gap: 8px; }
+.name-form { display: flex; gap: 6px; }

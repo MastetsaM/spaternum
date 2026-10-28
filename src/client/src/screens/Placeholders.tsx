@@ -1,4 +1,4 @@
-// Empty screens until they're built: notes (block 7), voice notes (8), archive (9);
+// Empty screens until they're built: voice notes (block 8), archive (9);
 // home, clients and projects in later phases.
 
 import { NavLink } from "react-router";
@@ -25,14 +25,6 @@ export function ToolsScreen() {
           </li>
         ))}
       </ul>
-    </Layout>
-  );
-}
-
-export function NotesScreen() {
-  return (
-    <Layout title="Notes" side={<p className="muted">Folders</p>} tools={<p className="muted">Note details</p>}>
-      <p className="muted">Notes come in block 7.</p>
     </Layout>
   );
 }

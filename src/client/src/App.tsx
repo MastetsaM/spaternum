@@ -9,11 +9,11 @@ import {
   ArchiveScreen,
   ClientsScreen,
   HomeScreen,
-  NotesScreen,
   ProjectsScreen,
   ToolsScreen,
   VoiceNotesScreen,
 } from "./screens/Placeholders";
+import { NotesScreen } from "./screens/NotesScreen";
 import { SettingsScreen } from "./screens/SettingsScreen";
 import "./App.css";
 
@@ -30,7 +30,7 @@ const router = createHashRouter([
   { path: "/", element: <Navigate to="/home" replace /> },
   { path: "/home", element: connected(<HomeScreen />) },
   { path: "/tools", element: connected(<ToolsScreen />) },
-  { path: "/tools/notes", element: connected(<NotesScreen />) },
+  { path: "/tools/notes/:noteId?", element: connected(<NotesScreen />) },
   { path: "/tools/voice-notes", element: connected(<VoiceNotesScreen />) },
   { path: "/tools/archive", element: connected(<ArchiveScreen />) },
   { path: "/clients", element: connected(<ClientsScreen />) },
