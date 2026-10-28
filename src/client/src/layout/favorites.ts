@@ -1,5 +1,9 @@
 // Favorite tools: which tools the side panel lists, in Mihail's order (favorites_spec.md).
-// Saved as a JSON list of tool keys in the synced setting `favorite_tools`.
+// Each device keeps its own, as a JSON list of tool keys in localStorage.
+
+import { useEffect, useState } from "react";
+
+const KEY = "spaternum.favoriteTools";
 
 /** The saved list, without unknown or repeated keys. Never saved or broken → every tool. */
 export function parseFavorites(value: string | null, known: string[]): string[] {
@@ -26,4 +30,35 @@ export function moveFavorite(favorites: string[], key: string, step: -1 | 1): st
   const next = [...favorites];
   [next[from], next[to]] = [next[to], next[from]];
   return next;
+}
+
+// Screens that show the favorites (the side panel, the Favorites page) redraw when they change
+const listeners = new Set<() => void>();
+
+function loadRaw(): string | null {
+  try {
+    return localStorage.getItem(KEY);
+  } catch {
+    return null;
+  }
+}
+
+/** This device's favorites, kept up to date. */
+export function useFavorites(known: string[]): string[] {
+  const [raw, setRaw] = useState(loadRaw);
+  useEffect(() => {
+    const update = () => setRaw(loadRaw());
+    listeners.add(update);
+    return () => void listeners.delete(update);
+  }, []);
+  return parseFavorites(raw, known);
+}
+
+export function saveFavorites(favorites: string[]) {
+  try {
+    localStorage.setItem(KEY, JSON.stringify(favorites));
+  } catch {
+    // not saved: nothing changes on screen either
+  }
+  listeners.forEach((update) => update());
 }

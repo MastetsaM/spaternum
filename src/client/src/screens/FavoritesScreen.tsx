@@ -1,21 +1,14 @@
-// Favorites: pick the tools the side panel lists, and their order (favorites_spec.md).
+// Favorites: pick the tools this device's side panel lists, and their order (favorites_spec.md).
 // Favorites first with up/down arrows, then the other tools; a star switches each on or off.
 
 import { ArrowDown, ArrowUp, Star } from "lucide-react";
-import { useState } from "react";
 import { Layout, TOOL_KEYS, TOOLS } from "../layout/Layout";
-import { moveFavorite, parseFavorites, toggleFavorite } from "../layout/favorites";
-import { saveSetting, useSetting } from "../sync/settings";
+import { moveFavorite, saveFavorites, toggleFavorite, useFavorites } from "../layout/favorites";
 
 export function FavoritesScreen() {
-  const favorites = parseFavorites(useSetting("favorite_tools"), TOOL_KEYS);
+  const favorites = useFavorites(TOOL_KEYS);
   const others = TOOL_KEYS.filter((key) => !favorites.includes(key));
-  const [error, setError] = useState("");
-
-  function save(next: string[]) {
-    setError("");
-    saveSetting("favorite_tools", JSON.stringify(next)).catch((e) => setError(`Save failed: ${e}`));
-  }
+  const save = saveFavorites;
 
   function row(key: string, starred: boolean, index: number) {
     const { label, icon: Icon } = TOOLS.find((t) => t.key === key)!;
@@ -56,7 +49,6 @@ export function FavoritesScreen() {
 
   return (
     <Layout title="Favorites">
-      {error && <p className="error">{error}</p>}
       <p className="muted">Starred tools show in the side panel, in this order.</p>
       <ul className="fav-list">
         {favorites.map((key, i) => row(key, true, i))}
