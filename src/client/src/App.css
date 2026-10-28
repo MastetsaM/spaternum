@@ -127,7 +127,6 @@ input {
   text-decoration: none;
 }
 .tool-list a.active { background: var(--bg); color: var(--accent); }
-.tool-items { padding: 4px 0 8px 36px; }
 
 .side, .tools {
   overflow: auto;
@@ -189,7 +188,6 @@ main h1 { font-size: 17px; margin: 0; flex: 1; min-width: 0; overflow: hidden; w
   .side.open { transform: none; }
   .tools { right: 0; }
   .side .close, .tools .close { float: right; border: none; }
-  .side .folder-tree { display: none; } /* phone: folders are browsed in the main area; ☰ only switches tools */
   .backdrop { position: fixed; inset: 0; z-index: 5; background: rgb(0 0 0 / 0.3); }
 }
 
@@ -245,7 +243,11 @@ button.danger { color: var(--error); border-color: var(--error); }
 .new-buttons { display: flex; gap: 8px; margin-bottom: 12px; }
 .new-buttons button { display: inline-flex; align-items: center; gap: 6px; }
 .new-buttons + .name-form { margin-bottom: 12px; }
-.up { display: inline-flex; align-items: center; gap: 4px; margin-bottom: 12px; color: var(--muted); text-decoration: none; }
+.location { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; min-width: 0; }
+.location strong { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.up { display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; color: var(--muted); text-decoration: none; }
+.folder-tree + .details { margin-top: 16px; }
+.panel-label { font-size: 12px; margin: 0 0 6px; color: var(--muted); text-transform: uppercase; }
 
 .note-list { list-style: none; margin: 0; padding: 0; }
 .note-list a {
@@ -258,8 +260,8 @@ button.danger { color: var(--error); border-color: var(--error); }
   text-decoration: none;
 }
 .note-list a.folder-row { flex-direction: row; align-items: center; gap: 8px; font-weight: 600; }
-.note-title { display: flex; align-items: center; gap: 6px; font-weight: 600; }
-.note-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 13px; }
+.note-list a.note-title { flex-direction: row; align-items: center; gap: 6px; font-weight: 600; }
+.note-title span { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 
 .editor { display: flex; flex-direction: column; gap: 8px; height: 100%; }
 .editor .back { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; border: none; padding: 4px 0; color: var(--muted); }

@@ -1,5 +1,5 @@
 // Voice notes: Record / Stop (Android only), the list newest first with upload state, Play,
-// edit title and tags, Archive. The side panel / ☰ drawer holds the tag filter.
+// edit title and tags, Archive. The tool panel (right) holds the tag filter.
 
 import { Archive, Mic, Pencil, Play, Square } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -71,21 +71,24 @@ export function VoiceNotesScreen() {
     }
   }
 
-  const side = (
-    <div className="tags">
-      <button className={`tag ${shownTag === null ? "on" : ""}`} onClick={() => setTag(null)}>
-        All
-      </button>
-      {tags.map((t) => (
-        <button key={t} className={`tag ${shownTag === t ? "on" : ""}`} onClick={() => setTag(t)}>
-          {t}
+  const tagFilter = (
+    <>
+      <h3 className="panel-label">Tags</h3>
+      <div className="tags">
+        <button className={`tag ${shownTag === null ? "on" : ""}`} onClick={() => setTag(null)}>
+          All
         </button>
-      ))}
-    </div>
+        {tags.map((t) => (
+          <button key={t} className={`tag ${shownTag === t ? "on" : ""}`} onClick={() => setTag(t)}>
+            {t}
+          </button>
+        ))}
+      </div>
+    </>
   );
 
   return (
-    <Layout title="Voice notes" side={side}>
+    <Layout title="Voice notes" tools={tagFilter}>
       {RECORDS_HERE && <RecordBar />}
       {error && <p className="error">{error}</p>}
       {docs.length === 0 && <p className="muted">No voice notes yet.</p>}

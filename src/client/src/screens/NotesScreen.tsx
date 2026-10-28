@@ -1,5 +1,5 @@
 // Notes: folders browsed like a file manager in the main area (sub-folders, then notes), or the
-// editor; the folder tree in the PC's side panel; folder or note details in the tool panel. Rules live in notes/notes.ts, database writes in notes/store.ts.
+// editor; the tool panel holds the folder tree, then the folder's or note's details. Rules live in notes/notes.ts, database writes in notes/store.ts.
 
 import { ArrowLeft, ChevronLeft, Folder as FolderIcon, FolderPlus, Pin, PinOff, Plus, Search, X } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
@@ -89,14 +89,21 @@ function ListView() {
 
   return (
     <Layout
-      title={searching ? "Search" : (current?.name ?? "Notes")}
-      side={<FolderTree folders={folders} currentId={current?.id ?? null} />}
-      tools={current && <FolderDetails key={current.id} folder={current} folders={folders} notes={notes} />}
+      title="Notes"
+      tools={
+        <>
+          <FolderTree folders={folders} currentId={current?.id ?? null} />
+          {current && <FolderDetails key={current.id} folder={current} folders={folders} notes={notes} />}
+        </>
+      }
     >
       {current && !searching && (
-        <Link className="up" to={listUrl(parentId)}>
-          <ChevronLeft size={16} /> {parentName}
-        </Link>
+        <div className="location">
+          <Link className="up" to={listUrl(parentId)}>
+            <ChevronLeft size={16} /> {parentName}
+          </Link>
+          <strong>{current.name}</strong>
+        </div>
       )}
 
       <div className="new-buttons">
@@ -153,7 +160,7 @@ function ListView() {
       ) : (
         <ul className="note-list">
           {shown.map((note) => (
-            <NoteRow key={note.id} note={note} folder={searching ? folders.find((f) => f.id === note.folder_id) : undefined} />
+            <NoteRow key={note.id} note={note} />
           ))}
         </ul>
       )}
@@ -161,22 +168,13 @@ function ListView() {
   );
 }
 
-function NoteRow({ note, folder }: { note: Note; folder?: Folder }) {
+/** Only the title, on one line; a tap opens the note. */
+function NoteRow({ note }: { note: Note }) {
   return (
     <li>
-      <Link to={`/tools/notes/${note.id}`}>
-        <span className="note-title">
-          {note.pinned && <Pin size={14} />} {title(note.body)}
-        </span>
-        <span className="muted note-meta">
-          {new Date(note.updated_at).toLocaleString()}
-          {folder && ` · ${folder.name}`}
-          {note.tags.map((tag) => (
-            <span key={tag} className="tag">
-              {tag}
-            </span>
-          ))}
-        </span>
+      <Link to={`/tools/notes/${note.id}`} className="note-title">
+        {note.pinned && <Pin size={14} />}
+        <span>{title(note.body)}</span>
       </Link>
     </li>
   );
@@ -186,20 +184,23 @@ function NoteRow({ note, folder }: { note: Note; folder?: Folder }) {
 
 function FolderTree({ folders, currentId }: { folders: Folder[]; currentId: string | null }) {
   return (
-    <ul className="folder-tree">
-      <li>
-        <Link to={listUrl(null)} className={currentId === null ? "active" : ""}>
-          Top level
-        </Link>
-      </li>
-      {folderTree(folders).map(({ folder, depth }) => (
-        <li key={folder.id} style={{ paddingLeft: depth * 14 }}>
-          <Link to={listUrl(folder.id)} className={folder.id === currentId ? "active" : ""}>
-            <FolderIcon size={15} /> {folder.name}
+    <>
+      <h3 className="panel-label">Folders</h3>
+      <ul className="folder-tree">
+        <li>
+          <Link to={listUrl(null)} className={currentId === null ? "active" : ""}>
+            Top level
           </Link>
         </li>
-      ))}
-    </ul>
+        {folderTree(folders).map(({ folder, depth }) => (
+          <li key={folder.id} style={{ paddingLeft: depth * 14 }}>
+            <Link to={listUrl(folder.id)} className={folder.id === currentId ? "active" : ""}>
+              <FolderIcon size={15} /> {folder.name}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </>
   );
 }
 
@@ -386,7 +387,7 @@ function EditorView({ id }: { id: string }) {
 
   if (state === "missing") {
     return (
-      <Layout title="Note">
+      <Layout title="Notes">
         <p className="muted">This note isn't on this device. It may have been archived — see the Archive page.</p>
         <Link to="/tools/notes">Back to notes</Link>
       </Layout>
@@ -401,9 +402,13 @@ function EditorView({ id }: { id: string }) {
 
   return (
     <Layout
-      title={text.trim() ? title(text) : params.get("new") === "1" ? "New note" : "Note"}
-      side={folders && <FolderTree folders={folders} currentId={folderId} />}
-      tools={<NoteDetails note={note} folders={folders ?? []} isNew={params.get("new") === "1"} onArchive={archive} />}
+      title="Notes"
+      tools={
+        <>
+          {folders && <FolderTree folders={folders} currentId={folderId} />}
+          <NoteDetails note={note} folders={folders ?? []} isNew={params.get("new") === "1"} onArchive={archive} />
+        </>
+      }
     >
       <div className="editor">
         <button className="back" onClick={back}>
