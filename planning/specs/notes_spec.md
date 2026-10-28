@@ -101,9 +101,18 @@ Notes work offline on both clients; changes sync when the server is reachable, l
 How the rules above map onto the app's layout ([[client-foundation_spec]]). Added 2026-10-28.
 
 **Screens** (routes, so Android's back gesture walks back through them):
-- `/tools/notes?folder=<id>` — **note list** of one folder in the main area; no `folder` = top level. Side panel / ☰ drawer: the **folder tree** under Notes (top level first, then folders, any depth). Tool panel: the **selected folder's details** — rename, move, new sub-folder, archive — and New folder at the top level.
+- `/tools/notes?folder=<id>`: a folder, browsed like a file manager (changed 2026-10-28 after Mihail's first look). No `folder` means the top level.
+  - **Main area, from the top:**
+    - A **"‹ <parent name>"** row ("‹ Notes" for the top level), shown inside a folder; it goes up one level.
+    - The **New note** and **New folder** buttons side by side. New folder opens an inline name box and creates the folder inside the current one.
+    - Search.
+    - The current folder's **sub-folders**, sorted by name; a tap goes in.
+    - Its **notes**.
+  - Going into a folder is a new screen, so Android's back gesture goes back up.
+  - **Side panel on the PC:** the folder tree under Notes, as a shortcut. **On the phone** the ☰ drawer only switches tools, with no folder tree.
+  - **Tool panel:** the current folder's details: rename, move, archive. It's empty at the top level.
 - `/tools/notes/<id>` — **editor** in the main area: one plain text box. Tool panel: the **note's details** — tags, pin, move to a folder, archive.
-- **Search** sits above the note list: a text box and the tags in use. While text is typed or a tag is chosen, the list shows matches from **all folders** instead of the one folder.
+- **Search** sits above the folder's contents: a text box and the tags in use. While text is typed or a tag is chosen, the list shows matching notes from **all folders** instead of the folder's sub-folders and notes.
 
 **Writing:**
 - Every write sets `updated_at` to the device time corrected by the server offset (`serverNow()`), so latest-write-wins works ([[2026-10-20-offline-latest-write-wins]]).
