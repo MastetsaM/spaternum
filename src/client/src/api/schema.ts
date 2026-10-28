@@ -198,40 +198,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/settings/settings/pull": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Pull Route */
-        get: operations["pull_route_api_settings_settings_pull_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/settings/settings/push": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Push Route */
-        post: operations["push_route_api_settings_settings_push_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -364,39 +330,6 @@ export interface components {
         Restored: {
             /** Status */
             status: string;
-        };
-        /** Setting */
-        Setting: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /**
-             * Updated At
-             * Format: date-time
-             */
-            updated_at: string;
-            /**
-             * Deleted
-             * @default false
-             */
-            _deleted: boolean;
-            /** Key */
-            key: string;
-            /** Value */
-            value: string;
-        };
-        /** SettingPull */
-        SettingPull: {
-            /** Documents */
-            documents: components["schemas"]["Setting"][];
-            checkpoint: components["schemas"]["Checkpoint"];
         };
         /** Uploaded */
         Uploaded: {
@@ -859,75 +792,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Restored"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    pull_route_api_settings_settings_pull_get: {
-        parameters: {
-            query?: {
-                seq?: number;
-                limit?: number;
-            };
-            header?: {
-                authorization?: string;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SettingPull"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    push_route_api_settings_settings_push_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                authorization?: string;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Setting"][];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Setting"][];
                 };
             };
             /** @description Validation Error */

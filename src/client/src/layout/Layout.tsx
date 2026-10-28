@@ -18,9 +18,8 @@ import {
 } from "lucide-react";
 import { useEffect, useState, type CSSProperties, type PointerEvent, type ReactNode } from "react";
 import { NavLink, useLocation } from "react-router";
-import { useSetting } from "../sync/settings";
 import { useStatus } from "../sync/status";
-import { parseFavorites } from "./favorites";
+import { useFavorites } from "./favorites";
 import { clampWidth, DEFAULTS, loadWidths, saveWidths, type Panel, type Widths } from "./widths";
 
 export const PHONE = "(max-width: 700px)"; // keep in sync with App.css
@@ -54,7 +53,7 @@ export function Layout({ title, tools, actions, children }: Props) {
   // Open by default on the PC; on the phone it covers the screen, so only when asked
   const [toolsOpen, setToolsOpen] = useState(() => !window.matchMedia(PHONE).matches);
   const [widths, setWidths] = useState(loadWidths);
-  const favorites = parseFavorites(useSetting("favorite_tools"), TOOL_KEYS);
+  const favorites = useFavorites(TOOL_KEYS);
   const { online } = useStatus();
   const close = () => setDrawerOpen(false);
   // Any new screen (e.g. a folder picked in the tool panel) closes what slides over it on the phone

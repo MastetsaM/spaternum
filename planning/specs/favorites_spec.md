@@ -1,7 +1,7 @@
 # Spec — Favorite tools
 
 ## What and why
-The left side panel (☰ drawer on the phone) lists every tool. As tools grow, that list gets long. Mihail picks his **favorite tools** on a Favorites page, and the side panel lists only those. The choice **syncs across devices** (Mihail, 2026-10-28).
+The left side panel (☰ drawer on the phone) lists every tool. As tools grow, that list gets long. Mihail picks his **favorite tools** on a Favorites page, and the side panel lists only those. The choice is **per device** (Mihail, 2026-10-28).
 
 ## Behaviour
 - **Side panel:** a **★ Favorites** entry first, then the favorite tools **in Mihail's order**. ★ Favorites opens `/tools/favorites`.
@@ -13,31 +13,15 @@ The left side panel (☰ drawer on the phone) lists every tool. As tools grow, t
   - Removing every favorite is allowed: the side panel then shows only ★ Favorites.
 - An open tool that isn't a favorite still works; it just isn't listed in the side panel.
 
-## Sync and data
-A new server module, **`settings`**, holds small settings that follow Mihail across devices. It's a synced table like the others ([[2026-10-21-sync-rxdb]]), so it works offline and the latest write wins ([[2026-10-20-offline-latest-write-wins]]).
-
-```sql
-CREATE TABLE settings (
-    id          uuid PRIMARY KEY,      -- fixed per key, the same on every device (below)
-    key         text NOT NULL UNIQUE,  -- e.g. 'favorite_tools'
-    value       text NOT NULL,         -- JSON, e.g. '["notes", "archive"]'
-    created_at  timestamptz NOT NULL,
-    updated_at  timestamptz NOT NULL,
-    archived_at timestamptz,           -- unused: settings are never archived
-    seq         bigint NOT NULL
-);
-```
-
-- **Fixed id per key:** two devices that save the same setting for the first time must write the same row, not two rows. Each key's id is a constant in the client code.
-- **`value` is JSON stored as text.** The server never looks inside it, and the sync helper passes text through unchanged. A `jsonb` column would need extra conversion code in the shared sync helper for no gain today.
-- `favorite_tools` holds the tool keys (`notes`, `voice-notes`, `archive`) **in display order**. Unknown keys, e.g. a tool removed later, are ignored, and so is a broken value (the default is used).
-- The whole list is one value, so the latest write wins for the whole list. That's fine for one person.
-- Settings never show in the Archive page; the module has no `archive.py`.
-- **Per-device things stay per device:** panel widths and the server address and token aren't synced.
+## Saved on each device
+Each device has **its own favorites and order** (Mihail, 2026-10-28). The PC and the phone can differ, and the server isn't involved.
+- Kept in `localStorage` under `spaternum.favoriteTools`: a JSON list of tool keys (`notes`, `voice-notes`, `archive`) **in display order**.
+- Unknown keys (e.g. a tool removed later) are ignored. A missing or broken value means the default: every tool.
+- A first version synced the list through a server `settings` table. That came from a misunderstanding of the question and was removed the same day, before reaching main.
 
 ## Acceptance criteria (done when…)
 1. Starring, un-starring and moving on the Favorites page changes the side panel at once.
-2. The change reaches the other device live, and after being offline.
+2. The choice stays after the app restarts, and doesn't affect the other device.
 3. Before anything is chosen, every tool shows.
 4. `/tools` still lists every tool.
 5. Server and client tests pass.
@@ -45,7 +29,7 @@ CREATE TABLE settings (
 ## Out of scope
 - Drag and drop (later).
 - Favorites in the rail or the phone's bottom bar (option b, not chosen).
-- Other synced settings. The table is ready for them, but each is proposed first.
+- Syncing favorites across devices.
 
 ## Related
-[[ui-design_spec]] · [[client-foundation_spec]] · [[archive_spec]] · [[2026-10-21-sync-rxdb]] · [[2026-10-20-offline-latest-write-wins]] · [[2026-10-20-architecture-modular-monolith]] · [[tasks]]
+[[ui-design_spec]] · [[client-foundation_spec]] · [[tasks]]
