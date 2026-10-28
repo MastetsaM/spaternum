@@ -1,5 +1,5 @@
 // The frame every screen sits in.
-// PC: rail (sections) | side panel (tools + the open tool's items) | main | tool panel.
+// PC: rail (sections) | side panel (the list of tools only) | main | tool panel (the tool's navigation and details).
 // Phone (narrow window): sections in the bottom bar, side panel as a ☰ drawer, tool panel from a button.
 
 import {
@@ -35,13 +35,12 @@ export const TOOLS = [
 
 type Props = {
   title: string;
-  side?: ReactNode; // the open tool's items, e.g. the folder tree
-  tools?: ReactNode; // tool-specific settings and details
+  tools?: ReactNode; // the tool's own navigation (e.g. the folder tree) and details
   actions?: ReactNode; // buttons at the right of the header, e.g. Home's Settings gear
   children: ReactNode; // main content
 };
 
-export function Layout({ title, side, tools, actions, children }: Props) {
+export function Layout({ title, tools, actions, children }: Props) {
   const { pathname, search } = useLocation();
   const inTools = pathname.startsWith("/tools");
   const [drawerOpen, setDrawerOpen] = useState(false); // phone only
@@ -49,7 +48,11 @@ export function Layout({ title, side, tools, actions, children }: Props) {
   const [toolsOpen, setToolsOpen] = useState(() => !window.matchMedia(PHONE).matches);
   const { online } = useStatus();
   const close = () => setDrawerOpen(false);
-  useEffect(close, [pathname, search]); // any new screen, e.g. a folder picked in the drawer
+  // Any new screen (e.g. a folder picked in the tool panel) closes what slides over it on the phone
+  useEffect(() => {
+    close();
+    if (window.matchMedia(PHONE).matches) setToolsOpen(false);
+  }, [pathname, search]);
 
   const sections = SECTIONS.map(({ to, label, icon: Icon }) => (
     <NavLink key={to} to={to} title={label} onClick={close}>
@@ -58,20 +61,17 @@ export function Layout({ title, side, tools, actions, children }: Props) {
     </NavLink>
   ));
 
-  // Tools: the list of tools, with the open tool's own items under it
-  const sideContent = inTools ? (
+  // Tools: only the list of tools; anything inside a tool goes in the tool panel
+  const sideContent = inTools && (
     <ul className="tool-list">
       {TOOLS.map(({ to, label, icon: Icon }) => (
         <li key={to}>
           <NavLink to={to} onClick={close}>
             <Icon size={18} /> {label}
           </NavLink>
-          {pathname.startsWith(to) && side && <div className="tool-items">{side}</div>}
         </li>
       ))}
     </ul>
-  ) : (
-    side
   );
 
   return (

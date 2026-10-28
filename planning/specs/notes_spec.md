@@ -102,16 +102,17 @@ How the rules above map onto the app's layout ([[client-foundation_spec]]). Adde
 
 **Screens** (routes, so Android's back gesture walks back through them):
 - `/tools/notes?folder=<id>`: a folder, browsed like a file manager (changed 2026-10-28 after Mihail's first look). No `folder` means the top level.
+  - The header always says **Notes** (in the editor too), never the folder or note name.
   - **Main area, from the top:**
-    - A **"‹ <parent name>"** row ("‹ Notes" for the top level), shown inside a folder; it goes up one level.
+    - Inside a folder, a **location row**: "‹ <parent name>" ("‹ Notes" for the top level) goes up one level, followed by the current folder's name.
     - The **New note** and **New folder** buttons side by side. New folder opens an inline name box and creates the folder inside the current one.
     - Search.
     - The current folder's **sub-folders**, sorted by name; a tap goes in.
-    - Its **notes**.
+    - Its **notes**: each row is **only the title** (the first line) on one line, cut with "…", with a pin mark if pinned. A tap opens the note (Mihail, 2026-10-28).
   - Going into a folder is a new screen, so Android's back gesture goes back up.
-  - **Side panel on the PC:** the folder tree under Notes, as a shortcut. **On the phone** the ☰ drawer only switches tools, with no folder tree.
-  - **Tool panel:** the current folder's details: rename, move, archive. It's empty at the top level.
-- `/tools/notes/<id>` — **editor** in the main area: one plain text box. Tool panel: the **note's details** — tags, pin, move to a folder, archive.
+  - **Left side panel / ☰:** only the list of tools.
+  - **Tool panel (right):** the **folder tree** for jumping anywhere, then the current folder's details (rename, move, archive). At the top level it shows only the tree.
+- `/tools/notes/<id>` — **editor** in the main area: one plain text box. Tool panel: the folder tree, then the **note's details** — tags, pin, move to a folder, archive.
 - **Search** sits above the folder's contents: a text box and the tags in use. While text is typed or a tag is chosen, the list shows matching notes from **all folders** instead of the folder's sub-folders and notes.
 
 **Writing:**

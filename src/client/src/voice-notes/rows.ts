@@ -29,8 +29,10 @@ export async function saveEdits(doc: RxDocument<VoiceNote>, title: string, tags:
   await doc.incrementalPatch({ title: title.trim(), tags, updated_at: serverNow() });
 }
 
-/** RxDB remove = archived on the server; a newer updated_at so the server takes it. */
+/**
+ * Removed = archived on the server. One write with a newer updated_at: as two writes (patch, then
+ * remove) the removal could be pushed alone with the same updated_at, and the server refuses that.
+ */
 export async function archive(doc: RxDocument<VoiceNote>): Promise<void> {
-  const latest = await doc.incrementalPatch({ updated_at: serverNow() });
-  await latest.remove();
+  await doc.incrementalModify((data) => ({ ...data, updated_at: serverNow(), _deleted: true }));
 }

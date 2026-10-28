@@ -1,7 +1,8 @@
-// Voice notes: Record / Stop (Android only), the list newest first with upload state, Play,
-// edit title and tags, Archive. The side panel / ☰ drawer holds the tag filter.
+// Voice notes: Record / Stop (Android only), the list newest first with upload state, a player
+// (Play / Pause, position bar, speed),
+// edit title and tags, Archive. The tool panel (right) holds the tag filter.
 
-import { Archive, Mic, Pencil, Play, Square } from "lucide-react";
+import { Archive, Mic, Pause, Pencil, Play, Square } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router";
 import type { RxDocument } from "rxdb";
@@ -9,7 +10,7 @@ import { loadSettings } from "../api/settings";
 import { Layout } from "../layout/Layout";
 import { getDb, type VoiceNote } from "../sync/db";
 import { useStatus } from "../sync/status";
-import { fetchAudio, play, stopPlaying } from "../voice-notes/audio";
+import { fetchAudio, pause, play, positionOf, seek, setSpeed, SPEEDS, stopPlaying, usePlayer } from "../voice-notes/audio";
 import { readAudio } from "../voice-notes/files";
 import {
   allTags,
@@ -36,7 +37,7 @@ export function VoiceNotesScreen() {
   const [params, setParams] = useSearchParams();
   const tag = params.get("tag");
   const setTag = (next: string | null) => setParams(next === null ? {} : { tag: next });
-  const [playing, setPlaying] = useState<string | null>(null);
+  const player = usePlayer();
   const [error, setError] = useState("");
   const uploads = useUploads();
   const { online } = useStatus();
@@ -57,35 +58,37 @@ export function VoiceNotesScreen() {
   const shownTag = tag !== null && tags.includes(tag) ? tag : null;
 
   async function onPlay(doc: Doc, source: PlaySource) {
-    if (playing === doc.id) return stopPlaying();
+    if (player.id === doc.id && player.playing) return pause();
     setError("");
     try {
-      const audio =
+      await play(doc.id, async () =>
         source.from === "local"
           ? new Blob([await readAudio(uploads.files.get(doc.id)!.name)], { type: MIME })
-          : await fetchAudio(loadSettings()!, doc.id);
-      setPlaying(doc.id);
-      await play(audio, () => setPlaying((id) => (id === doc.id ? null : id)));
+          : await fetchAudio(loadSettings()!, doc.id),
+      );
     } catch (e) {
       setError(`Play failed: ${e}`);
     }
   }
 
-  const side = (
-    <div className="tags">
-      <button className={`tag ${shownTag === null ? "on" : ""}`} onClick={() => setTag(null)}>
-        All
-      </button>
-      {tags.map((t) => (
-        <button key={t} className={`tag ${shownTag === t ? "on" : ""}`} onClick={() => setTag(t)}>
-          {t}
+  const tagFilter = (
+    <>
+      <h3 className="panel-label">Tags</h3>
+      <div className="tags">
+        <button className={`tag ${shownTag === null ? "on" : ""}`} onClick={() => setTag(null)}>
+          All
         </button>
-      ))}
-    </div>
+        {tags.map((t) => (
+          <button key={t} className={`tag ${shownTag === t ? "on" : ""}`} onClick={() => setTag(t)}>
+            {t}
+          </button>
+        ))}
+      </div>
+    </>
   );
 
   return (
-    <Layout title="Voice notes" side={side}>
+    <Layout title="Voice notes" tools={tagFilter}>
       {RECORDS_HERE && <RecordBar />}
       {error && <p className="error">{error}</p>}
       {docs.length === 0 && <p className="muted">No voice notes yet.</p>}
@@ -108,7 +111,9 @@ export function VoiceNotesScreen() {
               state={stateLabel(state)}
               stateKind={state.kind}
               source={source}
-              playing={playing === doc.id}
+              loaded={player.id === doc.id}
+              playing={player.id === doc.id && player.playing}
+              speed={player.speed}
               onPlay={() => onPlay(doc, source)}
               onError={setError}
             />
@@ -150,12 +155,14 @@ type ItemProps = {
   state: string;
   stateKind: string;
   source: PlaySource;
+  loaded: boolean; // the player holds this recording (playing or paused)
   playing: boolean;
+  speed: number;
   onPlay: () => void;
   onError: (message: string) => void;
 };
 
-function Item({ doc, state, stateKind, source, playing, onPlay, onError }: ItemProps) {
+function Item({ doc, state, stateKind, source, loaded, playing, speed, onPlay, onError }: ItemProps) {
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState("");
   const [tags, setTags] = useState("");
@@ -175,8 +182,11 @@ function Item({ doc, state, stateKind, source, playing, onPlay, onError }: ItemP
     }
   }
 
+  const position = positionOf(doc.id);
+  const length = Math.max(doc.duration_ms / 1000, position);
+
   async function onArchive() {
-    if (playing) stopPlaying();
+    if (loaded) stopPlaying();
     await archive(doc).catch((e) => onError(`Archive failed: ${e}`));
   }
 
@@ -209,14 +219,34 @@ function Item({ doc, state, stateKind, source, playing, onPlay, onError }: ItemP
               ))}
             </div>
           )}
-          <div className="vn-actions">
-            <button
-              onClick={onPlay}
-              disabled={source.from === "none"}
-              title={source.from === "none" ? source.reason : undefined}
-            >
-              {playing ? <Square size={16} /> : <Play size={16} />} {playing ? "Stop" : "Play"}
+          <div className="vn-player">
+            <button onClick={onPlay} disabled={source.from === "none"} aria-label={playing ? "Pause" : "Play"}>
+              {playing ? <Pause size={16} /> : <Play size={16} />}
             </button>
+            <input
+              type="range"
+              min={0}
+              max={length}
+              step={0.1}
+              value={position}
+              disabled={source.from === "none"}
+              onChange={(e) => seek(doc.id, Number(e.target.value))}
+              aria-label="Position"
+            />
+            <span className="muted vn-time">
+              {durationLabel(position * 1000)} / {durationLabel(length * 1000)}
+            </span>
+          </div>
+          {loaded && (
+            <div className="tags">
+              {SPEEDS.map((s) => (
+                <button key={s} className={`tag ${speed === s ? "on" : ""}`} onClick={() => setSpeed(s)}>
+                  ×{s}
+                </button>
+              ))}
+            </div>
+          )}
+          <div className="vn-actions">
             {source.from === "none" && <span className="muted">{source.reason}</span>}
             <button onClick={edit} aria-label="Edit title and tags">
               <Pencil size={16} /> Edit

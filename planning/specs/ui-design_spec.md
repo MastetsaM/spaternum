@@ -33,7 +33,7 @@ Colours come only from these tokens. A new colour needs a new token, and that ge
 - System font (`system-ui`), base **15px**.
 - Sizes: screen title 17px bold; body 15px; meta lines (dates, sizes, counts) 13px in `--muted`; panel section labels 12px uppercase in `--muted`; rail labels 10px.
 - Use `px` everywhere, the same as the rest of the file.
-- **Header:** the same 48px height on every screen. The screen title stays on one line and is cut with an ellipsis (e.g. a long note's first line).
+- **Header:** the same 48px height on every screen. It always shows the **tool or section name** (Notes, Voice notes, Archive, Home, Settings), never a folder or note title (Mihail, 2026-10-28). It stays on one line and is cut with an ellipsis if needed.
 - Titles cut off with an ellipsis instead of wrapping in lists. Note text in the editor wraps normally, with line height 1.5.
 
 ## Spacing and shapes
@@ -52,7 +52,7 @@ Colours come only from these tokens. A new colour needs a new token, and that ge
 | **Danger button** | Outline in `--error` (Archive inside a confirmation; Stop is filled red) |
 | **Icon button** | No border (close ✕, clear search) |
 | **Input / textarea / select** | `--bg` fill, 1px `--line` border, 6px corners, full width |
-| **List row** | Padding 10–12px top and bottom, bottom border `--line`. Title on the first line (600 weight), meta line below in 13px `--muted` |
+| **List row** | Padding 10–12px top and bottom, bottom border `--line`. Title on the first line (600 weight), meta line below in 13px `--muted`. Notes rows are the title only, one line, cut with "…" |
 | **Active item** (rail, tool list, folder) | `--accent` text on `--bg` background |
 | **Tag** | Pill (`.tag`): 1px border, 12px corners, 13px. Selected = `.on` (`--accent` border and text). Used for tags on items and for tag filters |
 | **Filter buttons** (e.g. Archive types) | Outline buttons in a wrapping row. Active = `.on` |
