@@ -12,7 +12,13 @@ Personal workspace ecosystem: a self-hosted server (Postgres, API, later AI) wit
 Full picture — architecture, stack, phases, what's cut: [[PRD]]. How it's built: [[TECH]].
 
 ## Status
-Phase 0 (voice recorder prototype) done — Tauri on Android works. Sync spike done — RxDB sync works on PC and phone. Notes spec complete; local-file locations decided. Last step before phase 1: the voice-notes spec. Current state and next steps: [[tasks]].
+As of 2026-10-28:
+- **Phase 1 (notes + voice notes) is done.**
+  - The server runs on the Pi over Tailscale.
+  - The Android app (release APK) and the PC app (`pnpm tauri dev`) were checked against it.
+- **Next:** merge notes and voice notes into one note ([[notes-recordings_spec]], draft).
+
+Ideas and loose ends: [[tasks]] under "Later".
 
 ## Workspaces
 | Folder | Read first |

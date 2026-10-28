@@ -54,6 +54,8 @@ Token and address in `localStorage` · plain CSS · `lucide-react` icons · `rea
 - 1, 2, 3, 6, 7: pass (8 Vitest tests).
 - 4: pass on the phone — a note pushed with `curl` to the Pi appeared without refresh. PC check moved to block 7.
 - 5: moved to block 7 — offline writes need the Notes screen; the PC runs the same sync code.
+- Block 7 check (Mihail, 2026-10-28): 4 passes on the PC too (live and quick between the PC and the phone); 5 passes (offline writes kept and synced back).
+- Added after the checks (2026-10-28): resizable PC panels ([[ui-design_spec]]) and favorite tools ([[favorites_spec]]).
 
 ## Related
-[[tasks]] · [[TECH]] · [[PRD]] · [[sync-spike_spec]] · [[notes_spec]] · [[voice-notes_spec]] · [[archive_spec]] · [[server-foundation_spec]] · [[2026-10-21-sync-rxdb]] · [[2026-10-20-clients-tauri-react]]
+[[tasks]] · [[TECH]] · [[PRD]] · [[sync-spike_spec]] · [[notes_spec]] · [[voice-notes_spec]] · [[archive_spec]] · [[server-foundation_spec]] · [[2026-10-21-sync-rxdb]] · [[2026-10-20-clients-tauri-react]] · [[ui-design_spec]] · [[favorites_spec]]

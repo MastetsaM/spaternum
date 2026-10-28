@@ -144,9 +144,14 @@ How the rules above map onto the app's layout ([[client-foundation_spec]]). Adde
 Server side built (`src/server/spaternum/notes/`); 8 tests in `tests/notes_test.py` pass. Covers criteria 1, 2, 5, 6, 8, 9 and the server part of 10: sync of folders and notes, a note arriving before its folder, folder archive cascade (earlier separate archives keep their own time), one Archive entry per archived folder, restore of a folder or a note, folder-loop refusal, a later edit un-archiving a note. Criteria 3, 4, 7 (list order, search, empty notes) are client work — the server doesn't refuse empty notes.
 
 ## Results — client (2026-10-28)
-Built in `src/client/src/notes/` (rules + database writes) and `screens/NotesScreen.tsx`; 21 Vitest tests in `notes/notes_test.ts` (29 client tests in total) and `pnpm build` pass. Not yet run on the devices.
+Built in `src/client/src/notes/` (rules + database writes) and `screens/NotesScreen.tsx`; 21 Vitest tests in `notes/notes_test.ts` (29 client tests in total) and `pnpm build` pass. The device check is below.
 - Unit-tested: 3 (title, order), 4 (search, tags), 7 (empty-note rules), the device side of the loop rule, and hiding the contents of a folder archived on the device.
 - Built, waiting for the phone/PC check: 1, 2, 5, 6, 8. Criterion 9's restore needs the Archive page (block 9); the client only archives the folder, the server cascade does the rest (server-tested).
+
+
+**Device check (Mihail, 2026-10-28, phone and PC against the Pi):** notes, folders, title, tags, pin, search and archive work; offline writes sync back; live sync between the PC and the phone is quick; archive and restore from the Archive page work. Criteria 1–5, 7–9 pass. Criterion 6 (the same note edited on two devices at once) wasn't checked separately; the server side is tested.
+- Feedback that changed the design during the check is in "Client details" above (folders browsed like a file manager, title-only rows, optional title).
+- Feedback for later is in [[notes-recordings_spec]]: merge with voice notes, a "Pinned" section at the top level, folder tags, a full tree with notes settings in the tool panel. Mihail also found navigation still a bit hard.
 
 ## Decided 2026-10-21 (former open questions)
 Archiving a folder → archives its contents · note in an archived folder → top level · empty notes → never saved · search → device "contains" + tags · archive view → shared Archive page, server only · sort → last edited · archive vs. later edit → latest write wins.
@@ -154,4 +159,4 @@ Archiving a folder → archives its contents · note in an archived folder → t
 Decided 2026-10-25 (while building the server): no foreign keys inside the module · Archive page shows an archived folder as one entry.
 
 ## Related
-[[PRD]] · [[TECH]] · [[tasks]] · [[2026-10-21-sync-rxdb]] · [[2026-10-21-database-access-plain-sql]] · [[2026-10-20-offline-latest-write-wins]] · [[2026-10-20-architecture-modular-monolith]] · [[sync-spike_spec]] · [[client-foundation_spec]]
+[[PRD]] · [[TECH]] · [[tasks]] · [[2026-10-21-sync-rxdb]] · [[2026-10-21-database-access-plain-sql]] · [[2026-10-20-offline-latest-write-wins]] · [[2026-10-20-architecture-modular-monolith]] · [[sync-spike_spec]] · [[client-foundation_spec]] · [[notes-recordings_spec]]

@@ -26,6 +26,11 @@ Each device has **its own favorites and order** (Mihail, 2026-10-28). The PC and
 4. `/tools` still lists every tool.
 5. Server and client tests pass.
 
+## Results (2026-10-28)
+- Built in `layout/favorites.ts` (rules and `localStorage`), `screens/FavoritesScreen.tsx` and the side panel in `layout/Layout.tsx`. 5 Vitest tests in `layout/favorites_test.ts`; 70 client tests pass; the build passes.
+- Mihail checked it on the PC: it works. The phone gets it with the next APK.
+- Later ideas for the Tools page (Android-style groups, drag and drop) are in [[tasks]] under "Later".
+
 ## Out of scope
 - Drag and drop (later).
 - Favorites in the rail or the phone's bottom bar (option b, not chosen).

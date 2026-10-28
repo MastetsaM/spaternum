@@ -74,6 +74,8 @@ Asked for by Mihail on 2026-10-28.
 - Maximums raised from 480 and 560, and the side panel allowed down to icons only, after Mihail tried it (2026-10-28). A first version snapped to icons below 180px; it felt too abrupt and changed the row spacing, so it was replaced by the smooth cut.
 - The phone isn't affected: its panels slide over the content as before.
 
+**Result (2026-10-28):** Mihail checked it on the PC and it works. 3 Vitest tests in `layout/widths_test.ts`.
+
 ## Phone
 - Narrow window = `max-width: 700px`. Sections go in the bottom bar. The side panel and tool panel slide over the content (85% wide, max 320px) with a dim backdrop. The slide is the only animation (0.2s).
 - The app is padded clear of the status bar, navigation bar and keyboard (`MainActivity.kt`).

@@ -134,7 +134,13 @@ Notes for the client:
 - **Archive bug fixed 2026-10-28:** archiving wrote twice (a new `updated_at`, then the removal), so the second push had the same `updated_at` and the server refused it. The recording came back. It's now one write, as in notes.
 
 ## Results — client (2026-10-28)
-Client built (`src/client/src/voice-notes/`, `screens/VoiceNotesScreen.tsx`); the rules with no I/O (file names, recovery, 1-hour split, upload state and errors, playback source, labels, tag filter) have Vitest tests in `voice-notes_test.ts`. Acceptance criteria 1–9 still need the checks on the phone and the PC.
+Client built (`src/client/src/voice-notes/`, `screens/VoiceNotesScreen.tsx`); the rules with no I/O (file names, recovery, 1-hour split, upload state and errors, playback source, labels, tag filter) have Vitest tests in `voice-notes_test.ts`. The device check is below.
+
+
+**Device check (Mihail, 2026-10-28, phone and PC against the Pi):** recording, the list, upload, offline recording with upload once back online, recovery after closing the app mid-recording, playback on both devices with the player, edit, archive and restore all work. Criteria 1–5, 8 pass, and 9 holds by design (no delete code, no fs remove permission).
+- Not checked on the device: 6 (repeat upload; server-tested) and 7 (killing the app during an upload).
+- **Sound:** recordings sounded off at first. That was headphones plugged in during recording; through the phone's microphone it's fine.
+- **PC playback needs `gst-plugins-good`** on Linux. Without it the PC app's page crashed on Play ([[TECH]]).
 
 ## Client details (block 8, 2026-10-28)
 How the client carries out the rules above. Nothing here adds behaviour; it fills in what the client needs to know.

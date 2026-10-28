@@ -1,6 +1,6 @@
 # Spec — Notes with recordings (draft)
 
-**Status:** draft, 2026-10-28. Build starts after the phase 1 phone checks pass and `feature/phase1-client` is merged into main (Mihail, 2026-10-28).
+**Status:** draft, 2026-10-28. Phase 1 is checked and merged, so this is the next feature to build. The open questions below come first.
 
 ## What and why
 Notes and voice notes are both notes. They become **one item, the note**, which can hold text, recordings, or both. Later phases (transcription, analysis) then work on one thing: a note's transcripts sit next to its text, under the same title, tags and folder. Asked for by Mihail on 2026-10-28, after using phase 1 on both devices.
