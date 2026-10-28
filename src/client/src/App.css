@@ -125,14 +125,12 @@ input {
   border-radius: 6px;
   color: var(--text);
   text-decoration: none;
+  overflow: hidden;
 }
 .tool-list a.active { background: var(--bg); color: var(--accent); }
-/* PC side panel dragged down to icons only (ui-design_spec.md) */
-@media (min-width: 701px) {
-  .side-icons .side { padding: 12px 8px; }
-  .side-icons .side .tool-list a { justify-content: center; padding: 8px 0; }
-  .side-icons .side .tool-list span { display: none; }
-}
+/* A narrow side panel cuts the names down to the icons (ui-design_spec.md) */
+.tool-list svg { flex-shrink: 0; }
+.tool-list span { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 
 .side, .tools {
   overflow: auto;
