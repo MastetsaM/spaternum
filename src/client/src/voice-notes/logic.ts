@@ -8,23 +8,25 @@ export const SLICE_MS = 5_000; // each piece is appended to the file at once
 export const MAX_PART_MS = 60 * 60 * 1000;
 export const RETRY_NOT_FOUND_MS = 30_000;
 
-// ---- File names: <id>.<recorded_at ms>.part while recording, <id>.webm once stopped
+// ---- File names: <id>.<recorded_at ms>.part while recording, <id>.webm once stopped,
+// <id>.uploaded.webm once the server has it
 
-export type LocalFile = { name: string; id: string; done: boolean; recordedAtMs: number | null };
+export type LocalFile = { name: string; id: string; done: boolean; uploaded: boolean; recordedAtMs: number | null };
 
 export const doneName = (id: string) => `${id}.webm`;
+export const uploadedName = (id: string) => `${id}.uploaded.webm`;
 export const partName = (id: string, recordedAtMs: number) => `${id}.${recordedAtMs}.part`;
 
 const UUID = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
-const DONE = new RegExp(`^(${UUID})\\.webm$`);
+const DONE = new RegExp(`^(${UUID})(\\.uploaded)?\\.webm$`);
 const PART = new RegExp(`^(${UUID})\\.(\\d+)\\.part$`);
 
-/** Anything that isn't one of our two names is ignored. */
+/** Anything that isn't one of our three names is ignored. */
 export function parseName(name: string): LocalFile | null {
   const done = DONE.exec(name);
-  if (done) return { name, id: done[1], done: true, recordedAtMs: null };
+  if (done) return { name, id: done[1], done: true, uploaded: Boolean(done[2]), recordedAtMs: null };
   const part = PART.exec(name);
-  if (part) return { name, id: part[1], done: false, recordedAtMs: Number(part[2]) };
+  if (part) return { name, id: part[1], done: false, uploaded: false, recordedAtMs: Number(part[2]) };
   return null;
 }
 
@@ -46,9 +48,9 @@ export function partOver(startedAtMs: number, nowMs: number): boolean {
 
 // ---- Upload
 
-/** A stopped recording still to upload. */
-export function needsUpload(file: LocalFile, uploadedAt: string | null | undefined, uploadedHere: Set<string>): boolean {
-  return file.done && !uploadedAt && !uploadedHere.has(file.id);
+/** A stopped recording still to upload. The row may be missing locally (archived); then the file name decides. */
+export function needsUpload(file: LocalFile, uploadedAt: string | null | undefined): boolean {
+  return file.done && !file.uploaded && !uploadedAt;
 }
 
 /** What to show after a failed upload; null = say nothing and retry (not reachable, row not pushed yet). */
@@ -68,7 +70,7 @@ export type UploadState =
   | { kind: "waiting" }; // on the PC: the phone hasn't uploaded it yet
 
 type StateInput = {
-  uploaded: boolean; // row's uploaded_at, or uploaded by this device
+  uploaded: boolean; // row's uploaded_at, or the file is named uploaded
   recordsHere: boolean; // this device keeps audio files (the phone)
   hasFile: boolean;
   uploading: boolean;

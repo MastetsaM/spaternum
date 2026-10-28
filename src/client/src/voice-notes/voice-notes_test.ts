@@ -14,6 +14,7 @@ import {
   sizeLabel,
   stateLabel,
   titleOf,
+  uploadedName,
   uploadError,
   uploadState,
   visibleRows,
@@ -22,13 +23,21 @@ import {
 const ID = "0b7c2a7e-1f3d-4c5b-9a8e-123456789abc";
 
 describe("file names", () => {
-  it("reads a finished and an unfinished recording", () => {
-    expect(parseName(doneName(ID))).toEqual({ name: `${ID}.webm`, id: ID, done: true, recordedAtMs: null });
+  it("reads a recording in progress, stopped, and uploaded", () => {
     expect(parseName(partName(ID, 1761645600000))).toEqual({
       name: `${ID}.1761645600000.part`,
       id: ID,
       done: false,
+      uploaded: false,
       recordedAtMs: 1761645600000,
+    });
+    expect(parseName(doneName(ID))).toEqual({ name: `${ID}.webm`, id: ID, done: true, uploaded: false, recordedAtMs: null });
+    expect(parseName(uploadedName(ID))).toEqual({
+      name: `${ID}.uploaded.webm`,
+      id: ID,
+      done: true,
+      uploaded: true,
+      recordedAtMs: null,
     });
   });
 
@@ -36,6 +45,7 @@ describe("file names", () => {
     expect(parseName("notes.txt")).toBeNull();
     expect(parseName(`${ID}.ogg`)).toBeNull();
     expect(parseName(`${ID}.part`)).toBeNull();
+    expect(parseName(`${ID}.sent.webm`)).toBeNull();
   });
 });
 
@@ -61,16 +71,18 @@ describe("1-hour limit", () => {
 describe("upload", () => {
   const done = parseName(doneName(ID))!;
   const part = parseName(partName(ID, 1))!;
+  const uploaded = parseName(uploadedName(ID))!;
 
   it("uploads a stopped recording not uploaded yet", () => {
-    expect(needsUpload(done, null, new Set())).toBe(true);
-    expect(needsUpload(done, undefined, new Set())).toBe(true); // archived: row not in the local db
+    expect(needsUpload(done, null)).toBe(true);
+    expect(needsUpload(done, undefined)).toBe(true); // archived: row not in the local db
   });
 
-  it("skips recordings still going, marked uploaded, or uploaded by this device", () => {
-    expect(needsUpload(part, null, new Set())).toBe(false);
-    expect(needsUpload(done, "2026-10-28T10:00:00.000Z", new Set())).toBe(false);
-    expect(needsUpload(done, undefined, new Set([ID]))).toBe(false);
+  it("skips recordings still going, marked uploaded by the server, or named uploaded", () => {
+    expect(needsUpload(part, null)).toBe(false);
+    expect(needsUpload(done, "2026-10-28T10:00:00.000Z")).toBe(false);
+    expect(needsUpload(uploaded, undefined)).toBe(false); // archived and already uploaded
+    expect(needsUpload(uploaded, null)).toBe(false); // uploaded, the row's uploaded_at not pulled yet
   });
 
   it("shows the reason only for errors that aren't retried quietly", () => {

@@ -9,32 +9,28 @@ import { getDb, type Db } from "../sync/db";
 import { onStatusChange } from "../sync/status";
 import { durationOf } from "./audio";
 import { fileSize, listFiles, readAudio, renameFile } from "./files";
-import { doneName, needsUpload, parseName, recoveryAction, RETRY_NOT_FOUND_MS, uploadError, type LocalFile } from "./logic";
+import {
+  doneName,
+  needsUpload,
+  parseName,
+  recoveryAction,
+  RETRY_NOT_FOUND_MS,
+  uploadedName,
+  uploadError,
+  type LocalFile,
+} from "./logic";
 import { createRow } from "./rows";
 
 /** Recording and local audio happen on Android only; the PC views and streams. */
 export const RECORDS_HERE = /android/i.test(navigator.userAgent);
 
 export type Uploads = {
-  files: Set<string>; // ids with a stopped recording on this device
-  uploaded: Set<string>; // ids this device has uploaded (kept across restarts)
+  files: Map<string, LocalFile>; // stopped recordings on this device, by id (uploaded or not)
   uploading: string | null;
   errors: Record<string, string>;
 };
 
-// Archived rows leave the local database, but their pending upload must keep going, so the
-// device remembers what it uploaded itself. Losing this only causes harmless repeat uploads.
-const UPLOADED_KEY = "spaternum.voice-notes.uploaded";
-
-function loadUploaded(): Set<string> {
-  try {
-    return new Set(JSON.parse(localStorage.getItem(UPLOADED_KEY) ?? "[]"));
-  } catch {
-    return new Set();
-  }
-}
-
-let state: Uploads = { files: new Set(), uploaded: loadUploaded(), uploading: null, errors: {} };
+let state: Uploads = { files: new Map(), uploading: null, errors: {} };
 const listeners = new Set<() => void>();
 
 function set(next: Partial<Uploads>) {
@@ -59,7 +55,7 @@ async function localFiles(): Promise<LocalFile[]> {
 /** Re-reads which stopped recordings are on this device. */
 export async function refreshFiles(): Promise<LocalFile[]> {
   const files = await localFiles();
-  set({ files: new Set(files.filter((f) => f.done).map((f) => f.id)) });
+  set({ files: new Map(files.filter((f) => f.done).map((f) => [f.id, f])) });
   return files;
 }
 
@@ -113,7 +109,7 @@ async function uploadPending(settings: Settings): Promise<void> {
   const db = await getDb();
   for (const file of await refreshFiles()) {
     const row = await db.voice_notes.findOne(file.id).exec();
-    if (!needsUpload(file, row?.uploaded_at, state.uploaded)) continue;
+    if (!needsUpload(file, row?.uploaded_at)) continue;
 
     set({ uploading: file.id });
     try {
@@ -123,10 +119,12 @@ async function uploadPending(settings: Settings): Promise<void> {
         body,
         headers: { "Content-Type": "audio/webm" },
       });
-      const uploaded = new Set(state.uploaded).add(file.id);
-      localStorage.setItem(UPLOADED_KEY, JSON.stringify([...uploaded]));
+      // The name marks it uploaded, also for archived rows that left the local database.
+      // If the rename fails, the next run uploads again: the server answers "already uploaded".
+      await renameFile(file.name, uploadedName(file.id));
       const { [file.id]: _, ...errors } = state.errors;
-      set({ uploaded, errors });
+      set({ errors });
+      await refreshFiles();
     } catch (e) {
       const status = e instanceof ApiError ? e.status : -1;
       const shown = uploadError(status, e instanceof Error ? e.message : String(e));

@@ -12,7 +12,6 @@ import { fetchAudio, play, stopPlaying } from "../voice-notes/audio";
 import { readAudio } from "../voice-notes/files";
 import {
   allTags,
-  doneName,
   durationLabel,
   MIME,
   parseTags,
@@ -59,7 +58,7 @@ export function VoiceNotesScreen() {
     try {
       const audio =
         source.from === "local"
-          ? new Blob([await readAudio(doneName(doc.id))], { type: MIME })
+          ? new Blob([await readAudio(uploads.files.get(doc.id)!.name)], { type: MIME })
           : await fetchAudio(loadSettings()!, doc.id);
       setPlaying(doc.id);
       await play(audio, () => setPlaying((id) => (id === doc.id ? null : id)));
@@ -92,9 +91,10 @@ export function VoiceNotesScreen() {
       {docs.length === 0 && <p className="muted">No voice notes yet.</p>}
       <ul className="vn-list">
         {visibleRows(docs, shownTag).map((doc) => {
-          const hasFile = uploads.files.has(doc.id);
+          const file = uploads.files.get(doc.id); // either name: <id>.webm or <id>.uploaded.webm
+          const hasFile = file !== undefined;
           const state = uploadState({
-            uploaded: Boolean(doc.uploaded_at) || uploads.uploaded.has(doc.id),
+            uploaded: Boolean(doc.uploaded_at) || Boolean(file?.uploaded),
             recordsHere: RECORDS_HERE,
             hasFile,
             uploading: uploads.uploading === doc.id,
