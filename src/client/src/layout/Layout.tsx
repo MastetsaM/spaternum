@@ -1,6 +1,7 @@
 // The frame every screen sits in.
 // PC: rail (sections) | side panel (the list of tools only) | main | tool panel (the tool's navigation and details).
 // Phone (narrow window): sections in the bottom bar, side panel as a ☰ drawer, tool panel from a button.
+// On the PC both panels can be resized by dragging their inner edge (widths.ts).
 
 import {
   Archive,
@@ -14,9 +15,10 @@ import {
   Wrench,
   X,
 } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type CSSProperties, type PointerEvent, type ReactNode } from "react";
 import { NavLink, useLocation } from "react-router";
 import { useStatus } from "../sync/status";
+import { clampWidth, DEFAULTS, loadWidths, saveWidths, type Panel, type Widths } from "./widths";
 
 export const PHONE = "(max-width: 700px)"; // keep in sync with App.css
 
@@ -46,6 +48,7 @@ export function Layout({ title, tools, actions, children }: Props) {
   const [drawerOpen, setDrawerOpen] = useState(false); // phone only
   // Open by default on the PC; on the phone it covers the screen, so only when asked
   const [toolsOpen, setToolsOpen] = useState(() => !window.matchMedia(PHONE).matches);
+  const [widths, setWidths] = useState(loadWidths);
   const { online } = useStatus();
   const close = () => setDrawerOpen(false);
   // Any new screen (e.g. a folder picked in the tool panel) closes what slides over it on the phone
@@ -75,7 +78,10 @@ export function Layout({ title, tools, actions, children }: Props) {
   );
 
   return (
-    <div className={`layout ${sideContent ? "" : "no-side"} ${tools && toolsOpen ? "" : "no-tools"}`}>
+    <div
+      className={`layout ${sideContent ? "" : "no-side"} ${tools && toolsOpen ? "" : "no-tools"}`}
+      style={{ "--side-w": `${widths.side}px`, "--tools-w": `${widths.tools}px` } as CSSProperties}
+    >
       <nav className="rail">
         {sections}
         <span className={`status ${online ? "online" : ""}`} title={online ? "Online" : "Offline"} />
@@ -89,6 +95,7 @@ export function Layout({ title, tools, actions, children }: Props) {
           {sideContent}
         </aside>
       )}
+      {sideContent && <ResizeEdge panel="side" widths={widths} onChange={setWidths} />}
       {drawerOpen && <div className="backdrop phone-only" onClick={close} />}
 
       <main>
@@ -118,8 +125,46 @@ export function Layout({ title, tools, actions, children }: Props) {
           {tools}
         </aside>
       )}
+      {tools && toolsOpen && <ResizeEdge panel="tools" widths={widths} onChange={setWidths} />}
 
       <nav className="tabs">{sections}</nav>
     </div>
+  );
+}
+
+type EdgeProps = { panel: Panel; widths: Widths; onChange: (widths: Widths) => void };
+
+/** The draggable inner edge of a panel (PC only). Saved when the drag ends; double-click resets. */
+function ResizeEdge({ panel, widths, onChange }: EdgeProps) {
+  const widthAt = (x: number) => clampWidth(panel, panel === "side" ? x - 64 : window.innerWidth - x); // 64 = rail
+
+  function onPointerDown(e: PointerEvent<HTMLDivElement>) {
+    e.preventDefault(); // no text selection while dragging
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }
+  function onPointerMove(e: PointerEvent<HTMLDivElement>) {
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) onChange({ ...widths, [panel]: widthAt(e.clientX) });
+  }
+  function onPointerUp(e: PointerEvent<HTMLDivElement>) {
+    e.currentTarget.releasePointerCapture(e.pointerId);
+    saveWidths(widths);
+  }
+  function reset() {
+    const next = { ...widths, [panel]: DEFAULTS[panel] };
+    onChange(next);
+    saveWidths(next);
+  }
+
+  return (
+    <div
+      className={`resize resize-${panel}`}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onDoubleClick={reset}
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="Resize panel"
+    />
   );
 }

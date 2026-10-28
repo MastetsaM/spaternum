@@ -62,6 +62,16 @@ Colours come only from these tokens. A new colour needs a new token, and that ge
 | **Loading** | "Loading…" in `--muted`; no spinners |
 | **Confirmation** | Inline: the question as text, then the danger button and Cancel |
 
+## Panel widths (PC)
+Asked for by Mihail on 2026-10-28.
+- Both the side panel and the tool panel can be resized by dragging their inner edge. The edge shows the accent colour on hover and while dragging.
+- Each panel has a minimum and maximum width:
+  - Side panel: default 260px, from 180 to 480.
+  - Tool panel: default 280px, from 200 to 560.
+- The width is remembered on that device (`localStorage`, key `spaternum.panelWidths`) and applies on every screen.
+- A double-click on the edge resets it to the default.
+- The phone isn't affected: its panels slide over the content as before.
+
 ## Phone
 - Narrow window = `max-width: 700px`. Sections go in the bottom bar. The side panel and tool panel slide over the content (85% wide, max 320px) with a dim backdrop. The slide is the only animation (0.2s).
 - The app is padded clear of the status bar, navigation bar and keyboard (`MainActivity.kt`).

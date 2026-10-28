@@ -61,6 +61,7 @@ Start reading at `main.tsx`, which starts sync and the voice-notes uploads, then
 | `App.tsx` | Routes (hash router). Sends you to Settings until a server and token are saved, or when the token is rejected |
 | `App.css` | All styles, plain CSS, one section per screen. The phone layout is under `max-width: 700px` |
 | `layout/Layout.tsx` | The frame: rail or bottom bar (sections), side panel or ☰ drawer (only the list of tools), main, and the tool panel on the right (the tool's navigation and details). On the phone both sliding panels close when the screen changes |
+| `layout/widths.ts` | PC panel widths: limits, defaults, and the dragged widths kept in `localStorage` |
 | `api/settings.ts` | Server address and token in `localStorage` |
 | `api/client.ts` | `call()`: every direct server call. It adds the token, reads the clock offset and marks online/offline |
 | `api/schema.ts` | Generated from the server's OpenAPI (`pnpm gen:api`). Never edit by hand |
