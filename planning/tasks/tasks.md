@@ -41,11 +41,21 @@
 ## Phase 1 — notes + voice notes
 Specs: [[notes_spec]], [[voice-notes_spec]]. One branch per block (name in brackets), merged when its tests pass ([[2026-10-20-git-workflow]]).
 
+**Status 2026-10-28 (end of day):**
+- Blocks 1–9 are done and merged into `main`. Blocks 7–9 were built in parallel, each by its own agent on its own branch, then combined on `feature/phase1-client`. Mihail checked them on the phone and the PC against the Pi, and the branch was merged.
+- Also built during the checks, from Mihail's feedback:
+  - an optional note title (server migration 002)
+  - folders browsed like a file manager
+  - the voice-notes player
+  - resizable PC panels down to icons only ([[ui-design_spec]])
+  - per-device favorite tools ([[favorites_spec]])
+- Results are written in each spec. Code map: `src/CONTEXT.md`.
+
 ### Decided before starting (2026-10-21)
 - [x] Folders: `src/server/` and `src/client/` (one client codebase for PC and Android)
 - [x] Tests: server — pytest against a real Postgres in Docker; client — Vitest for logic, manual checks on the phone and PC for UI
 - [x] Server URL + API token: a settings screen on first start, stored on the device, editable later in settings
-- [x] Layout: Teams / VS Code style — left rail / bottom bar with the sections (Home, Tools, Clients, Projects; Settings as a small gear), side panel / ☰ drawer with the tools (Notes, Voice notes, Archive) and the open tool's items (e.g. folders), main content, tool panel on the right ([[client-foundation_spec]], corrected 2026-10-26)
+- [x] Layout: Teams / VS Code style — left rail / bottom bar with the sections (Home, Tools, Clients, Projects; Settings as a gear on Home only, since 2026-10-28), side panel / ☰ drawer with the tools (Notes, Voice notes, Archive) and the open tool's items (e.g. folders), main content, tool panel on the right ([[client-foundation_spec]], corrected 2026-10-26)
 - [x] Phone layout: the sections go in the bottom bar, the tools in the ☰ drawer, the tool panel opens from a button
 - [x] Pi: deploy as early as possible (right after the server foundation). The Pi is updated **only from `main`, after the change is fully tested on the PC**. Day to day, the server runs on the PC and the phone reaches it over Tailscale (as in the sync spike)
 
@@ -96,28 +106,45 @@ Specs: [[notes_spec]], [[voice-notes_spec]]. One branch per block (name in brack
 - [x] Release APK build and install on the phone (steps in [[TECH]])
 
 ### 7. Notes client (`feature/notes-client`)
-- [ ] Folder tree: create, rename, move, archive
-- [ ] Note list: first line as title, pinned first, then last edited
-- [ ] Editor: plain text box; empty-note rules
-- [ ] Tags, pin, move, archive
-- [ ] Search: "contains" text + tag filter, offline
-- [ ] Check every notes acceptance criterion on the phone and the PC
-- [ ] Moved from block 6: live sync seen on the PC; offline writes kept and synced back (client-foundation criteria 4–5)
+- [x] Folder tree: create, rename, move, archive
+- [x] Note list: first line as title, pinned first, then last edited
+- [x] Editor: plain text box; empty-note rules
+- [x] Tags, pin, move, archive
+- [x] Search: "contains" text + tag filter, offline
+- [x] Check every notes acceptance criterion on the phone and the PC (2026-10-28; criterion 6 not checked separately, results in [[notes_spec]])
+- [x] Moved from block 6: live sync seen on the PC; offline writes kept and synced back (client-foundation criteria 4–5)
 
 ### 8. Voice notes client (`feature/voice-notes-client`)
-- [ ] Recorder (Android only): settings from phase 0, audio appended to the file every ~5 s, row created at Stop, auto-continue at 1 hour
-- [ ] Recovery of interrupted recordings on start
-- [ ] Upload queue: after each recording, on start, when back online; show not-uploaded / error / audio-missing states
-- [ ] List: title or date-time, tags, duration, size, upload state; tag filter; edit title and tags; archive
-- [ ] Playback: local file, else stream; disabled with a reason when not possible
-- [ ] PC: same list, no Record button
-- [ ] Check every voice notes acceptance criterion on the phone and the PC
+- [x] Recorder (Android only): settings from phase 0, audio appended to the file every ~5 s, row created at Stop, auto-continue at 1 hour
+- [x] Recovery of interrupted recordings on start
+- [x] Upload queue: after each recording, on start, when back online; show not-uploaded / error / audio-missing states
+- [x] List: title or date-time, tags, duration, size, upload state; tag filter; edit title and tags; archive
+- [x] Playback: local file, else stream; disabled with a reason when not possible
+- [x] PC: same list, no Record button
+- [x] Check every voice notes acceptance criterion on the phone and the PC (2026-10-28; 6 and 7 not checked on the device, results in [[voice-notes_spec]])
 
 ### 9. Archive page (`feature/archive-client`)
-- [ ] Online-only page: everything archived, filter by type, Restore button
+- [x] Online-only page: everything archived, filter by type, Restore button ([[archive_spec]] client page)
+- [x] Check the archive client criteria (6–8) on the phone and the PC (2026-10-28; 8 not checked separately)
 
 ### 10. Phase 1 done
-- [ ] Both specs' acceptance criteria checked on the PC server, then the Pi updated and checked again; results written in each spec
+- [x] Acceptance criteria checked and results written in each spec. The device checks ran directly against the Pi, which already had every server change from `main`.
+- [ ] Install the latest APK on the phone (favorites, panels) and check ★ Favorites in the ☰ drawer
+- [ ] On the Pi: `cd ~/spaternum && git switch main && ops/update.sh`. No new migrations; it only keeps the checkout current.
+- [ ] Not checked on the device yet: two devices editing the same note at once, killing the app during an upload, and the Archive page's offline message with Retry
+
+## Later (ideas and loose ends, not scheduled)
+- **Notes with recordings:** merge notes and voice notes into one note with text and/or recordings, plus a Pinned section, folder tags, a full tree and notes settings in the tool panel. Draft with Mihail's decisions: [[notes-recordings_spec]]. Next feature.
+- **Claude talking to the server directly (MCP-like):** let Claude read and create notes (and later other items) on Mihail's server, e.g. "make a note about this". Asked for on 2026-10-28; needs a spec first, covering what it may do, the token, and Tailscale-only access ([[2026-10-20-auth-tailscale-api-token]]).
+- **Tool groups on the Tools page:** Android-style folders to sort tools by use, **synced across devices**. Dropped for now as too much work (Mihail, 2026-10-28).
+- **Drag and drop:** for reordering favorites (arrows for now), and for groups if they come.
+- **Notes order:** pin, tag and move change `updated_at`, so the note jumps up the list. Fixing it needs a separate edited time ([[notes_spec]]).
+- **Name of the first section, Home or Dashboard:** still open in [[ui-design_spec]]. Home is kept for now.
+- **Housekeeping:**
+  - the Starlette `httpx` deprecation warning in server tests
+  - the client bundle is over 500 kB (Vite warning)
+  - the old `spike-db` container can be removed
+  - a real PC install (Arch package depending on `gst-plugins-good`, or an AppImage) instead of `pnpm tauri dev`
 
 ## Related
-[[PRD]] · [[TECH]] · [[risks]] · [[notes_spec]] · [[voice-notes_spec]] · [[2026-10-21-sync-rxdb]] · [[2026-10-20-git-workflow]]
+[[PRD]] · [[TECH]] · [[risks]] · [[notes_spec]] · [[voice-notes_spec]] · [[archive_spec]] · [[client-foundation_spec]] · [[ui-design_spec]] · [[favorites_spec]] · [[notes-recordings_spec]] · [[2026-10-21-sync-rxdb]] · [[2026-10-20-git-workflow]]

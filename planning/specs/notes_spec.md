@@ -73,7 +73,7 @@ Notes work offline on both clients; changes sync when the server is reachable, l
 ## Acceptance criteria (done when…)
 1. Notes can be created, edited, moved, tagged, pinned and archived on PC and Android.
 2. Folders can be nested to any depth, renamed, moved and archived.
-3. The note list shows the first line of each note as its title — pinned first, then last edited first.
+3. The note list shows each note's title, or its first line when the title is empty — pinned first, then last edited first.
 4. Notes can be found by text ("contains") and by tag, offline too.
 5. With no connection, notes can still be created and edited; once the connection returns, the changes reach the server and the other device.
 6. The same note edited on two devices: the later edit wins, nothing crashes.
@@ -98,8 +98,60 @@ Notes work offline on both clients; changes sync when the server is reachable, l
 - Searching archived notes on the device.
 - **Markdown export to the PC (later):** write a `.md` copy of each note to `~/Documents/Spaternum/notes/`, so notes are visible and usable outside the app (Obsidian-style). Requested by Mihail 2026-10-21; not phase 1.
 
+## Client details (block 7)
+How the rules above map onto the app's layout ([[client-foundation_spec]]). Added 2026-10-28.
+
+**Screens** (routes, so Android's back gesture walks back through them):
+- `/tools/notes?folder=<id>`: a folder, browsed like a file manager (changed 2026-10-28 after Mihail's first look). No `folder` means the top level.
+  - The header always says **Notes** (in the editor too), never the folder or note name.
+  - **Main area, from the top:**
+    - Inside a folder, a **location row**: "‹ <parent name>" ("‹ Notes" for the top level) goes up one level, followed by the current folder's name.
+    - The **New note** and **New folder** buttons side by side. New folder opens an inline name box and creates the folder inside the current one.
+    - Search.
+    - The current folder's **sub-folders**, sorted by name; a tap goes in.
+    - Its **notes**: each row is **only the title** (the title, or the first line when it's empty) on one line, cut with "…", with a pin mark if pinned. A tap opens the note (Mihail, 2026-10-28).
+  - Going into a folder is a new screen, so Android's back gesture goes back up.
+  - **Left side panel / ☰:** only the list of tools.
+  - **Tool panel (right):** the **folder tree** for jumping anywhere, then the current folder's details (rename, move, archive). At the top level it shows only the tree.
+- `/tools/notes/<id>` — **editor** in the main area: a one-line **Title** box above the plain text box. While the title is empty, the box shows the text's first line in grey as its placeholder, so it looks filled in but follows the text; typing replaces it. The title saves the same way as the text. Tool panel: the folder tree, then the **note's details** — tags, pin, move to a folder, archive.
+- **Search** sits above the folder's contents: a text box and the tags in use. While text is typed or a tag is chosen, the list shows matching notes from **all folders** instead of the folder's sub-folders and notes.
+
+**Writing:**
+- Every write sets `updated_at` to the device time corrected by the server offset (`serverNow()`), so latest-write-wins works ([[2026-10-20-offline-latest-write-wins]]).
+- The editor **saves on its own** a moment after typing stops and when leaving — no Save button, so nothing written is lost.
+- **New note:** the editor opens with an id but no row; the row is created at the first save with text. Left empty → nothing is written.
+- **Existing note cleared:** an empty text is never saved; on leaving, the note goes back to the text it had when it was opened.
+- **Archive** = one local write: `_deleted: true` with a new `updated_at` (otherwise the server keeps its newer row). A folder archive writes only the folder; the server archives what's inside and sends those back as deletions, so they share one `archived_at` and restore together.
+- **Contents of a folder archived on this device** are hidden straight away, any depth, until the server's archive of them syncs back (decided 2026-10-28). The device keeps the folder's id and archive time; only items not changed since then are hidden, so a note moved or restored into it later still shows (at the top level, below).
+- A note open in the editor follows changes from the other device only while it has no unsaved typing; otherwise the later write wins as usual.
+
+**Folders:**
+- A folder or note whose folder isn't on the device shows at the top level — unless that folder was archived on this device (above).
+- Move to: every folder except the folder itself and its sub-folders (the loop rule above, checked on the device too). Folder names are trimmed; an empty name is refused.
+
+**Also decided (2026-10-28):**
+- Text search ignores upper/lower case. A body of only spaces/new lines counts as empty.
+- Several chosen tags = notes with all of them. Tags are trimmed and de-duplicated, kept as typed.
+- Folders are sorted by name.
+- A new note that was saved while typing and then cleared before leaving is archived (it already has a row, and archiving is the only way to get rid of one).
+- Archiving a folder asks for confirmation first, with the number of sub-folders and notes inside.
+
+**Client database:** the RxDB `notes` schema goes to version 1, with a migration that gives every stored note `title: ""`.
+
+**Known limitation (phase 1):** pinning, tagging or moving a note sets `updated_at`, which is also the "last edited" sort key, so the note moves up the list. Fixing it needs a separate edited time (schema change); left for later (decided 2026-10-28).
+
 ## Results — server (2026-10-25)
 Server side built (`src/server/spaternum/notes/`); 8 tests in `tests/notes_test.py` pass. Covers criteria 1, 2, 5, 6, 8, 9 and the server part of 10: sync of folders and notes, a note arriving before its folder, folder archive cascade (earlier separate archives keep their own time), one Archive entry per archived folder, restore of a folder or a note, folder-loop refusal, a later edit un-archiving a note. Criteria 3, 4, 7 (list order, search, empty notes) are client work — the server doesn't refuse empty notes.
+
+## Results — client (2026-10-28)
+Built in `src/client/src/notes/` (rules + database writes) and `screens/NotesScreen.tsx`; 21 Vitest tests in `notes/notes_test.ts` (29 client tests in total) and `pnpm build` pass. The device check is below.
+- Unit-tested: 3 (title, order), 4 (search, tags), 7 (empty-note rules), the device side of the loop rule, and hiding the contents of a folder archived on the device.
+- Built, waiting for the phone/PC check: 1, 2, 5, 6, 8. Criterion 9's restore needs the Archive page (block 9); the client only archives the folder, the server cascade does the rest (server-tested).
+
+
+**Device check (Mihail, 2026-10-28, phone and PC against the Pi):** notes, folders, title, tags, pin, search and archive work; offline writes sync back; live sync between the PC and the phone is quick; archive and restore from the Archive page work. Criteria 1–5, 7–9 pass. Criterion 6 (the same note edited on two devices at once) wasn't checked separately; the server side is tested.
+- Feedback that changed the design during the check is in "Client details" above (folders browsed like a file manager, title-only rows, optional title).
+- Feedback for later is in [[notes-recordings_spec]]: merge with voice notes, a "Pinned" section at the top level, folder tags, a full tree with notes settings in the tool panel. Mihail also found navigation still a bit hard.
 
 ## Decided 2026-10-21 (former open questions)
 Archiving a folder → archives its contents · note in an archived folder → top level · empty notes → never saved · search → device "contains" + tags · archive view → shared Archive page, server only · sort → last edited · archive vs. later edit → latest write wins.
@@ -107,4 +159,4 @@ Archiving a folder → archives its contents · note in an archived folder → t
 Decided 2026-10-25 (while building the server): no foreign keys inside the module · Archive page shows an archived folder as one entry.
 
 ## Related
-[[PRD]] · [[TECH]] · [[tasks]] · [[2026-10-21-sync-rxdb]] · [[2026-10-21-database-access-plain-sql]] · [[2026-10-20-offline-latest-write-wins]] · [[2026-10-20-architecture-modular-monolith]] · [[sync-spike_spec]]
+[[PRD]] · [[TECH]] · [[tasks]] · [[2026-10-21-sync-rxdb]] · [[2026-10-21-database-access-plain-sql]] · [[2026-10-20-offline-latest-write-wins]] · [[2026-10-20-architecture-modular-monolith]] · [[sync-spike_spec]] · [[client-foundation_spec]] · [[notes-recordings_spec]]

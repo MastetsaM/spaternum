@@ -64,6 +64,10 @@ Per [[2026-10-21-local-files-location]], the local copy is deleted only when **u
 - Local file present → play it (works offline).
 - No local file (always on the PC; on the phone once deleted later) → stream from `GET /voice-notes/{id}/audio` (online only).
 - No local file and offline, or not uploaded yet from the phone → Play disabled, with a short reason ("offline" / "not uploaded yet").
+- **Player** (added 2026-10-28 after Mihail's first look): Play / Pause, a **position bar** to jump anywhere, the time played and the total, and **speed buttons ×1, ×1.5, ×2**.
+  - Pause keeps the position, and Play continues from it. The position is kept while the app is open, per recording.
+  - The chosen speed applies to every recording until changed, while the app is open.
+  - The bar's length comes from the row's `duration_ms`, because MediaRecorder's WebM files don't carry a duration.
 
 ## Archiving
 Same rules as [[notes_spec]]: archives live only on the server, shown on the shared Archive page; the module provides `list_archived()` and `restore(id)` ([[2026-10-20-architecture-modular-monolith]]).
@@ -104,6 +108,7 @@ Same rules as [[notes_spec]]: archives live only on the server, shown on the sha
 - **Local file missing but row says not uploaded** (e.g. app data cleared) → the recording is lost; the list shows it as "audio missing" instead of retrying forever.
 - **Recording reaches 1 hour** → stopped and a new one started at once (see Recording).
 - **Two devices record at the same time** → separate UUIDs, no conflict.
+- **Known limitation (phase 1, accepted 2026-10-28):** rows don't say which install recorded them, so a recording not yet uploaded from one install (e.g. the main space) shows as "audio missing" in another install on the same phone (e.g. Second Space), which has its own app storage.
 
 ## Out of scope
 - Transcription, transcript validation, deleting local audio (phase 2).
@@ -125,6 +130,30 @@ Server side built (`src/server/spaternum/voice_notes/`); 9 tests in `tests/voice
 Notes for the client:
 - `<audio src>` can't send the token header, so the app fetches the audio with `fetch` and plays it from a blob (files are small: ≤ ~15 MB for an hour).
 - The Archive list gives `recorded_at` for untitled voice notes; the app formats it in local time.
+
+- **Archive bug fixed 2026-10-28:** archiving wrote twice (a new `updated_at`, then the removal), so the second push had the same `updated_at` and the server refused it. The recording came back. It's now one write, as in notes.
+
+## Results — client (2026-10-28)
+Client built (`src/client/src/voice-notes/`, `screens/VoiceNotesScreen.tsx`); the rules with no I/O (file names, recovery, 1-hour split, upload state and errors, playback source, labels, tag filter) have Vitest tests in `voice-notes_test.ts`. The device check is below.
+
+
+**Device check (Mihail, 2026-10-28, phone and PC against the Pi):** recording, the list, upload, offline recording with upload once back online, recovery after closing the app mid-recording, playback on both devices with the player, edit, archive and restore all work. Criteria 1–5, 8 pass, and 9 holds by design (no delete code, no fs remove permission).
+- Not checked on the device: 6 (repeat upload; server-tested) and 7 (killing the app during an upload).
+- **Sound:** recordings sounded off at first. That was headphones plugged in during recording; through the phone's microphone it's fine.
+- **PC playback needs `gst-plugins-good`** on Linux. Without it the PC app's page crashed on Play ([[TECH]]).
+
+## Client details (block 8, 2026-10-28)
+How the client carries out the rules above. Nothing here adds behaviour; it fills in what the client needs to know.
+- **Which device records:** the app records when it runs on Android (read from the webview's user agent). Elsewhere the list shows with no Record button.
+- **Local folder:** `voice-notes/` in the app's data folder (Android app storage). All reads and writes go through one file module (`src/voice-notes/files.ts`).
+- **File names tell the state:** while recording, the file is `<id>.<recorded_at in ms>.part`; at Stop the last piece is written, the row is created (size read from the file), then the file is renamed to `<id>.webm`. After a successful upload it is renamed again to `<id>.uploaded.webm` (decided by Mihail 2026-10-28, instead of a list kept in `localStorage`). So a `.part` file found on start is an unfinished recording, a `.webm` file with no visible row is an archived one, not an interrupted one, and the `.uploaded` part of the name keeps an archived recording from being uploaded again. Playback and "audio missing" accept both finished names.
+- **Recorder states:** idle → asking for the mic → recording (timer) → saving → idle. Errors (mic denied, write failed) show under the button. Recording keeps going when another screen is opened. At 1 hour the next recorder is started on the same mic stream *before* the current one stops, so no audio falls between the parts.
+- **Recovery on start:** each `.part` file → empty: left alone (no audio) · a row already exists (app killed between the row and the rename): rename only · otherwise: create the row (`recorded_at` from the file name, duration read from the file, size from the file), then rename.
+- **Upload queue:** one upload at a time. Pending = a `<id>.webm` file (not `.uploaded`) whose row, if still in the local database, isn't marked uploaded. Archived rows leave the local database, but their file still uploads. If the rename after an upload fails, the next run uploads again and the server answers "already uploaded". Runs on start, after each recording, and when sync turns online. After a recording (and after recovery) it first waits until the voice_notes push has reached the server (RxDB `awaitInSync`, exposed by `sync/db.ts`), at most 10 s since offline it never finishes; a `404` (row still not pushed) retries after 30 s as a fallback; network errors wait for the next online.
+- **Upload states in the list:** Uploaded · Uploading… · Not uploaded (file on this phone) · Upload failed: *reason* (size mismatch, server disk full, other) — retried on the next trigger · Audio missing (on the phone: no local file, not uploaded) · Not uploaded yet (PC: waiting for the phone).
+- **Playback source:** local file → play it; otherwise not uploaded → disabled ("audio missing" or "not uploaded yet"); offline → disabled ("offline"); else fetch from the server with the token and play from a blob.
+- **Edits:** title and tags (comma-separated) edited in the list; `updated_at` from the clock offset. Archive = bump `updated_at`, then RxDB remove.
+- **Tag filter:** the tool panel (right) lists the tags of active voice notes (moved from the left panel 2026-10-28); one tag at a time, or All. The chosen tag is kept in the URL (`?tag=<tag>`), as on the notes screen.
 
 ## Decided 2026-10-21
 Title optional, editable by Mihail, used as advice by phase 2 processing · tags only, no folders · max length 1 hour, then a new recording starts automatically · no server path column · archiving doesn't touch the local file, nothing deleted in phase 1 · crash safety: write audio to disk every ~5 s, recover interrupted recordings on start · recording on Android only; the PC views and listens (PC test results under Out of scope).

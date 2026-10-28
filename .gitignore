@@ -20,3 +20,6 @@ __pycache__/
 
 # Local Claude instructions (personal paths, not for the public repo)
 CLAUDE.md
+
+# Claude Code agent worktrees
+.claude/

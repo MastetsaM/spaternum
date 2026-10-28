@@ -300,6 +300,11 @@ export interface components {
             /** Folder Id */
             folder_id?: string | null;
             /**
+             * Title
+             * @default
+             */
+            title: string;
+            /**
              * Body
              * @default
              */

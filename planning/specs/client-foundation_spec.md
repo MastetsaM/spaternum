@@ -16,10 +16,11 @@ The base of the one app that runs on the PC and on Android: the Tauri project, t
   - **Online indicator:** from the last sync result (stream connected, last call OK) — not `navigator.onLine`.
 - **Layout** (Teams / VS Code style; structure corrected by Mihail 2026-10-26):
   - **Sections:** Home (dashboard), **Tools**, Clients, Projects. PC: left rail; phone: bottom bar. Home, Clients and Projects are placeholders until their phases.
-  - **Settings** slightly hidden: a gear at the bottom of the rail (PC) / top-right of the header (phone).
-  - **Side panel** (PC) / **☰ drawer** (phone): for Tools, the list of tools — Notes, Voice notes, Archive; the open tool shows its own items under it (e.g. the notes folder tree).
-  - **Tool panel** on the right for tool-specific settings and details (PC, can be closed); on the phone it opens from a button.
+  - **Settings** only from Home: a gear at the top right of the Home screen, PC and phone (changed 2026-10-28, [[ui-design_spec]]).
+  - **Left: side panel (PC) / ☰ drawer (phone)** only switches tools (Notes, Voice notes, Archive). Nothing tool-specific goes there (Mihail, 2026-10-28).
+  - **Right: tool panel**, sliding in on the phone from the header button. It holds everything for moving around inside a tool and the tool's details, e.g. the notes folder tree with the folder or note details, or the voice-notes tag filter. On the PC it's open by default and can be closed.
   - Switches by window width, so a narrow PC window behaves like the phone.
+  - The ☰ drawer closes whenever the screen changes, query string included (e.g. a notes folder picked in it) — added 2026-10-28.
   - Modules fill in the panels in later blocks; here they show placeholders.
   - **Screens are routes** (`react-router`): `/home`, `/tools/notes`, `/tools/voice-notes`, `/tools/archive`, `/clients`, `/projects`, `/settings`. Android's back gesture walks back through screens instead of closing the app; later a route can open one note directly.
   - Plain CSS (a grid for the layout), icons from `lucide-react`.
@@ -31,7 +32,7 @@ The base of the one app that runs on the PC and on Android: the Tauri project, t
 3. Generated API types compile, and a server change shows up after `pnpm gen:api`.
 4. With two devices on: a row written through the API (e.g. a note pushed with `curl`) appears in both devices' local databases within ~2 s, without polling.
 5. Offline (airplane mode on the phone): the indicator shows offline; writes to the local database stay; back online they reach the server and the indicator turns online.
-6. PC: rail with Home, Tools, Clients, Projects (+ gear), side panel listing the tools with the open tool's items, main, tool panel. Phone: the same sections in the bottom bar, the tools in the ☰ drawer, gear top-right, tool panel from a button.
+6. PC: rail with Home, Tools, Clients, Projects, side panel listing the tools, main, tool panel with the tool's navigation and details. Phone: the same sections in the bottom bar, the tools in the ☰ drawer, tool panel from a button. Settings gear only on Home.
 7. Vitest tests pass for the logic that isn't UI: clock offset, reconnect pause, event → collection routing, settings validation.
 
 ## Edge cases and failure modes
@@ -53,6 +54,8 @@ Token and address in `localStorage` · plain CSS · `lucide-react` icons · `rea
 - 1, 2, 3, 6, 7: pass (8 Vitest tests).
 - 4: pass on the phone — a note pushed with `curl` to the Pi appeared without refresh. PC check moved to block 7.
 - 5: moved to block 7 — offline writes need the Notes screen; the PC runs the same sync code.
+- Block 7 check (Mihail, 2026-10-28): 4 passes on the PC too (live and quick between the PC and the phone); 5 passes (offline writes kept and synced back).
+- Added after the checks (2026-10-28): resizable PC panels ([[ui-design_spec]]) and favorite tools ([[favorites_spec]]).
 
 ## Related
-[[tasks]] · [[TECH]] · [[PRD]] · [[sync-spike_spec]] · [[notes_spec]] · [[voice-notes_spec]] · [[archive_spec]] · [[server-foundation_spec]] · [[2026-10-21-sync-rxdb]] · [[2026-10-20-clients-tauri-react]]
+[[tasks]] · [[TECH]] · [[PRD]] · [[sync-spike_spec]] · [[notes_spec]] · [[voice-notes_spec]] · [[archive_spec]] · [[server-foundation_spec]] · [[2026-10-21-sync-rxdb]] · [[2026-10-20-clients-tauri-react]] · [[ui-design_spec]] · [[favorites_spec]]
