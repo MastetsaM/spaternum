@@ -103,6 +103,8 @@ Already done on Mihail's PC (Arch Linux, 2026-10-20) — logged in `wiki/install
 ```bash
 # Tauri Linux prerequisites
 sudo pacman -S --needed webkit2gtk-4.1 base-devel curl wget file openssl appmenu-gtk-module libappindicator-gtk3 librsvg xdotool
+# Audio playback in the PC app (voice notes); added 2026-10-28. A PC install of the app must depend on it
+sudo pacman -S --needed gst-plugins-good
 # Rust + Android target
 sudo pacman -S --needed rustup
 rustup default stable
