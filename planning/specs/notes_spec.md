@@ -118,11 +118,14 @@ How the rules above map onto the app's layout ([[client-foundation_spec]]). Adde
 - A folder or note whose folder isn't on the device shows at the top level — unless that folder was archived on this device (above).
 - Move to: every folder except the folder itself and its sub-folders (the loop rule above, checked on the device too). Folder names are trimmed; an empty name is refused.
 
-**Defaults chosen while building (to confirm with Mihail):**
+**Also decided (2026-10-28):**
 - Text search ignores upper/lower case. A body of only spaces/new lines counts as empty.
 - Several chosen tags = notes with all of them. Tags are trimmed and de-duplicated, kept as typed.
 - Folders are sorted by name.
 - A new note that was saved while typing and then cleared before leaving is archived (it already has a row, and archiving is the only way to get rid of one).
+- Archiving a folder asks for confirmation first, with the number of sub-folders and notes inside.
+
+**Known limitation (phase 1):** pinning, tagging or moving a note sets `updated_at`, which is also the "last edited" sort key, so the note moves up the list. Fixing it needs a separate edited time (schema change); left for later (decided 2026-10-28).
 
 ## Results — server (2026-10-25)
 Server side built (`src/server/spaternum/notes/`); 8 tests in `tests/notes_test.py` pass. Covers criteria 1, 2, 5, 6, 8, 9 and the server part of 10: sync of folders and notes, a note arriving before its folder, folder archive cascade (earlier separate archives keep their own time), one Archive entry per archived folder, restore of a folder or a note, folder-loop refusal, a later edit un-archiving a note. Criteria 3, 4, 7 (list order, search, empty notes) are client work — the server doesn't refuse empty notes.
