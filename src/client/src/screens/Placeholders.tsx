@@ -37,14 +37,6 @@ export function NotesScreen() {
   );
 }
 
-export function VoiceNotesScreen() {
-  return (
-    <Layout title="Voice notes" side={<p className="muted">Tags</p>} tools={<p className="muted">Recording details</p>}>
-      <p className="muted">Voice notes come in block 8.</p>
-    </Layout>
-  );
-}
-
 export function ArchiveScreen() {
   return (
     <Layout title="Archive">

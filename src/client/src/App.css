@@ -178,3 +178,23 @@ main h1 { font-size: 17px; margin: 0; flex: 1; }
 .settings { display: flex; flex-direction: column; gap: 14px; max-width: 420px; }
 .settings label { display: flex; flex-direction: column; gap: 6px; color: var(--muted); }
 .settings .buttons { display: flex; gap: 8px; }
+
+/* ---- Voice notes ---- */
+
+.vn-tags { list-style: none; margin: 4px 0; padding: 0 0 0 12px; }
+.vn-tags button { border: none; padding: 4px 8px; width: 100%; text-align: left; color: var(--muted); }
+.vn-tags button.active { color: var(--accent); background: var(--bg); }
+.vn-record { margin-bottom: 16px; }
+.vn-record button { display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; font-size: 1.1rem; }
+.vn-start { background: var(--accent); border-color: var(--accent); color: #fff; }
+.vn-stop { background: var(--error); border-color: var(--error); color: #fff; font-variant-numeric: tabular-nums; }
+.vn-list { list-style: none; margin: 0; padding: 0; }
+.vn-item { padding: 12px 0; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; }
+.vn-title { font-weight: 600; overflow-wrap: anywhere; }
+.vn-meta { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 0.9rem; }
+.vn-state.vn-local, .vn-state.vn-error, .vn-state.vn-missing { color: var(--error); font-weight: 600; }
+.vn-state.vn-uploaded { color: var(--ok); }
+.vn-chips { display: flex; flex-wrap: wrap; gap: 6px; font-size: 0.9rem; color: var(--accent); }
+.vn-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.vn-actions button { display: inline-flex; align-items: center; gap: 6px; }
+.vn-edit { display: flex; flex-direction: column; gap: 8px; }
