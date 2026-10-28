@@ -2,7 +2,7 @@
 // pulled by the server's seq, pushed with latest-write-wins, nudged by the live stream.
 
 import { createRxDatabase, type RxCollection, type RxDatabase, type RxJsonSchema } from "rxdb";
-import { replicateRxCollection } from "rxdb/plugins/replication";
+import { replicateRxCollection, type RxReplicationState } from "rxdb/plugins/replication";
 import { getRxStorageDexie } from "rxdb/plugins/storage-dexie";
 import { Subject } from "rxjs";
 import { call } from "../api/client";
@@ -74,10 +74,17 @@ type Checkpoint = { seq: number };
 
 // React's StrictMode runs effects twice in development: open the database only once
 let opened: Promise<Db> | null = null;
+const replications: Partial<Record<Table, RxReplicationState<any, Checkpoint>>> = {};
 
 export function startSync(settings: Settings): Promise<Db> {
   opened ??= open(settings);
   return opened;
+}
+
+/** Resolves once the table's local writes have reached the server (never while offline). */
+export async function awaitInSync(table: Table): Promise<void> {
+  await getDb();
+  await replications[table]?.awaitInSync();
 }
 
 export function getDb(): Promise<Db> {
@@ -97,7 +104,7 @@ async function open(settings: Settings): Promise<Db> {
   for (const [table, { path }] of Object.entries(TABLES)) {
     const pulls = new Subject<"RESYNC">();
     resync[table] = pulls;
-    replicateRxCollection<any, Checkpoint>({
+    replications[table as Table] = replicateRxCollection<any, Checkpoint>({
       replicationIdentifier: `${table}-${settings.server}`,
       collection: db[table as Table],
       live: true,

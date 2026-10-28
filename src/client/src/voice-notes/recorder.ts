@@ -9,7 +9,7 @@ import { getDb } from "../sync/db";
 import { appendFile, fileSize, renameFile } from "./files";
 import { BITS_PER_SECOND, doneName, MIME, partName, partOver, SLICE_MS } from "./logic";
 import { createRow } from "./rows";
-import { recovered, refreshFiles, runUploads } from "./uploads";
+import { recovered, refreshFiles, uploadAfterRecording } from "./uploads";
 
 export type Recorder = {
   phase: "idle" | "asking" | "recording" | "saving";
@@ -127,7 +127,7 @@ function splitIfLong() {
   set({ startedAt: current.startedAt });
   finishPart(old)
     .then(() => refreshFiles())
-    .then(() => runUploads())
+    .then(() => uploadAfterRecording())
     .catch((e) => set({ error: `Saving the first part failed: ${e}` }));
 }
 
@@ -147,5 +147,5 @@ export async function stopRecording(error = ""): Promise<void> {
     set({ phase: "idle" });
   }
   await refreshFiles().catch(() => {});
-  runUploads();
+  uploadAfterRecording();
 }

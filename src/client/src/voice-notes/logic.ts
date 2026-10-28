@@ -7,6 +7,7 @@ export const BITS_PER_SECOND = 32_000;
 export const SLICE_MS = 5_000; // each piece is appended to the file at once
 export const MAX_PART_MS = 60 * 60 * 1000;
 export const RETRY_NOT_FOUND_MS = 30_000;
+export const PUSH_WAIT_MS = 10_000; // longest wait for a new row to reach the server before uploading
 
 // ---- File names: <id>.<recorded_at ms>.part while recording, <id>.webm once stopped,
 // <id>.uploaded.webm once the server has it

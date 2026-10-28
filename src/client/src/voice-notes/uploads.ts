@@ -5,7 +5,7 @@
 import { useSyncExternalStore } from "react";
 import { ApiError, call } from "../api/client";
 import type { Settings } from "../api/settings";
-import { getDb, type Db } from "../sync/db";
+import { awaitInSync, getDb, type Db } from "../sync/db";
 import { onStatusChange } from "../sync/status";
 import { durationOf } from "./audio";
 import { fileSize, listFiles, readAudio, renameFile } from "./files";
@@ -13,6 +13,7 @@ import {
   doneName,
   needsUpload,
   parseName,
+  PUSH_WAIT_MS,
   recoveryAction,
   RETRY_NOT_FOUND_MS,
   uploadedName,
@@ -105,6 +106,18 @@ export async function runUploads(): Promise<void> {
   }
 }
 
+/**
+ * After a recording: wait until its row has been pushed, so the upload isn't refused with a 404.
+ * Offline the push never finishes, so stop waiting after a while; the 404 retry stays as a fallback.
+ */
+export async function uploadAfterRecording(): Promise<void> {
+  await Promise.race([
+    awaitInSync("voice_notes").catch(() => {}),
+    new Promise((resolve) => setTimeout(resolve, PUSH_WAIT_MS)),
+  ]);
+  await runUploads();
+}
+
 async function uploadPending(settings: Settings): Promise<void> {
   const db = await getDb();
   for (const file of await refreshFiles()) {
@@ -156,7 +169,7 @@ export function startVoiceNotes(appSettings: Settings): Promise<void> {
     });
     await refreshFiles().catch(() => {}); // so the list doesn't show "audio missing" meanwhile
     await recover(await getDb()).catch((e) => console.error("voice notes: recovery failed", e));
-    runUploads();
+    uploadAfterRecording(); // recovered rows were just created too
   })();
   return started;
 }
