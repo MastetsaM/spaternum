@@ -260,3 +260,21 @@ button.danger { color: var(--error); border-color: var(--error); }
 .details .confirm p { margin: 0 0 8px; }
 .details .buttons { display: flex; gap: 8px; }
 .name-form { display: flex; gap: 6px; }
+
+/* ---- Archive ---- */
+
+.archive-filters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.archive-filters button.active { color: var(--accent); border-color: var(--accent); }
+.archive-list { list-style: none; margin: 0; padding: 0; }
+.archive-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+.archive-list li > div { min-width: 0; }
+.archive-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.archive-list .muted { font-size: 13px; }
+.archive-list button { flex-shrink: 0; }
