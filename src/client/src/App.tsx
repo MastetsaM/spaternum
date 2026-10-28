@@ -10,11 +10,11 @@ import {
   HomeScreen,
   ProjectsScreen,
   ToolsScreen,
-  VoiceNotesScreen,
 } from "./screens/Placeholders";
 import { NotesScreen } from "./screens/NotesScreen";
 import { ArchiveScreen } from "./screens/ArchiveScreen";
 import { SettingsScreen } from "./screens/SettingsScreen";
+import { VoiceNotesScreen } from "./screens/VoiceNotesScreen";
 import "./App.css";
 
 /** Until the settings are saved, or when the server rejects the token: the settings screen. */

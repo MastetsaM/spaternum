@@ -105,12 +105,12 @@ Specs: [[notes_spec]], [[voice-notes_spec]]. One branch per block (name in brack
 - [ ] Moved from block 6: live sync seen on the PC; offline writes kept and synced back (client-foundation criteria 4–5)
 
 ### 8. Voice notes client (`feature/voice-notes-client`)
-- [ ] Recorder (Android only): settings from phase 0, audio appended to the file every ~5 s, row created at Stop, auto-continue at 1 hour
-- [ ] Recovery of interrupted recordings on start
-- [ ] Upload queue: after each recording, on start, when back online; show not-uploaded / error / audio-missing states
-- [ ] List: title or date-time, tags, duration, size, upload state; tag filter; edit title and tags; archive
-- [ ] Playback: local file, else stream; disabled with a reason when not possible
-- [ ] PC: same list, no Record button
+- [x] Recorder (Android only): settings from phase 0, audio appended to the file every ~5 s, row created at Stop, auto-continue at 1 hour
+- [x] Recovery of interrupted recordings on start
+- [x] Upload queue: after each recording, on start, when back online; show not-uploaded / error / audio-missing states
+- [x] List: title or date-time, tags, duration, size, upload state; tag filter; edit title and tags; archive
+- [x] Playback: local file, else stream; disabled with a reason when not possible
+- [x] PC: same list, no Record button
 - [ ] Check every voice notes acceptance criterion on the phone and the PC
 
 ### 9. Archive page (`feature/archive-client`)
