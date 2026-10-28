@@ -96,11 +96,11 @@ Specs: [[notes_spec]], [[voice-notes_spec]]. One branch per block (name in brack
 - [x] Release APK build and install on the phone (steps in [[TECH]])
 
 ### 7. Notes client (`feature/notes-client`)
-- [ ] Folder tree: create, rename, move, archive
-- [ ] Note list: first line as title, pinned first, then last edited
-- [ ] Editor: plain text box; empty-note rules
-- [ ] Tags, pin, move, archive
-- [ ] Search: "contains" text + tag filter, offline
+- [x] Folder tree: create, rename, move, archive
+- [x] Note list: first line as title, pinned first, then last edited
+- [x] Editor: plain text box; empty-note rules
+- [x] Tags, pin, move, archive
+- [x] Search: "contains" text + tag filter, offline
 - [ ] Check every notes acceptance criterion on the phone and the PC
 - [ ] Moved from block 6: live sync seen on the PC; offline writes kept and synced back (client-foundation criteria 4–5)
 

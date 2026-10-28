@@ -126,10 +126,16 @@ How the rules above map onto the app's layout ([[client-foundation_spec]]). Adde
 ## Results — server (2026-10-25)
 Server side built (`src/server/spaternum/notes/`); 8 tests in `tests/notes_test.py` pass. Covers criteria 1, 2, 5, 6, 8, 9 and the server part of 10: sync of folders and notes, a note arriving before its folder, folder archive cascade (earlier separate archives keep their own time), one Archive entry per archived folder, restore of a folder or a note, folder-loop refusal, a later edit un-archiving a note. Criteria 3, 4, 7 (list order, search, empty notes) are client work — the server doesn't refuse empty notes.
 
+## Results — client (2026-10-28)
+Built in `src/client/src/notes/` (rules + database writes) and `screens/NotesScreen.tsx`; 17 Vitest tests in `notes/notes_test.ts` (25 client tests in total) and `pnpm build` pass. Not yet run on the devices.
+- Unit-tested: 3 (title, order), 4 (search, tags), 7 (empty-note rules), and the device side of the loop rule.
+- Built, waiting for the phone/PC check: 1, 2, 5, 6, 8. Criterion 9's restore needs the Archive page (block 9); the client only archives the folder, the server cascade does the rest (server-tested).
+- Known gap: after archiving a folder, its notes and sub-folders show at the top level until the server's archive of them syncs back — a moment online, until reconnect offline.
+
 ## Decided 2026-10-21 (former open questions)
 Archiving a folder → archives its contents · note in an archived folder → top level · empty notes → never saved · search → device "contains" + tags · archive view → shared Archive page, server only · sort → last edited · archive vs. later edit → latest write wins.
 
 Decided 2026-10-25 (while building the server): no foreign keys inside the module · Archive page shows an archived folder as one entry.
 
 ## Related
-[[PRD]] · [[TECH]] · [[tasks]] · [[2026-10-21-sync-rxdb]] · [[2026-10-21-database-access-plain-sql]] · [[2026-10-20-offline-latest-write-wins]] · [[2026-10-20-architecture-modular-monolith]] · [[sync-spike_spec]]
+[[PRD]] · [[TECH]] · [[tasks]] · [[2026-10-21-sync-rxdb]] · [[2026-10-21-database-access-plain-sql]] · [[2026-10-20-offline-latest-write-wins]] · [[2026-10-20-architecture-modular-monolith]] · [[sync-spike_spec]] · [[client-foundation_spec]]
