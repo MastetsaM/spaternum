@@ -131,6 +131,8 @@ Notes for the client:
 - `<audio src>` can't send the token header, so the app fetches the audio with `fetch` and plays it from a blob (files are small: ≤ ~15 MB for an hour).
 - The Archive list gives `recorded_at` for untitled voice notes; the app formats it in local time.
 
+- **Archive bug fixed 2026-10-28:** archiving wrote twice (a new `updated_at`, then the removal), so the second push had the same `updated_at` and the server refused it. The recording came back. It's now one write, as in notes.
+
 ## Results — client (2026-10-28)
 Client built (`src/client/src/voice-notes/`, `screens/VoiceNotesScreen.tsx`); the rules with no I/O (file names, recovery, 1-hour split, upload state and errors, playback source, labels, tag filter) have Vitest tests in `voice-notes_test.ts`. Acceptance criteria 1–9 still need the checks on the phone and the PC.
 
