@@ -48,6 +48,7 @@ Run, migrate and test commands are at the top of `spaternum/main.py`, `spaternum
 | `spaternum/core/migrations/` | `sync_notify()`, the trigger function every synced table uses |
 | `spaternum/notes/` | Tables `note_folders` and `notes`. `tables.py`: models, the folder-loop check, archiving a folder archives its contents. `archive.py`: list and restore for the Archive page |
 | `spaternum/voice_notes/` | Table `voice_notes`. `audio.py`: upload (size check, 507 when the disk is full) and streaming with Range. `archive.py`: list and restore |
+| `spaternum/settings/` | Table `settings`: small settings synced across devices (favorite tools), JSON as text, never archived |
 | `spaternum/archive/` | Owns no tables. `/api/archive` asks each module's `archive.py` |
 | `tests/` | pytest against a real Postgres: one `*_test.py` per module, plus `conftest.py` (database and client fixtures) |
 | `Dockerfile` | Image built on the machine that runs it (see `ops/`) |
@@ -61,13 +62,15 @@ Start reading at `main.tsx`, which starts sync and the voice-notes uploads, then
 | `App.tsx` | Routes (hash router). Sends you to Settings until a server and token are saved, or when the token is rejected |
 | `App.css` | All styles, plain CSS, one section per screen. The phone layout is under `max-width: 700px` |
 | `layout/Layout.tsx` | The frame: rail or bottom bar (sections), side panel or ☰ drawer (only the list of tools), main, and the tool panel on the right (the tool's navigation and details). On the phone both sliding panels close when the screen changes |
+| `layout/favorites.ts` | Pure rules for the favorite tools: reading the saved list, star on/off, moving up/down |
 | `layout/widths.ts` | PC panel widths: limits, defaults, and the dragged widths kept in `localStorage` |
 | `api/settings.ts` | Server address and token in `localStorage` |
 | `api/client.ts` | `call()`: every direct server call. It adds the token, reads the clock offset and marks online/offline |
 | `api/schema.ts` | Generated from the server's OpenAPI (`pnpm gen:api`). Never edit by hand |
-| `sync/db.ts` | RxDB: the collections `note_folders`, `notes`, `voice_notes`, their replication, and `awaitInSync(table)` |
+| `sync/db.ts` | RxDB: the collections `note_folders`, `notes`, `voice_notes`, `settings`, their replication, and `awaitInSync(table)` |
 | `sync/events.ts` | Reads the SSE stream with fetch, reconnects, 60 s silence watchdog |
 | `sync/clock.ts` | `serverNow()`: the device clock corrected by the server's `Date` header |
+| `sync/settings.ts` | Settings synced across devices: `useSetting(key)` and `saveSetting(key, value)`, one row per key with a fixed id |
 | `sync/status.ts` | Online dot and "token rejected" state; `onStatusChange()` lets code react to coming back online |
 | `notes/notes.ts` | Pure rules: the title (its own, or the first line), what the editor saves (title and body together), order, search, tags, folder tree, allowed moves, hiding what's inside a just-archived folder |
 | `notes/store.ts` | Notes and folders read and written in RxDB. The ids of folders archived on this device are kept in `localStorage` |
@@ -78,7 +81,7 @@ Start reading at `main.tsx`, which starts sync and the voice-notes uploads, then
 | `voice-notes/rows.ts` | Writes to the `voice_notes` collection |
 | `voice-notes/audio.ts` | Reading a file's duration, fetching audio from the server, and the player: one recording at a time, with position kept per recording, seeking and speed |
 | `archive/archive.ts` | Archive page calls and display rules |
-| `screens/` | One screen per route: `NotesScreen`, `VoiceNotesScreen`, `ArchiveScreen`, `SettingsScreen`. `Placeholders.tsx` holds Home, Tools, Clients and Projects |
+| `screens/` | One screen per route: `NotesScreen`, `VoiceNotesScreen`, `ArchiveScreen`, `FavoritesScreen`, `SettingsScreen`. `Placeholders.tsx` holds Home, Tools, Clients and Projects |
 | `*_test.ts` | Vitest tests next to the code they test (`pnpm test`) |
 
 Other client files:

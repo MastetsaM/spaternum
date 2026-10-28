@@ -323,3 +323,11 @@ button.danger { color: var(--error); border-color: var(--error); }
 .vn-player input[type="range"] { flex: 1; min-width: 0; padding: 0; border: none; accent-color: var(--accent); }
 .vn-time { font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .vn-edit { display: flex; flex-direction: column; gap: 8px; }
+
+/* ---- Favorites ---- */
+
+.fav-list { list-style: none; margin: 12px 0 0; padding: 0; }
+.fav-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.fav-label { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.fav-row .icon-button { display: inline-flex; border: none; padding: 6px; color: var(--muted); }
+.fav-row .icon-button.on { color: var(--accent); }

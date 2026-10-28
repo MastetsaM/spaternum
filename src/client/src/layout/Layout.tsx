@@ -12,12 +12,15 @@ import {
   Menu,
   Mic,
   PanelRight,
+  Star,
   Wrench,
   X,
 } from "lucide-react";
 import { useEffect, useState, type CSSProperties, type PointerEvent, type ReactNode } from "react";
 import { NavLink, useLocation } from "react-router";
+import { useSetting } from "../sync/settings";
 import { useStatus } from "../sync/status";
+import { parseFavorites } from "./favorites";
 import { clampWidth, DEFAULTS, loadWidths, saveWidths, type Panel, type Widths } from "./widths";
 
 export const PHONE = "(max-width: 700px)"; // keep in sync with App.css
@@ -29,11 +32,13 @@ const SECTIONS = [
   { to: "/projects", label: "Projects", icon: FolderKanban },
 ];
 
+// key = the name saved in the favorites list (favorites_spec.md)
 export const TOOLS = [
-  { to: "/tools/notes", label: "Notes", icon: FileText },
-  { to: "/tools/voice-notes", label: "Voice notes", icon: Mic },
-  { to: "/tools/archive", label: "Archive", icon: Archive },
+  { key: "notes", to: "/tools/notes", label: "Notes", icon: FileText },
+  { key: "voice-notes", to: "/tools/voice-notes", label: "Voice notes", icon: Mic },
+  { key: "archive", to: "/tools/archive", label: "Archive", icon: Archive },
 ];
+export const TOOL_KEYS = TOOLS.map((t) => t.key);
 
 type Props = {
   title: string;
@@ -49,6 +54,7 @@ export function Layout({ title, tools, actions, children }: Props) {
   // Open by default on the PC; on the phone it covers the screen, so only when asked
   const [toolsOpen, setToolsOpen] = useState(() => !window.matchMedia(PHONE).matches);
   const [widths, setWidths] = useState(loadWidths);
+  const favorites = parseFavorites(useSetting("favorite_tools"), TOOL_KEYS);
   const { online } = useStatus();
   const close = () => setDrawerOpen(false);
   // Any new screen (e.g. a folder picked in the tool panel) closes what slides over it on the phone
@@ -64,16 +70,18 @@ export function Layout({ title, tools, actions, children }: Props) {
     </NavLink>
   ));
 
-  // Tools: only the list of tools; anything inside a tool goes in the tool panel
+  // Tools: ★ Favorites, then the favorite tools in Mihail's order; anything inside a tool goes in the tool panel
   const sideContent = inTools && (
     <ul className="tool-list">
-      {TOOLS.map(({ to, label, icon: Icon }) => (
-        <li key={to}>
-          <NavLink to={to} onClick={close} title={label}>
-            <Icon size={18} /> <span>{label}</span>
-          </NavLink>
-        </li>
-      ))}
+      {[{ to: "/tools/favorites", label: "Favorites", icon: Star }, ...favorites.map((key) => TOOLS.find((t) => t.key === key)!)].map(
+        ({ to, label, icon: Icon }) => (
+          <li key={to}>
+            <NavLink to={to} onClick={close} title={label}>
+              <Icon size={18} /> <span>{label}</span>
+            </NavLink>
+          </li>
+        ),
+      )}
     </ul>
   );
 

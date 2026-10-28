@@ -11,6 +11,7 @@ from psycopg import OperationalError
 from psycopg_pool import PoolTimeout
 
 from spaternum import archive, config, db, events, logs, notes, voice_notes
+from spaternum import settings as synced_settings  # the name `settings` is the config below
 from spaternum.auth import require_token
 
 log = logging.getLogger("spaternum")
@@ -72,6 +73,7 @@ def create_app(extra_routers: tuple[APIRouter, ...] = ()) -> FastAPI:
     api.include_router(notes.router)
     api.include_router(voice_notes.router)
     api.include_router(archive.router)
+    api.include_router(synced_settings.router)
     for router in extra_routers:
         api.include_router(router)
     app.include_router(api)
