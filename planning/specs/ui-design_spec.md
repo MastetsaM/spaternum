@@ -66,10 +66,12 @@ Colours come only from these tokens. A new colour needs a new token, and that ge
 Asked for by Mihail on 2026-10-28.
 - Both the side panel and the tool panel can be resized by dragging their inner edge. The edge shows the accent colour on hover and while dragging.
 - Each panel has a minimum and maximum width:
-  - Side panel: default 260px, from 180 to 480.
-  - Tool panel: default 280px, from 200 to 560.
+  - Side panel: default 260px, from 180 to 600.
+  - Tool panel: default 280px, from 200 to 720.
+- **Side panel, icons only:** dragged narrower than its minimum, it snaps to 52px and shows only the tool icons, with each name on hover. Dragging it wider brings the names back.
 - The width is remembered on that device (`localStorage`, key `spaternum.panelWidths`) and applies on every screen.
 - A double-click on the edge resets it to the default.
+- Maximums raised from 480 and 560, and the icons-only snap added, after Mihail tried it (2026-10-28).
 - The phone isn't affected: its panels slide over the content as before.
 
 ## Phone
