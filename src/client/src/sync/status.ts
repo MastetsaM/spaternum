@@ -19,6 +19,13 @@ export const markOnline = () => set({ online: true, tokenRejected: false });
 export const markOffline = () => set({ online: false });
 export const markTokenRejected = () => set({ online: false, tokenRejected: true });
 
+/** For code outside React (the voice-notes upload queue): called on every change. */
+export function onStatusChange(listener: (status: Status) => void): () => void {
+  const notify = () => listener(status);
+  listeners.add(notify);
+  return () => listeners.delete(notify);
+}
+
 export function useStatus(): Status {
   return useSyncExternalStore(
     (listener) => {
