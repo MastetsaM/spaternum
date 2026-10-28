@@ -68,7 +68,7 @@ Start reading at `main.tsx`, which starts sync and the voice-notes uploads, then
 | `sync/events.ts` | Reads the SSE stream with fetch, reconnects, 60 s silence watchdog |
 | `sync/clock.ts` | `serverNow()`: the device clock corrected by the server's `Date` header |
 | `sync/status.ts` | Online dot and "token rejected" state; `onStatusChange()` lets code react to coming back online |
-| `notes/notes.ts` | Pure rules: title from the first line, order, search, tags, folder tree, allowed moves, what the editor saves, hiding what's inside a just-archived folder |
+| `notes/notes.ts` | Pure rules: the title (its own, or the first line), what the editor saves (title and body together), order, search, tags, folder tree, allowed moves, what the editor saves, hiding what's inside a just-archived folder |
 | `notes/store.ts` | Notes and folders read and written in RxDB. The ids of folders archived on this device are kept in `localStorage` |
 | `voice-notes/logic.ts` | Pure rules: file names, recovery, the 1-hour split, upload state, playback source, labels, tags |
 | `voice-notes/files.ts` | The only code that touches audio files: the `voice-notes/` folder in app storage |

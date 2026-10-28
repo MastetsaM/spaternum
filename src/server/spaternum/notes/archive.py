@@ -15,9 +15,10 @@ WITH RECURSIVE sub(id) AS (
 """
 
 
-def title(body: str) -> str:
+def title(note_title: str, body: str) -> str:
+    """The note's title, or its first line when the title is empty."""
     first = body.split("\n", 1)[0].lstrip("# ").strip()
-    return first or "(empty)"
+    return note_title.strip() or first or "(empty)"
 
 
 def list_archived(conn: Connection) -> list[dict]:
@@ -51,14 +52,14 @@ def list_archived(conn: Connection) -> list[dict]:
 
     notes = conn.execute(
         """
-        SELECT n.id, n.body, n.archived_at FROM notes n
+        SELECT n.id, n.title, n.body, n.archived_at FROM notes n
         LEFT JOIN note_folders f ON f.id = n.folder_id
         WHERE n.archived_at IS NOT NULL AND f.archived_at IS DISTINCT FROM n.archived_at
         """
     ).fetchall()
     for n in notes:
         items.append(
-            {"type": "note", "id": n["id"], "title": title(n["body"]),
+            {"type": "note", "id": n["id"], "title": title(n["title"], n["body"]),
              "archived_at": n["archived_at"], "items": 0}
         )
     return sorted(items, key=lambda i: i["archived_at"], reverse=True)

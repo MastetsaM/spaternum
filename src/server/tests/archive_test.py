@@ -46,6 +46,13 @@ def test_list_has_every_module_newest_first(client, archived):
     ]
 
 
+def test_archived_note_shows_its_title_before_its_first_line(client, archived):
+    push(client, "notes/notes", {**archived["alone"], "title": "Named", "_deleted": True,
+                                 "updated_at": "2026-10-25T14:00:00.000Z"})
+    notes = client.get("/api/archive?type=note").json()
+    assert [i["title"] for i in notes] == ["Named"]
+
+
 def test_list_filters_by_type(client, archived):
     assert [i["type"] for i in client.get("/api/archive?type=folder").json()] == ["folder"]
 
