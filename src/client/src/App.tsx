@@ -6,7 +6,6 @@ import type { ReactNode } from "react";
 import { loadSettings } from "./api/settings";
 import { useStatus } from "./sync/status";
 import {
-  ArchiveScreen,
   ClientsScreen,
   HomeScreen,
   NotesScreen,
@@ -14,6 +13,7 @@ import {
   ToolsScreen,
   VoiceNotesScreen,
 } from "./screens/Placeholders";
+import { ArchiveScreen } from "./screens/ArchiveScreen";
 import { SettingsScreen } from "./screens/SettingsScreen";
 import "./App.css";
 
