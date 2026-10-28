@@ -114,7 +114,8 @@ Specs: [[notes_spec]], [[voice-notes_spec]]. One branch per block (name in brack
 - [ ] Check every voice notes acceptance criterion on the phone and the PC
 
 ### 9. Archive page (`feature/archive-client`)
-- [ ] Online-only page: everything archived, filter by type, Restore button
+- [x] Online-only page: everything archived, filter by type, Restore button ([[archive_spec]] client page)
+- [ ] Check the archive client criteria (6–8) on the phone and the PC
 
 ### 10. Phase 1 done
 - [ ] Both specs' acceptance criteria checked on the PC server, then the Pi updated and checked again; results written in each spec

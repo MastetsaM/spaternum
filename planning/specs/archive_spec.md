@@ -34,6 +34,8 @@ Client criteria:
 8. Offline, the page says it needs the server and recovers with Retry.
 9. Vitest tests pass for the display logic (titles, dates, filter labels).
 
+Client results (2026-10-28): built (`src/client/src/archive/`, `screens/ArchiveScreen.tsx`); 9 passes (5 tests in `archive_test.ts`, 13 client tests in total); `pnpm build` passes. 6–8 still to check on the phone and the PC.
+
 ## Out of scope
 - Paging (single user; revisit if the list gets long).
 - Deleting for good — archive, never delete.
