@@ -83,6 +83,23 @@ export function folderTree(folders: Folder[]): FolderNode[] {
 }
 
 /** The ids of every folder inside this one, any depth. */
+/**
+ * The folders shown directly inside a folder (null = top level), sorted by name.
+ * Taken from the tree, so folders in a loop still show somewhere (at the top level).
+ */
+export function childFolders(folders: Folder[], parentId: string | null): Folder[] {
+  const tree = folderTree(folders);
+  if (parentId === null) return tree.filter((n) => n.depth === 0).map((n) => n.folder);
+  const at = tree.findIndex((n) => n.folder.id === parentId);
+  if (at < 0) return [];
+  const depth = tree[at].depth;
+  const out: Folder[] = [];
+  for (let i = at + 1; i < tree.length && tree[i].depth > depth; i++) {
+    if (tree[i].depth === depth + 1) out.push(tree[i].folder);
+  }
+  return out;
+}
+
 export function subFolderIds(folders: Folder[], id: string): Set<string> {
   const inside = new Set<string>();
   let added = true;
