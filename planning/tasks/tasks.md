@@ -45,8 +45,8 @@ Specs: [[notes_spec]], [[voice-notes_spec]]. One branch per block (name in brack
 - [x] Folders: `src/server/` and `src/client/` (one client codebase for PC and Android)
 - [x] Tests: server — pytest against a real Postgres in Docker; client — Vitest for logic, manual checks on the phone and PC for UI
 - [x] Server URL + API token: a settings screen on first start, stored on the device, editable later in settings
-- [x] Layout: Teams / VS Code style — a left rail with the main categories (Notes, Voice notes, Archive, later modules), a side panel with that category's sub-categories (e.g. the folder tree), the main content, and a panel on the other side for tool-specific settings/details
-- [x] Phone layout: the left rail becomes a bottom tab bar, the sub-category panel slides in from the left, the tool panel opens from a button
+- [x] Layout: Teams / VS Code style — left rail / bottom bar with the sections (Home, Tools, Clients, Projects; Settings as a small gear), side panel / ☰ drawer with the tools (Notes, Voice notes, Archive) and the open tool's items (e.g. folders), main content, tool panel on the right ([[client-foundation_spec]], corrected 2026-10-26)
+- [x] Phone layout: the sections go in the bottom bar, the tools in the ☰ drawer, the tool panel opens from a button
 - [x] Pi: deploy as early as possible (right after the server foundation). The Pi is updated **only from `main`, after the change is fully tested on the PC**. Day to day, the server runs on the PC and the phone reaches it over Tailscale (as in the sync spike)
 
 ### 1. Server foundation (`feature/server-skeleton`) — spec: [[server-foundation_spec]]
@@ -87,13 +87,13 @@ Specs: [[notes_spec]], [[voice-notes_spec]]. One branch per block (name in brack
 - [x] `GET /archive` (from each module's `list_archived()`, filter by type) and `POST /archive/{module}/{id}/restore`
 - [x] Tests
 
-### 6. Client foundation (`feature/client-skeleton`)
-- [ ] Scaffold `src/client/` (Tauri 2 + React + TS), Android init, manifest `RECORD_AUDIO` + `MODIFY_AUDIO_SETTINGS`, plugin-fs
-- [ ] Client types generated from the server's OpenAPI with `openapi-typescript`
-- [ ] First-start settings screen: server URL + API token, stored on the device, editable later
-- [ ] RxDB opened once; replication helper (pull, push, SSE stream); clock offset from the `Date` header; online indicator from the last sync
-- [ ] App shell: left rail (categories) → side panel (sub-categories) → main content → tool panel on the other side; on the phone: bottom tab bar, slide-in side panel, tool panel behind a button
-- [ ] Release APK build and install on the phone (steps in [[TECH]])
+### 6. Client foundation (`feature/client-skeleton`) — spec: [[client-foundation_spec]]
+- [x] Scaffold `src/client/` (Tauri 2 + React + TS), Android init, manifest `RECORD_AUDIO` + `MODIFY_AUDIO_SETTINGS`, plugin-fs
+- [x] Client types generated from the server's OpenAPI with `openapi-typescript`
+- [x] First-start settings screen: server URL + API token, stored on the device, editable later
+- [x] RxDB opened once; replication helper (pull, push, SSE stream); clock offset from the `Date` header; online indicator from the last sync
+- [x] App shell: rail / bottom bar (sections) → side panel / ☰ drawer (tools + the open tool's items) → main content → tool panel
+- [x] Release APK build and install on the phone (steps in [[TECH]])
 
 ### 7. Notes client (`feature/notes-client`)
 - [ ] Folder tree: create, rename, move, archive
@@ -102,6 +102,7 @@ Specs: [[notes_spec]], [[voice-notes_spec]]. One branch per block (name in brack
 - [ ] Tags, pin, move, archive
 - [ ] Search: "contains" text + tag filter, offline
 - [ ] Check every notes acceptance criterion on the phone and the PC
+- [ ] Moved from block 6: live sync seen on the PC; offline writes kept and synced back (client-foundation criteria 4–5)
 
 ### 8. Voice notes client (`feature/voice-notes-client`)
 - [ ] Recorder (Android only): settings from phase 0, audio appended to the file every ~5 s, row created at Stop, auto-continue at 1 hour

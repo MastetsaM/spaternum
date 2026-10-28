@@ -3,7 +3,7 @@
 ## What it is
 A personal workspace ecosystem. One self-hosted **server** is the single source of truth: database, API, and (later) AI. **PC** and **Android** apps are interfaces to it. Each tool — notes, voice notes, project manager, agile dashboard, clients, code editor — is an independent module, but all of them store their data on the same server, so they (and later the AI) can connect across modules.
 
-The PC app should feel like Teams / VS Code: a left rail with the main categories, a side panel with each category's sub-categories, the main content, and a panel on the other side for tool-specific settings. Later the code editor adds a file explorer and Monaco.
+The app should feel like Teams / VS Code: sections (Home, Tools, Clients, Projects) in a left rail on the PC and a bottom bar on the phone; a side panel (☰ drawer on the phone) listing the tools — Notes, Voice notes, Archive — with the open tool's items under it; the main content; and a panel on the right for tool-specific settings. Later the code editor adds a file explorer and Monaco.
 
 ## Why
 - A workspace Mihail controls end to end, shaped to how he works.
