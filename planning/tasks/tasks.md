@@ -88,12 +88,12 @@ Specs: [[notes_spec]], [[voice-notes_spec]]. One branch per block (name in brack
 - [x] Tests
 
 ### 6. Client foundation (`feature/client-skeleton`) — spec: [[client-foundation_spec]]
-- [ ] Scaffold `src/client/` (Tauri 2 + React + TS), Android init, manifest `RECORD_AUDIO` + `MODIFY_AUDIO_SETTINGS`, plugin-fs
-- [ ] Client types generated from the server's OpenAPI with `openapi-typescript`
-- [ ] First-start settings screen: server URL + API token, stored on the device, editable later
-- [ ] RxDB opened once; replication helper (pull, push, SSE stream); clock offset from the `Date` header; online indicator from the last sync
-- [ ] App shell: rail / bottom bar (sections) → side panel / ☰ drawer (tools + the open tool's items) → main content → tool panel
-- [ ] Release APK build and install on the phone (steps in [[TECH]])
+- [x] Scaffold `src/client/` (Tauri 2 + React + TS), Android init, manifest `RECORD_AUDIO` + `MODIFY_AUDIO_SETTINGS`, plugin-fs
+- [x] Client types generated from the server's OpenAPI with `openapi-typescript`
+- [x] First-start settings screen: server URL + API token, stored on the device, editable later
+- [x] RxDB opened once; replication helper (pull, push, SSE stream); clock offset from the `Date` header; online indicator from the last sync
+- [x] App shell: rail / bottom bar (sections) → side panel / ☰ drawer (tools + the open tool's items) → main content → tool panel
+- [x] Release APK build and install on the phone (steps in [[TECH]])
 
 ### 7. Notes client (`feature/notes-client`)
 - [ ] Folder tree: create, rename, move, archive
@@ -102,6 +102,7 @@ Specs: [[notes_spec]], [[voice-notes_spec]]. One branch per block (name in brack
 - [ ] Tags, pin, move, archive
 - [ ] Search: "contains" text + tag filter, offline
 - [ ] Check every notes acceptance criterion on the phone and the PC
+- [ ] Moved from block 6: live sync seen on the PC; offline writes kept and synced back (client-foundation criteria 4–5)
 
 ### 8. Voice notes client (`feature/voice-notes-client`)
 - [ ] Recorder (Android only): settings from phase 0, audio appended to the file every ~5 s, row created at Stop, auto-continue at 1 hour

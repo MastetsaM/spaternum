@@ -49,5 +49,10 @@ The base of the one app that runs on the PC and on Android: the Tauri project, t
 ## Decided 2026-10-26
 Token and address in `localStorage` · plain CSS · `lucide-react` icons · `react-router` for screens (Android back gesture, links to a note later).
 
+## Results 2026-10-28
+- 1, 2, 3, 6, 7: pass (8 Vitest tests).
+- 4: pass on the phone — a note pushed with `curl` to the Pi appeared without refresh. PC check moved to block 7.
+- 5: moved to block 7 — offline writes need the Notes screen; the PC runs the same sync code.
+
 ## Related
 [[tasks]] · [[TECH]] · [[PRD]] · [[sync-spike_spec]] · [[notes_spec]] · [[voice-notes_spec]] · [[archive_spec]] · [[server-foundation_spec]] · [[2026-10-21-sync-rxdb]] · [[2026-10-20-clients-tauri-react]]
