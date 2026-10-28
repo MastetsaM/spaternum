@@ -4,6 +4,7 @@ import {
   addTags,
   allTags,
   folderTree,
+  hideArchivedContents,
   isEmpty,
   moveTargets,
   searchNotes,
@@ -142,5 +143,43 @@ describe("folder tree", () => {
     const folders = [folder("a"), folder("a1", "a"), folder("a1x", "a1"), folder("b"), folder("b1", "b")];
     expect(moveTargets(folders, "a").map((f) => f.id)).toEqual(["b", "b1"]);
     expect(moveTargets(folders, "a1").map((f) => f.id)).toEqual(["a", "b", "b1"]);
+  });
+});
+
+describe("folder archived on this device", () => {
+  const before = "2026-10-28T09:00:00.000Z";
+  const archivedAt = "2026-10-28T10:00:00.000Z";
+  const after = "2026-10-28T11:00:00.000Z";
+  // Folder "a" was archived here; "b" and its notes are still on the device until the server's archive syncs back
+  const folders = [{ ...folder("b", "a"), updated_at: before }, { ...folder("c", "b"), updated_at: before }, folder("x")];
+  const notes = [
+    note("in-a", { folder_id: "a", updated_at: before }),
+    note("in-c", { folder_id: "c", updated_at: before }),
+    note("moved-in-later", { folder_id: "a", updated_at: after }),
+    note("in-gone-folder", { folder_id: "gone", updated_at: before }),
+    note("top", { updated_at: before }),
+  ];
+
+  it("hides everything inside it, any depth", () => {
+    const shown = hideArchivedContents(folders, notes, { a: archivedAt });
+    expect(shown.folders.map((f) => f.id)).toEqual(["x"]);
+    expect(shown.notes.map((n) => n.id)).toEqual(["moved-in-later", "in-gone-folder", "top"]);
+  });
+
+  it("still shows a note moved in later and one whose folder simply isn't on the device (top level)", () => {
+    const ids = new Set(hideArchivedContents(folders, notes, { a: archivedAt }).folders.map((f) => f.id));
+    expect(shownFolder("a", ids)).toBeNull();
+    expect(shownFolder("gone", ids)).toBeNull();
+  });
+
+  it("hides nothing once the folder is back (restored)", () => {
+    const restored = [...folders, { ...folder("a"), updated_at: after }];
+    const shown = hideArchivedContents(restored, notes, { a: archivedAt });
+    expect(shown.folders).toHaveLength(4);
+    expect(shown.notes).toHaveLength(5);
+  });
+
+  it("hides nothing without local archives", () => {
+    expect(hideArchivedContents(folders, notes, {}).notes).toHaveLength(5);
   });
 });

@@ -121,3 +121,38 @@ export function toSave(text: string, saved: string | null, opened: string | null
   // A new note written while typing and then cleared: it shouldn't exist, so it's archived
   return opened === null ? { kind: "archive" } : { kind: "write", body: opened };
 }
+
+/**
+ * Hides what's inside a folder this device archived, until the server's archive of it syncs
+ * back. `archived` maps such a folder's id to its archive time (its last updated_at).
+ * Only items not changed since then are hidden: a note moved or restored into it later
+ * (newer updated_at) shows at the top level, like any note whose folder isn't on the device.
+ * A folder in `archived` that is active again (restored) hides nothing.
+ */
+export function hideArchivedContents(
+  folders: Folder[],
+  notes: Note[],
+  archived: Record<string, string>,
+): { folders: Folder[]; notes: Note[] } {
+  const byId = new Map(folders.map((f) => [f.id, f]));
+  // Archive time of the nearest folder up the chain that isn't on the device, if this device archived it
+  const archivedAbove = (folderId: string | null | undefined): string | null => {
+    const seen = new Set<string>();
+    let id = folderId;
+    while (id && !seen.has(id)) {
+      const folder = byId.get(id);
+      if (!folder) return archived[id] ?? null;
+      seen.add(id);
+      id = folder.parent_id;
+    }
+    return null;
+  };
+  const shown = (start: string | null | undefined, updatedAt: string) => {
+    const at = archivedAbove(start);
+    return at === null || updatedAt > at;
+  };
+  return {
+    folders: folders.filter((f) => shown(f.parent_id, f.updated_at)),
+    notes: notes.filter((n) => shown(n.folder_id, n.updated_at)),
+  };
+}

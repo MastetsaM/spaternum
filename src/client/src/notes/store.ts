@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { serverNow } from "../sync/clock";
 import type { RxCollection } from "rxdb";
 import { getDb, type Db, type Folder, type Note } from "../sync/db";
+import { hideArchivedContents } from "./notes";
 
 /** Every active row of a collection, kept up to date; null while loading. */
 function useRows<T>(pick: (db: Db) => RxCollection<T>): T[] | null {
@@ -24,8 +25,28 @@ function useRows<T>(pick: (db: Db) => RxCollection<T>): T[] | null {
   return rows;
 }
 
-export const useNotes = () => useRows((db) => db.notes);
-export const useFolders = () => useRows((db) => db.note_folders);
+/**
+ * Active notes and folders, without what's inside a folder this device archived
+ * (see hideArchivedContents); null while loading.
+ */
+export function useNotesAndFolders(): { notes: Note[]; folders: Folder[] } | null {
+  const notes = useRows((db) => db.notes);
+  const folders = useRows((db) => db.note_folders);
+  if (!notes || !folders) return null;
+  return hideArchivedContents(folders, notes, archivedHere());
+}
+
+// Folders archived on this device: id → archive time. Kept on the device, so a restart while
+// offline still hides their contents. Old entries are harmless (see hideArchivedContents).
+const ARCHIVED_KEY = "spaternum.archivedFolders";
+
+function archivedHere(): Record<string, string> {
+  try {
+    return JSON.parse(localStorage.getItem(ARCHIVED_KEY) ?? "{}");
+  } catch {
+    return {};
+  }
+}
 
 // ---- Notes ----
 
@@ -77,10 +98,15 @@ export async function updateFolder(id: string, fields: Partial<Pick<Folder, "nam
 
 /**
  * Only the folder is written: the server archives what's inside with the same time and
- * sends those back as deletions, so a restore brings them all back together.
+ * sends those back as deletions, so a restore brings them all back together. Until then the
+ * screen hides the contents (useNotesAndFolders).
  */
 export async function archiveFolder(id: string): Promise<void> {
   const db = await getDb();
   const doc = await db.note_folders.findOne(id).exec();
-  await doc?.incrementalModify((data) => ({ ...data, updated_at: serverNow(), _deleted: true }));
+  if (!doc) return;
+  const at = serverNow();
+  // Noted before the write, so the screen hides the contents as soon as the folder goes
+  localStorage.setItem(ARCHIVED_KEY, JSON.stringify({ ...archivedHere(), [id]: at }));
+  await doc.incrementalModify((data) => ({ ...data, updated_at: at, _deleted: true }));
 }

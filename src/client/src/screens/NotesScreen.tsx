@@ -26,8 +26,7 @@ import {
   saveBody,
   updateFolder,
   updateNote,
-  useFolders,
-  useNotes,
+  useNotesAndFolders,
 } from "../notes/store";
 import { getDb, type Folder, type Note } from "../sync/db";
 
@@ -42,14 +41,13 @@ export function NotesScreen() {
 // ---- List ----
 
 function ListView() {
-  const notes = useNotes();
-  const folders = useFolders();
+  const data = useNotesAndFolders();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const text = params.get("q") ?? "";
   const tags = params.getAll("tag");
 
-  if (!notes || !folders) {
+  if (!data) {
     return (
       <Layout title="Notes">
         <p className="muted">Loading…</p>
@@ -57,6 +55,7 @@ function ListView() {
     );
   }
 
+  const { notes, folders } = data;
   const folderIds = new Set(folders.map((f) => f.id));
   const current = folders.find((f) => f.id === params.get("folder")) ?? null;
   const searching = text.trim() !== "" || tags.length > 0;
@@ -264,7 +263,7 @@ function FolderDetails({ folder, folders, notes }: { folder: Folder | null; fold
 function EditorView({ id }: { id: string }) {
   const [params] = useSearchParams();
   const navigate = useNavigate();
-  const folders = useFolders();
+  const folders = useNotesAndFolders()?.folders ?? null;
   const [state, setState] = useState<"loading" | "ready" | "missing">("loading");
   const [text, setText] = useState("");
   const [note, setNote] = useState<Note | null>(null); // the stored row, live; null = none (yet)

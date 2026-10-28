@@ -111,10 +111,11 @@ How the rules above map onto the app's layout ([[client-foundation_spec]]). Adde
 - **New note:** the editor opens with an id but no row; the row is created at the first save with text. Left empty → nothing is written.
 - **Existing note cleared:** an empty text is never saved; on leaving, the note goes back to the text it had when it was opened.
 - **Archive** = one local write: `_deleted: true` with a new `updated_at` (otherwise the server keeps its newer row). A folder archive writes only the folder; the server archives what's inside and sends those back as deletions, so they share one `archived_at` and restore together.
+- **Contents of a folder archived on this device** are hidden straight away, any depth, until the server's archive of them syncs back (decided 2026-10-28). The device keeps the folder's id and archive time; only items not changed since then are hidden, so a note moved or restored into it later still shows (at the top level, below).
 - A note open in the editor follows changes from the other device only while it has no unsaved typing; otherwise the later write wins as usual.
 
 **Folders:**
-- A folder or note whose folder isn't on the device shows at the top level.
+- A folder or note whose folder isn't on the device shows at the top level — unless that folder was archived on this device (above).
 - Move to: every folder except the folder itself and its sub-folders (the loop rule above, checked on the device too). Folder names are trimmed; an empty name is refused.
 
 **Defaults chosen while building (to confirm with Mihail):**
@@ -127,10 +128,9 @@ How the rules above map onto the app's layout ([[client-foundation_spec]]). Adde
 Server side built (`src/server/spaternum/notes/`); 8 tests in `tests/notes_test.py` pass. Covers criteria 1, 2, 5, 6, 8, 9 and the server part of 10: sync of folders and notes, a note arriving before its folder, folder archive cascade (earlier separate archives keep their own time), one Archive entry per archived folder, restore of a folder or a note, folder-loop refusal, a later edit un-archiving a note. Criteria 3, 4, 7 (list order, search, empty notes) are client work — the server doesn't refuse empty notes.
 
 ## Results — client (2026-10-28)
-Built in `src/client/src/notes/` (rules + database writes) and `screens/NotesScreen.tsx`; 17 Vitest tests in `notes/notes_test.ts` (25 client tests in total) and `pnpm build` pass. Not yet run on the devices.
-- Unit-tested: 3 (title, order), 4 (search, tags), 7 (empty-note rules), and the device side of the loop rule.
+Built in `src/client/src/notes/` (rules + database writes) and `screens/NotesScreen.tsx`; 21 Vitest tests in `notes/notes_test.ts` (29 client tests in total) and `pnpm build` pass. Not yet run on the devices.
+- Unit-tested: 3 (title, order), 4 (search, tags), 7 (empty-note rules), the device side of the loop rule, and hiding the contents of a folder archived on the device.
 - Built, waiting for the phone/PC check: 1, 2, 5, 6, 8. Criterion 9's restore needs the Archive page (block 9); the client only archives the folder, the server cascade does the rest (server-tested).
-- Known gap: after archiving a folder, its notes and sub-folders show at the top level until the server's archive of them syncs back — a moment online, until reconnect offline.
 
 ## Decided 2026-10-21 (former open questions)
 Archiving a folder → archives its contents · note in an archived folder → top level · empty notes → never saved · search → device "contains" + tags · archive view → shared Archive page, server only · sort → last edited · archive vs. later edit → latest write wins.
