@@ -74,12 +74,12 @@ input {
 
 .layout {
   display: grid;
-  grid-template-columns: 64px 260px 1fr 280px;
+  grid-template-columns: 64px var(--side-w) 1fr var(--tools-w);
   grid-template-areas: "rail side main tools";
   height: 100vh;
 }
-.layout.no-side { grid-template-columns: 64px 0 1fr 280px; }
-.layout.no-tools { grid-template-columns: 64px 260px 1fr 0; }
+.layout.no-side { grid-template-columns: 64px 0 1fr var(--tools-w); }
+.layout.no-tools { grid-template-columns: 64px var(--side-w) 1fr 0; }
 .layout.no-side.no-tools { grid-template-columns: 64px 0 1fr 0; }
 
 .rail {
@@ -136,6 +136,12 @@ input {
 .side { grid-area: side; border-right: 1px solid var(--line); }
 .tools { grid-area: tools; border-left: 1px solid var(--line); }
 
+/* Drag edges for the panel widths (set on .layout by Layout.tsx) */
+.resize { position: fixed; top: 0; bottom: 0; width: 6px; cursor: col-resize; z-index: 5; touch-action: none; }
+.resize:hover, .resize:active { background: var(--accent); }
+.resize-side { left: calc(64px + var(--side-w) - 3px); }
+.resize-tools { right: calc(var(--tools-w) - 3px); }
+
 main { grid-area: main; display: flex; flex-direction: column; min-width: 0; }
 /* Same height on every screen; a long title is cut, never wrapped */
 main header {
@@ -164,6 +170,7 @@ main h1 { font-size: 17px; margin: 0; flex: 1; min-width: 0; overflow: hidden; w
     grid-template-rows: 1fr auto;
   }
   .rail { display: none; }
+  .resize { display: none; }
   .phone-only { display: inline-flex; }
   .status.phone-only { display: inline-block; }
 
