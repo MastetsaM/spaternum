@@ -13,6 +13,7 @@ import {
 } from "./screens/Placeholders";
 import { NotesScreen } from "./screens/NotesScreen";
 import { ArchiveScreen } from "./screens/ArchiveScreen";
+import { FavoritesScreen } from "./screens/FavoritesScreen";
 import { SettingsScreen } from "./screens/SettingsScreen";
 import { VoiceNotesScreen } from "./screens/VoiceNotesScreen";
 import "./App.css";
@@ -30,6 +31,7 @@ const router = createHashRouter([
   { path: "/", element: <Navigate to="/home" replace /> },
   { path: "/home", element: connected(<HomeScreen />) },
   { path: "/tools", element: connected(<ToolsScreen />) },
+  { path: "/tools/favorites", element: connected(<FavoritesScreen />) },
   { path: "/tools/notes/:noteId?", element: connected(<NotesScreen />) },
   { path: "/tools/voice-notes", element: connected(<VoiceNotesScreen />) },
   { path: "/tools/archive", element: connected(<ArchiveScreen />) },

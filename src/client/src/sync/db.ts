@@ -19,11 +19,13 @@ type Schemas = components["schemas"];
 export type Folder = Omit<Schemas["Folder"], "_deleted">;
 export type Note = Omit<Schemas["Note"], "_deleted">;
 export type VoiceNote = Omit<Schemas["VoiceNote"], "_deleted">;
+export type Setting = Omit<Schemas["Setting"], "_deleted">;
 
 type Collections = {
   note_folders: RxCollection<Folder>;
   notes: RxCollection<Note>;
   voice_notes: RxCollection<VoiceNote>;
+  settings: RxCollection<Setting>;
 };
 export type Db = RxDatabase<Collections>;
 
@@ -68,11 +70,21 @@ const voiceNoteSchema: RxJsonSchema<VoiceNote> = {
   required: ["id", "title", "tags", "recorded_at", "duration_ms", "size_bytes", "mime_type", "created_at", "updated_at"],
 };
 
+// Small settings that follow Mihail across devices; value is JSON as text (sync/settings.ts)
+const settingSchema: RxJsonSchema<Setting> = {
+  version: 0,
+  primaryKey: "id",
+  type: "object",
+  properties: { ...synced, key: text, value: text },
+  required: ["id", "key", "value", "created_at", "updated_at"],
+};
+
 // Collection name = server table name; path = where its pull/push endpoints live
 const TABLES = {
   note_folders: { schema: folderSchema, path: "/api/notes/note_folders" },
   notes: { schema: noteSchema, path: "/api/notes/notes" },
   voice_notes: { schema: voiceNoteSchema, path: "/api/voice-notes/voice_notes" },
+  settings: { schema: settingSchema, path: "/api/settings/settings" },
 } as const;
 type Table = keyof typeof TABLES;
 
@@ -104,6 +116,7 @@ async function open(settings: Settings): Promise<Db> {
     note_folders: { schema: folderSchema },
     notes: { schema: noteSchema, migrationStrategies: noteMigrations },
     voice_notes: { schema: voiceNoteSchema },
+    settings: { schema: settingSchema },
   });
 
   const resync: Record<string, Subject<"RESYNC">> = {};
