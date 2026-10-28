@@ -4,12 +4,16 @@ export type Panel = "side" | "tools";
 export type Widths = Record<Panel, number>;
 
 export const DEFAULTS: Widths = { side: 260, tools: 280 };
-export const LIMITS: Record<Panel, [number, number]> = { side: [180, 480], tools: [200, 560] };
+export const LIMITS: Record<Panel, [number, number]> = { side: [180, 600], tools: [200, 720] };
+/** The side panel showing only the tool icons. Dragged below its minimum, it snaps to this. */
+export const SIDE_ICONS = 52;
 
 const KEY = "spaternum.panelWidths";
 
 export function clampWidth(panel: Panel, px: number): number {
   const [min, max] = LIMITS[panel];
+  // Below the side panel's minimum: whichever is nearer, icons only or the minimum
+  if (panel === "side" && px < min) return px < (SIDE_ICONS + min) / 2 ? SIDE_ICONS : min;
   return Math.round(Math.min(max, Math.max(min, px)));
 }
 

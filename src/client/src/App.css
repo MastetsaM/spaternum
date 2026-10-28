@@ -127,6 +127,12 @@ input {
   text-decoration: none;
 }
 .tool-list a.active { background: var(--bg); color: var(--accent); }
+/* PC side panel dragged down to icons only (ui-design_spec.md) */
+@media (min-width: 701px) {
+  .side-icons .side { padding: 12px 8px; }
+  .side-icons .side .tool-list a { justify-content: center; padding: 8px 0; }
+  .side-icons .side .tool-list span { display: none; }
+}
 
 .side, .tools {
   overflow: auto;
