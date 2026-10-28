@@ -129,7 +129,7 @@ Specs: [[notes_spec]], [[voice-notes_spec]]. One branch per block (name in brack
 
 ### 10. Phase 1 done
 - [x] Acceptance criteria checked and results written in each spec. The device checks ran directly against the Pi, which already had every server change from `main`.
-- [ ] Install the latest APK on the phone (favorites, panels) and check ★ Favorites in the ☰ drawer
+- [x] Install the latest APK on the phone and check ★ Favorites (2026-10-28, works on the PC and the phone)
 - [ ] On the Pi: `cd ~/spaternum && git switch main && ops/update.sh`. No new migrations; it only keeps the checkout current.
 - [ ] Not checked on the device yet: two devices editing the same note at once, killing the app during an upload, and the Archive page's offline message with Retry
 
