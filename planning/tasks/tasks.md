@@ -41,6 +41,12 @@
 ## Phase 1 — notes + voice notes
 Specs: [[notes_spec]], [[voice-notes_spec]]. One branch per block (name in brackets), merged when its tests pass ([[2026-10-20-git-workflow]]).
 
+**Status 2026-10-28:**
+- Blocks 1–6 are merged into `main`.
+- Blocks 7, 8 and 9 were built in parallel, each by its own agent on its own branch. Each agent wrote its spec's client section first, and Mihail decided the open questions.
+- The three branches are combined on `feature/phase1-client` for one APK. It goes to `main` once the device checks below pass.
+- Code map: `src/CONTEXT.md`.
+
 ### Decided before starting (2026-10-21)
 - [x] Folders: `src/server/` and `src/client/` (one client codebase for PC and Android)
 - [x] Tests: server — pytest against a real Postgres in Docker; client — Vitest for logic, manual checks on the phone and PC for UI

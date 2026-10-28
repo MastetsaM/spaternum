@@ -24,5 +24,10 @@ Decided 2026-10-20 in conversation with Mihail.
 
 Repo: public on GitHub, license AGPL-3.0 — see [[2026-10-20-license-agpl]].
 
+## Addition 2026-10-28: parallel branches
+- When blocks don't depend on each other, they can be built at the same time. Each one gets its own branch in its own git worktree (`.claude/worktrees/`, ignored by git), so the builds don't switch branches under each other.
+- Changes to shared files (routes, layout, CSS, the sync code) stay small, and conflicts are resolved at merge.
+- For device testing, the finished branches are merged into one combined branch (`feature/phase1-client`), and one APK is built from it. The combined branch goes to `main` once the device checks pass.
+
 ## Related
 [[PRD]] · [[TECH]] · [[tasks]]

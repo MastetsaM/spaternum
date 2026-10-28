@@ -22,6 +22,7 @@ Technical reference. The *why* behind each choice lives in [[PRD]] and the decis
 - **Files on PC** (code editor module, later): every file operation goes through one interface — `list / read / write / watch` — never direct `fs` calls from UI code.
 
 ## Key implementation patterns
+Where each piece lives in the code: `src/CONTEXT.md`.
 
 ### Offline (only for modules that need it — voice notes and notes)
 - Every record has `id` (UUID, generated on the client so it exists before upload), `created_at`, `updated_at`, `archived_at` (archive, never delete — archived rows tell other devices a record is gone).
