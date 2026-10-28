@@ -2,7 +2,7 @@
 
 import { Settings } from "lucide-react";
 import { NavLink } from "react-router";
-import { Layout, TOOLS } from "../layout/Layout";
+import { FAVORITES_LINK, Layout, TOOLS } from "../layout/Layout";
 
 export function HomeScreen() {
   return (
@@ -20,12 +20,12 @@ export function HomeScreen() {
   );
 }
 
-/** The tools, also in the main area — on the phone the ☰ drawer starts closed. */
+/** ★ Favorites and every tool, also in the main area — on the phone the ☰ drawer starts closed. */
 export function ToolsScreen() {
   return (
     <Layout title="Tools">
       <ul className="tool-list">
-        {TOOLS.map(({ to, label, icon: Icon }) => (
+        {[FAVORITES_LINK, ...TOOLS].map(({ to, label, icon: Icon }) => (
           <li key={to}>
             <NavLink to={to}>
               <Icon size={18} /> {label}
