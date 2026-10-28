@@ -126,6 +126,19 @@ Notes for the client:
 - `<audio src>` can't send the token header, so the app fetches the audio with `fetch` and plays it from a blob (files are small: ≤ ~15 MB for an hour).
 - The Archive list gives `recorded_at` for untitled voice notes; the app formats it in local time.
 
+## Client details (block 8, 2026-10-28)
+How the client carries out the rules above. Nothing here adds behaviour; it fills in what the client needs to know.
+- **Which device records:** the app records when it runs on Android (read from the webview's user agent). Elsewhere the list shows with no Record button.
+- **Local folder:** `voice-notes/` in the app's data folder (Android app storage). All reads and writes go through one file module (`src/voice-notes/files.ts`).
+- **File names tell the state:** while recording, the file is `<id>.<recorded_at in ms>.part`; at Stop the last piece is written, the row is created (size read from the file), then the file is renamed to `<id>.webm`. So a `.part` file found on start is an unfinished recording, and a `.webm` file with no visible row is an archived one, not an interrupted one.
+- **Recorder states:** idle → asking for the mic → recording (timer) → saving → idle. Errors (mic denied, write failed) show under the button. Recording keeps going when another screen is opened. At 1 hour the next recorder is started on the same mic stream *before* the current one stops, so no audio falls between the parts.
+- **Recovery on start:** each `.part` file → empty: left alone (no audio) · a row already exists (app killed between the row and the rename): rename only · otherwise: create the row (`recorded_at` from the file name, duration read from the file, size from the file), then rename.
+- **Upload queue:** one upload at a time. Pending = a `<id>.webm` file whose row isn't marked uploaded and which this device hasn't uploaded yet. This device keeps its own list of uploaded ids (`localStorage`), because an archived row is no longer in the local database but its pending upload must keep going; losing that list only causes harmless repeat uploads. Runs on start, after each recording, and when sync turns online. A `404` (row not pushed yet) retries after 30 s; network errors wait for the next online.
+- **Upload states in the list:** Uploaded · Uploading… · Not uploaded (file on this phone) · Upload failed: *reason* (size mismatch, server disk full, other) — retried on the next trigger · Audio missing (on the phone: no local file, not uploaded) · Not uploaded yet (PC: waiting for the phone).
+- **Playback source:** local file → play it; otherwise not uploaded → disabled ("audio missing" or "not uploaded yet"); offline → disabled ("offline"); else fetch from the server with the token and play from a blob.
+- **Edits:** title and tags (comma-separated) edited in the list; `updated_at` from the clock offset. Archive = bump `updated_at`, then RxDB remove.
+- **Tag filter:** the side panel / ☰ drawer lists the tags of active voice notes; one tag at a time, or All.
+
 ## Decided 2026-10-21
 Title optional, editable by Mihail, used as advice by phase 2 processing · tags only, no folders · max length 1 hour, then a new recording starts automatically · no server path column · archiving doesn't touch the local file, nothing deleted in phase 1 · crash safety: write audio to disk every ~5 s, recover interrupted recordings on start · recording on Android only; the PC views and listens (PC test results under Out of scope).
 
