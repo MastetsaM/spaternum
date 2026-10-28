@@ -97,6 +97,31 @@ Notes work offline on both clients; changes sync when the server is reachable, l
 - Searching archived notes on the device.
 - **Markdown export to the PC (later):** write a `.md` copy of each note to `~/Documents/Spaternum/notes/`, so notes are visible and usable outside the app (Obsidian-style). Requested by Mihail 2026-10-21; not phase 1.
 
+## Client details (block 7)
+How the rules above map onto the app's layout ([[client-foundation_spec]]). Added 2026-10-28.
+
+**Screens** (routes, so Android's back gesture walks back through them):
+- `/tools/notes?folder=<id>` — **note list** of one folder in the main area; no `folder` = top level. Side panel / ☰ drawer: the **folder tree** under Notes (top level first, then folders, any depth). Tool panel: the **selected folder's details** — rename, move, new sub-folder, archive — and New folder at the top level.
+- `/tools/notes/<id>` — **editor** in the main area: one plain text box. Tool panel: the **note's details** — tags, pin, move to a folder, archive.
+- **Search** sits above the note list: a text box and the tags in use. While text is typed or a tag is chosen, the list shows matches from **all folders** instead of the one folder.
+
+**Writing:**
+- Every write sets `updated_at` to the device time corrected by the server offset (`serverNow()`), so latest-write-wins works ([[2026-10-20-offline-latest-write-wins]]).
+- The editor **saves on its own** a moment after typing stops and when leaving — no Save button, so nothing written is lost.
+- **New note:** the editor opens with an id but no row; the row is created at the first save with text. Left empty → nothing is written.
+- **Existing note cleared:** an empty text is never saved; on leaving, the note goes back to the text it had when it was opened.
+- **Archive** = one local write: `_deleted: true` with a new `updated_at` (otherwise the server keeps its newer row). A folder archive writes only the folder; the server archives what's inside and sends those back as deletions, so they share one `archived_at` and restore together.
+- A note open in the editor follows changes from the other device only while it has no unsaved typing; otherwise the later write wins as usual.
+
+**Folders:**
+- A folder or note whose folder isn't on the device shows at the top level.
+- Move to: every folder except the folder itself and its sub-folders (the loop rule above, checked on the device too). Folder names are trimmed; an empty name is refused.
+
+**Defaults chosen while building (to confirm with Mihail):**
+- Text search ignores upper/lower case. A body of only spaces/new lines counts as empty.
+- Several chosen tags = notes with all of them. Tags are trimmed and de-duplicated, kept as typed.
+- Folders are sorted by name.
+
 ## Results — server (2026-10-25)
 Server side built (`src/server/spaternum/notes/`); 8 tests in `tests/notes_test.py` pass. Covers criteria 1, 2, 5, 6, 8, 9 and the server part of 10: sync of folders and notes, a note arriving before its folder, folder archive cascade (earlier separate archives keep their own time), one Archive entry per archived folder, restore of a folder or a note, folder-loop refusal, a later edit un-archiving a note. Criteria 3, 4, 7 (list order, search, empty notes) are client work — the server doesn't refuse empty notes.
 
