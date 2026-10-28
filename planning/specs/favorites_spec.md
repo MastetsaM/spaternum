@@ -7,7 +7,7 @@ The left side panel (☰ drawer on the phone) lists every tool. As tools grow, t
 - **Side panel:** a **★ Favorites** entry first, then the favorite tools **in Mihail's order**. ★ Favorites opens `/tools/favorites`.
 - **Favorites page** (`/tools/favorites`, header "Favorites"): the favorites first, in their order, each with **up and down arrows** to move it. Then the other tools in the fixed tool order. Every tool has a star to switch it on or off. A newly starred tool goes to the end of the favorites. A change applies at once, with no Save button.
   - Drag and drop is wanted later (Mihail, 2026-10-28). It only changes the page's controls; the saved list stays the same.
-- **The Tools section's main screen** (`/tools`) still lists every tool, so a tool that isn't a favorite is always reachable.
+- **The Tools section's main screen** (`/tools`) shows ★ Favorites first, then every tool, so a tool that isn't a favorite is always reachable. On the phone the ☰ drawer starts closed, so this is where Favorites is found first (fixed 2026-10-28 after Mihail's phone check).
 - **Defaults** (confirmed by Mihail, 2026-10-28):
   - Before anything is chosen, **every tool is a favorite**, in the fixed tool order, so nothing disappears on update.
   - Removing every favorite is allowed: the side panel then shows only ★ Favorites.
@@ -23,7 +23,7 @@ Each device has **its own favorites and order** (Mihail, 2026-10-28). The PC and
 1. Starring, un-starring and moving on the Favorites page changes the side panel at once.
 2. The choice stays after the app restarts, and doesn't affect the other device.
 3. Before anything is chosen, every tool shows.
-4. `/tools` still lists every tool.
+4. `/tools` shows ★ Favorites, then every tool.
 5. Server and client tests pass.
 
 ## Results (2026-10-28)

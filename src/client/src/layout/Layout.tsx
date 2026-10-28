@@ -38,6 +38,8 @@ export const TOOLS = [
   { key: "archive", to: "/tools/archive", label: "Archive", icon: Archive },
 ];
 export const TOOL_KEYS = TOOLS.map((t) => t.key);
+/** First in the side panel and on the Tools screen; opens the page that picks the favorites. */
+export const FAVORITES_LINK = { to: "/tools/favorites", label: "Favorites", icon: Star };
 
 type Props = {
   title: string;
@@ -72,7 +74,7 @@ export function Layout({ title, tools, actions, children }: Props) {
   // Tools: ★ Favorites, then the favorite tools in Mihail's order; anything inside a tool goes in the tool panel
   const sideContent = inTools && (
     <ul className="tool-list">
-      {[{ to: "/tools/favorites", label: "Favorites", icon: Star }, ...favorites.map((key) => TOOLS.find((t) => t.key === key)!)].map(
+      {[FAVORITES_LINK, ...favorites.map((key) => TOOLS.find((t) => t.key === key)!)].map(
         ({ to, label, icon: Icon }) => (
           <li key={to}>
             <NavLink to={to} onClick={close} title={label}>
