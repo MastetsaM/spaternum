@@ -20,6 +20,7 @@ The base of the one app that runs on the PC and on Android: the Tauri project, t
   - **Side panel** (PC) / **☰ drawer** (phone): for Tools, the list of tools — Notes, Voice notes, Archive; the open tool shows its own items under it (e.g. the notes folder tree).
   - **Tool panel** on the right for tool-specific settings and details (PC, can be closed); on the phone it opens from a button.
   - Switches by window width, so a narrow PC window behaves like the phone.
+  - The ☰ drawer closes whenever the screen changes, query string included (e.g. a notes folder picked in it) — added 2026-10-28.
   - Modules fill in the panels in later blocks; here they show placeholders.
   - **Screens are routes** (`react-router`): `/home`, `/tools/notes`, `/tools/voice-notes`, `/tools/archive`, `/clients`, `/projects`, `/settings`. Android's back gesture walks back through screens instead of closing the app; later a route can open one note directly.
   - Plain CSS (a grid for the layout), icons from `lucide-react`.

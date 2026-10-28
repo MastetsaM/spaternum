@@ -15,7 +15,7 @@ import {
   Wrench,
   X,
 } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { NavLink, useLocation } from "react-router";
 import { useStatus } from "../sync/status";
 
@@ -42,13 +42,14 @@ type Props = {
 };
 
 export function Layout({ title, side, tools, children }: Props) {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const inTools = pathname.startsWith("/tools");
   const [drawerOpen, setDrawerOpen] = useState(false); // phone only
   // Open by default on the PC; on the phone it covers the screen, so only when asked
   const [toolsOpen, setToolsOpen] = useState(() => !window.matchMedia(PHONE).matches);
   const { online } = useStatus();
   const close = () => setDrawerOpen(false);
+  useEffect(close, [pathname, search]); // any new screen, e.g. a folder picked in the drawer
 
   const sections = SECTIONS.map(({ to, label, icon: Icon }) => (
     <NavLink key={to} to={to} title={label} onClick={close}>
