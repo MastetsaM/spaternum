@@ -3,6 +3,7 @@
 
 import { Archive, Mic, Pencil, Play, Square } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router";
 import type { RxDocument } from "rxdb";
 import { loadSettings } from "../api/settings";
 import { Layout } from "../layout/Layout";
@@ -31,7 +32,10 @@ type Doc = RxDocument<VoiceNote>;
 
 export function VoiceNotesScreen() {
   const [docs, setDocs] = useState<Doc[]>([]);
-  const [tag, setTag] = useState<string | null>(null);
+  // The tag filter lives in the URL (?tag=…), like the notes screen; the phone drawer closes on change
+  const [params, setParams] = useSearchParams();
+  const tag = params.get("tag");
+  const setTag = (next: string | null) => setParams(next === null ? {} : { tag: next });
   const [playing, setPlaying] = useState<string | null>(null);
   const [error, setError] = useState("");
   const uploads = useUploads();
