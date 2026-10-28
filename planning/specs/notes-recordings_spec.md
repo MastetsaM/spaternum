@@ -12,6 +12,7 @@ Notes and voice notes are both notes. They become **one item, the note**, which 
 4. **Pinned:** one **"Pinned" section at the top level** of Notes, with the pinned notes from all folders.
 5. **Folder tags:** a note in `Work › Clients › Acme` also shows the tags `Work`, `Clients`, `Acme`, and choosing one in search finds everything under that folder at any depth. They are **worked out on the fly** from where the note is now, never saved, so moving or renaming a folder updates them at once. They look different from normal tags.
 6. The separate **Voice notes tool goes away**.
+7. **Tool panel (right):** a full tree of everything, with folders and the notes inside them, so the whole layout can be seen and navigated from one place. At its top sits a place for **notes settings** (added 2026-10-28).
 
 ## What stays the same
 Everything about recording and audio in [[voice-notes_spec]]: the recorder settings, crash safety and recovery, the 1-hour split, upload, playback, the player, the file names, and that recording is Android only. Sync, archive and empty-note rules from [[notes_spec]].
@@ -25,6 +26,7 @@ Everything about recording and audio in [[voice-notes_spec]]: the recorder setti
 ## Open questions
 - Which module owns recordings: notes, or voice notes as a part notes uses? This affects [[2026-10-20-architecture-modular-monolith]].
 - Where recordings show in the note: above or below the text?
+- Notes settings: what goes in them?
 - Notes list row: does a note with recordings show a mark (e.g. a mic icon) next to its title?
 
 ## Out of scope
