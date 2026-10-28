@@ -64,6 +64,10 @@ Per [[2026-10-21-local-files-location]], the local copy is deleted only when **u
 - Local file present → play it (works offline).
 - No local file (always on the PC; on the phone once deleted later) → stream from `GET /voice-notes/{id}/audio` (online only).
 - No local file and offline, or not uploaded yet from the phone → Play disabled, with a short reason ("offline" / "not uploaded yet").
+- **Player** (added 2026-10-28 after Mihail's first look): Play / Pause, a **position bar** to jump anywhere, the time played and the total, and **speed buttons ×1, ×1.5, ×2**.
+  - Pause keeps the position, and Play continues from it. The position is kept while the app is open, per recording.
+  - The chosen speed applies to every recording until changed, while the app is open.
+  - The bar's length comes from the row's `duration_ms`, because MediaRecorder's WebM files don't carry a duration.
 
 ## Archiving
 Same rules as [[notes_spec]]: archives live only on the server, shown on the shared Archive page; the module provides `list_archived()` and `restore(id)` ([[2026-10-20-architecture-modular-monolith]]).
@@ -141,7 +145,7 @@ How the client carries out the rules above. Nothing here adds behaviour; it fill
 - **Upload states in the list:** Uploaded · Uploading… · Not uploaded (file on this phone) · Upload failed: *reason* (size mismatch, server disk full, other) — retried on the next trigger · Audio missing (on the phone: no local file, not uploaded) · Not uploaded yet (PC: waiting for the phone).
 - **Playback source:** local file → play it; otherwise not uploaded → disabled ("audio missing" or "not uploaded yet"); offline → disabled ("offline"); else fetch from the server with the token and play from a blob.
 - **Edits:** title and tags (comma-separated) edited in the list; `updated_at` from the clock offset. Archive = bump `updated_at`, then RxDB remove.
-- **Tag filter:** the side panel / ☰ drawer lists the tags of active voice notes; one tag at a time, or All. The chosen tag is kept in the URL (`?tag=<tag>`), as on the notes screen.
+- **Tag filter:** the tool panel (right) lists the tags of active voice notes (moved from the left panel 2026-10-28); one tag at a time, or All. The chosen tag is kept in the URL (`?tag=<tag>`), as on the notes screen.
 
 ## Decided 2026-10-21
 Title optional, editable by Mihail, used as advice by phase 2 processing · tags only, no folders · max length 1 hour, then a new recording starts automatically · no server path column · archiving doesn't touch the local file, nothing deleted in phase 1 · crash safety: write audio to disk every ~5 s, recover interrupted recordings on start · recording on Android only; the PC views and listens (PC test results under Out of scope).
