@@ -1,12 +1,21 @@
 // Empty screens until they're built: home, clients and projects come in later phases.
 
+import { Settings } from "lucide-react";
 import { NavLink } from "react-router";
 import { Layout, TOOLS } from "../layout/Layout";
 
 export function HomeScreen() {
   return (
-    <Layout title="Home">
-      <p className="muted">The dashboard comes later.</p>
+    // Settings opens only from here (ui-design_spec.md)
+    <Layout
+      title="Home"
+      actions={
+        <NavLink to="/settings" title="Settings" className="gear">
+          <Settings size={20} />
+        </NavLink>
+      }
+    >
+      <p className="muted">Home comes in a later phase.</p>
     </Layout>
   );
 }

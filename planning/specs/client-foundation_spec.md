@@ -16,7 +16,7 @@ The base of the one app that runs on the PC and on Android: the Tauri project, t
   - **Online indicator:** from the last sync result (stream connected, last call OK) — not `navigator.onLine`.
 - **Layout** (Teams / VS Code style; structure corrected by Mihail 2026-10-26):
   - **Sections:** Home (dashboard), **Tools**, Clients, Projects. PC: left rail; phone: bottom bar. Home, Clients and Projects are placeholders until their phases.
-  - **Settings** slightly hidden: a gear at the bottom of the rail (PC) / top-right of the header (phone).
+  - **Settings** only from Home: a gear at the top right of the Home screen, PC and phone (changed 2026-10-28, [[ui-design_spec]]).
   - **Side panel** (PC) / **☰ drawer** (phone): for Tools, the list of tools — Notes, Voice notes, Archive; the open tool shows its own items under it (e.g. the notes folder tree).
   - **Tool panel** on the right for tool-specific settings and details (PC, can be closed); on the phone it opens from a button.
   - Switches by window width, so a narrow PC window behaves like the phone.
@@ -32,7 +32,7 @@ The base of the one app that runs on the PC and on Android: the Tauri project, t
 3. Generated API types compile, and a server change shows up after `pnpm gen:api`.
 4. With two devices on: a row written through the API (e.g. a note pushed with `curl`) appears in both devices' local databases within ~2 s, without polling.
 5. Offline (airplane mode on the phone): the indicator shows offline; writes to the local database stay; back online they reach the server and the indicator turns online.
-6. PC: rail with Home, Tools, Clients, Projects (+ gear), side panel listing the tools with the open tool's items, main, tool panel. Phone: the same sections in the bottom bar, the tools in the ☰ drawer, gear top-right, tool panel from a button.
+6. PC: rail with Home, Tools, Clients, Projects, side panel listing the tools with the open tool's items, main, tool panel. Phone: the same sections in the bottom bar, the tools in the ☰ drawer, tool panel from a button. Settings gear only on Home.
 7. Vitest tests pass for the logic that isn't UI: clock offset, reconnect pause, event → collection routing, settings validation.
 
 ## Edge cases and failure modes

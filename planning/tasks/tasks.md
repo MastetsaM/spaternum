@@ -51,7 +51,7 @@ Specs: [[notes_spec]], [[voice-notes_spec]]. One branch per block (name in brack
 - [x] Folders: `src/server/` and `src/client/` (one client codebase for PC and Android)
 - [x] Tests: server — pytest against a real Postgres in Docker; client — Vitest for logic, manual checks on the phone and PC for UI
 - [x] Server URL + API token: a settings screen on first start, stored on the device, editable later in settings
-- [x] Layout: Teams / VS Code style — left rail / bottom bar with the sections (Home, Tools, Clients, Projects; Settings as a small gear), side panel / ☰ drawer with the tools (Notes, Voice notes, Archive) and the open tool's items (e.g. folders), main content, tool panel on the right ([[client-foundation_spec]], corrected 2026-10-26)
+- [x] Layout: Teams / VS Code style — left rail / bottom bar with the sections (Home, Tools, Clients, Projects; Settings as a gear on Home only, since 2026-10-28), side panel / ☰ drawer with the tools (Notes, Voice notes, Archive) and the open tool's items (e.g. folders), main content, tool panel on the right ([[client-foundation_spec]], corrected 2026-10-26)
 - [x] Phone layout: the sections go in the bottom bar, the tools in the ☰ drawer, the tool panel opens from a button
 - [x] Pi: deploy as early as possible (right after the server foundation). The Pi is updated **only from `main`, after the change is fully tested on the PC**. Day to day, the server runs on the PC and the phone reaches it over Tailscale (as in the sync spike)
 

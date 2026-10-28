@@ -25,6 +25,7 @@ The structure (rail, side panel, main, tool panel, phone drawer) is in [[client-
 | `--accent` | `#4f5bd5` | same | Active, selected, the primary action |
 | `--ok` | `#2f9e5b` | same | Online dot, "Uploaded" |
 | `--error` | `#c93c3c` | same | Errors, danger buttons, Stop, "Not uploaded" |
+| `--on-accent` | `#ffffff` | same | Text on accent and error fills (Record, Stop) |
 
 Colours come only from these tokens. A new colour needs a new token, and that gets proposed first.
 
@@ -52,8 +53,8 @@ Colours come only from these tokens. A new colour needs a new token, and that ge
 | **Input / textarea / select** | `--bg` fill, 1px `--line` border, 6px corners, full width |
 | **List row** | Padding 10–12px top and bottom, bottom border `--line`. Title on the first line (600 weight), meta line below in 13px `--muted` |
 | **Active item** (rail, tool list, folder) | `--accent` text on `--bg` background |
-| **Tag** | Pill: 1px border, 12px corners, 13px. Selected = `--accent` border and text |
-| **Filter buttons** (e.g. Archive types) | Outline buttons in a wrapping row. Active = `--accent` border and text |
+| **Tag** | Pill (`.tag`): 1px border, 12px corners, 13px. Selected = `.on` (`--accent` border and text). Used for tags on items and for tag filters |
+| **Filter buttons** (e.g. Archive types) | Outline buttons in a wrapping row. Active = `.on` |
 | **Status dot** | 10px circle: `--ok` online, `--muted` offline |
 | **Empty state** | One short line in `--muted`, e.g. "Nothing archived." |
 | **Error** | One line in `--error`, with a Retry button when retrying helps |
@@ -65,19 +66,17 @@ Colours come only from these tokens. A new colour needs a new token, and that ge
 - The app is padded clear of the status bar, navigation bar and keyboard (`MainActivity.kt`).
 
 ## Settings
-**Decided 2026-10-28, not built yet:**
+**Decided and built 2026-10-28:**
 - Settings is opened only from the **Home** screen. There's a gear at the top right of Home, on both PC and phone.
 - The rail and the phone header no longer show a gear.
 - The first start and a rejected token still open Settings by themselves.
 
-## Gaps in the current code (to fix)
-1. **Settings gear** is in the rail (PC) and the header (phone) on every screen. Move it to Home only (see above).
-2. **Voice notes uses `rem`** (`1.1rem`, `0.9rem`) where everything else uses `px`. Switch to the sizes above.
-3. **Tags look different per tool.**
-   - Voice notes shows them as plain accent text (`.vn-chips`); Notes uses the `.tag` pill. Use the pill everywhere.
-   - The tag filter is a list in Voice notes (`.vn-tags`) and pills in Notes. Pick one, the pills, for both.
-4. **`#fff` is written directly** on the Record and Stop buttons. Use a token, e.g. `--on-accent`, so dark mode stays in control.
-5. **Repeated styles.** `.archive-filters button.active` and `.tag.on` are the same "selected" look. One shared class (e.g. `.on`) would keep them from drifting apart.
+## Gaps found in the code (all fixed 2026-10-28)
+1. Settings gear on every screen → now on Home only. The header takes an `actions` slot, so Home puts the gear there.
+2. Voice notes used `rem` → now `px` (17px Record button, 13px meta).
+3. Tags looked different per tool → Voice notes now uses the `.tag` pill for its tags and its tag filter.
+4. `#fff` written directly on Record and Stop → now the `--on-accent` token.
+5. Two copies of the "selected" look → one shared `.on` class. Tags and Archive filters use it, in the "Shared pieces" section of `App.css`.
 
 ## Out of scope
 - A theme switch (light/dark follows the system).
