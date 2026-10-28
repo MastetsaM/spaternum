@@ -3,6 +3,7 @@ import type { Folder, Note } from "../sync/db";
 import {
   addTags,
   allTags,
+  childFolders,
   folderTree,
   hideArchivedContents,
   isEmpty,
@@ -181,5 +182,19 @@ describe("folder archived on this device", () => {
 
   it("hides nothing without local archives", () => {
     expect(hideArchivedContents(folders, notes, {}).notes).toHaveLength(5);
+  });
+});
+
+describe("childFolders", () => {
+  const folders = [folder("b"), folder("a"), folder("a2", "a"), folder("a1", "a"), folder("a1x", "a1")];
+  it("lists the top level by name", () => {
+    expect(childFolders(folders, null).map((f) => f.id)).toEqual(["a", "b"]);
+  });
+  it("lists only direct sub-folders", () => {
+    expect(childFolders(folders, "a").map((f) => f.id)).toEqual(["a1", "a2"]);
+    expect(childFolders(folders, "a1x")).toEqual([]);
+  });
+  it("shows a folder whose parent isn't on the device at the top level", () => {
+    expect(childFolders([folder("x", "gone")], null).map((f) => f.id)).toEqual(["x"]);
   });
 });

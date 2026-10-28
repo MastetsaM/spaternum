@@ -1,13 +1,14 @@
-// Notes: folder tree in the side panel, note list or editor in the main area, folder or
-// note details in the tool panel. Rules live in notes/notes.ts, database writes in notes/store.ts.
+// Notes: folders browsed like a file manager in the main area (sub-folders, then notes), or the
+// editor; the folder tree in the PC's side panel; folder or note details in the tool panel. Rules live in notes/notes.ts, database writes in notes/store.ts.
 
-import { ArrowLeft, Folder as FolderIcon, Pin, PinOff, Plus, Search, X } from "lucide-react";
+import { ArrowLeft, ChevronLeft, Folder as FolderIcon, FolderPlus, Pin, PinOff, Plus, Search, X } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router";
 import { Layout } from "../layout/Layout";
 import {
   addTags,
   allTags,
+  childFolders,
   folderTree,
   moveTargets,
   searchNotes,
@@ -44,6 +45,7 @@ function ListView() {
   const data = useNotesAndFolders();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
+  const [naming, setNaming] = useState(false); // the New folder name box is open
   const text = params.get("q") ?? "";
   const tags = params.getAll("tag");
 
@@ -76,6 +78,10 @@ function ListView() {
   const toggleTag = (tag: string) =>
     setSearch(text, tags.includes(tag) ? tags.filter((t) => t !== tag) : [...tags, tag]);
 
+  const parentId = current ? shownFolder(current.parent_id, folderIds) : null;
+  const parentName = folders.find((f) => f.id === parentId)?.name ?? "Notes";
+  const subFolders = searching ? [] : childFolders(folders, current?.id ?? null);
+
   const openNew = () => {
     const folder = current ? `&folder=${current.id}` : "";
     navigate(`/tools/notes/${crypto.randomUUID()}?new=1${folder}`);
@@ -85,8 +91,32 @@ function ListView() {
     <Layout
       title={searching ? "Search" : (current?.name ?? "Notes")}
       side={<FolderTree folders={folders} currentId={current?.id ?? null} />}
-      tools={<FolderDetails key={current?.id ?? "top"} folder={current} folders={folders} notes={notes} />}
+      tools={current && <FolderDetails key={current.id} folder={current} folders={folders} notes={notes} />}
     >
+      {current && !searching && (
+        <Link className="up" to={listUrl(parentId)}>
+          <ChevronLeft size={16} /> {parentName}
+        </Link>
+      )}
+
+      <div className="new-buttons">
+        <button onClick={openNew}>
+          <Plus size={16} /> New note
+        </button>
+        <button onClick={() => setNaming(!naming)}>
+          <FolderPlus size={16} /> New folder
+        </button>
+      </div>
+      {naming && (
+        <NameForm
+          label="Create"
+          onSave={(name) => {
+            createFolder(name, current?.id ?? null);
+            setNaming(false);
+          }}
+        />
+      )}
+
       <div className="note-search">
         <label className="search-box">
           <Search size={16} />
@@ -106,12 +136,20 @@ function ListView() {
         </div>
       </div>
 
-      <button className="new-note" onClick={openNew}>
-        <Plus size={16} /> New note
-      </button>
+      {subFolders.length > 0 && (
+        <ul className="note-list">
+          {subFolders.map((folder) => (
+            <li key={folder.id}>
+              <Link to={listUrl(folder.id)} className="folder-row">
+                <FolderIcon size={16} /> {folder.name}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
 
       {shown.length === 0 ? (
-        <p className="muted">{searching ? "No notes match." : "No notes here yet."}</p>
+        subFolders.length === 0 && <p className="muted">{searching ? "No notes match." : "Nothing here yet."}</p>
       ) : (
         <ul className="note-list">
           {shown.map((note) => (
@@ -197,19 +235,9 @@ function NameForm({ label, initial = "", onSave }: { label: string; initial?: st
   );
 }
 
-function FolderDetails({ folder, folders, notes }: { folder: Folder | null; folders: Folder[]; notes: Note[] }) {
+function FolderDetails({ folder, folders, notes }: { folder: Folder; folders: Folder[]; notes: Note[] }) {
   const navigate = useNavigate();
   const [confirming, setConfirming] = useState(false);
-
-  if (!folder) {
-    return (
-      <div className="details">
-        <h2>Top level</h2>
-        <h3>New folder</h3>
-        <NameForm label="Create" onSave={(name) => createFolder(name, null)} />
-      </div>
-    );
-  }
 
   const folderIds = new Set(folders.map((f) => f.id));
   const parentId = shownFolder(folder.parent_id, folderIds);
@@ -233,9 +261,6 @@ function FolderDetails({ folder, folders, notes }: { folder: Folder | null; fold
       <select value={parentId ?? ""} onChange={(e) => updateFolder(folder.id, { parent_id: e.target.value || null })}>
         <FolderOptions folders={moveTargets(folders, folder.id)} />
       </select>
-
-      <h3>New sub-folder</h3>
-      <NameForm label="Create" onSave={(name) => createFolder(name, folder.id)} />
 
       <h3>Archive</h3>
       {confirming ? (

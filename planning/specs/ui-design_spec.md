@@ -33,6 +33,7 @@ Colours come only from these tokens. A new colour needs a new token, and that ge
 - System font (`system-ui`), base **15px**.
 - Sizes: screen title 17px bold; body 15px; meta lines (dates, sizes, counts) 13px in `--muted`; panel section labels 12px uppercase in `--muted`; rail labels 10px.
 - Use `px` everywhere, the same as the rest of the file.
+- **Header:** the same 48px height on every screen. The screen title stays on one line and is cut with an ellipsis (e.g. a long note's first line).
 - Titles cut off with an ellipsis instead of wrapping in lists. Note text in the editor wraps normally, with line height 1.5.
 
 ## Spacing and shapes
@@ -67,7 +68,7 @@ Colours come only from these tokens. A new colour needs a new token, and that ge
 
 ## Settings
 **Decided and built 2026-10-28:**
-- Settings is opened only from the **Home** screen. There's a gear at the top right of Home, on both PC and phone.
+- Settings is opened only from the **Home** screen. There's a gear at the top right of Home, on both PC and phone. On the phone it sits just left of the connection dot.
 - The rail and the phone header no longer show a gear.
 - The first start and a rejected token still open Settings by themselves.
 
