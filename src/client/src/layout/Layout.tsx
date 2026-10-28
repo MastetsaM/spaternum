@@ -18,7 +18,7 @@ import {
 import { useEffect, useState, type CSSProperties, type PointerEvent, type ReactNode } from "react";
 import { NavLink, useLocation } from "react-router";
 import { useStatus } from "../sync/status";
-import { clampWidth, DEFAULTS, loadWidths, saveWidths, SIDE_ICONS, type Panel, type Widths } from "./widths";
+import { clampWidth, DEFAULTS, loadWidths, saveWidths, type Panel, type Widths } from "./widths";
 
 export const PHONE = "(max-width: 700px)"; // keep in sync with App.css
 
@@ -79,9 +79,7 @@ export function Layout({ title, tools, actions, children }: Props) {
 
   return (
     <div
-      className={`layout ${sideContent ? "" : "no-side"} ${tools && toolsOpen ? "" : "no-tools"} ${
-        widths.side === SIDE_ICONS ? "side-icons" : ""
-      }`}
+      className={`layout ${sideContent ? "" : "no-side"} ${tools && toolsOpen ? "" : "no-tools"}`}
       style={{ "--side-w": `${widths.side}px`, "--tools-w": `${widths.tools}px` } as CSSProperties}
     >
       <nav className="rail">
