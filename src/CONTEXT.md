@@ -60,7 +60,7 @@ Start reading at `main.tsx`, which starts sync and the voice-notes uploads, then
 | `main.tsx` | Starts sync and voice-notes recovery and uploads once for the whole app, then renders `App` |
 | `App.tsx` | Routes (hash router). Sends you to Settings until a server and token are saved, or when the token is rejected |
 | `App.css` | All styles, plain CSS, one section per screen. The phone layout is under `max-width: 700px` |
-| `layout/Layout.tsx` | The frame: rail or bottom bar (sections), side panel or ☰ drawer (tools + the open tool's items), main, tool panel. The drawer closes when the route changes |
+| `layout/Layout.tsx` | The frame: rail or bottom bar (sections), side panel or ☰ drawer (only the list of tools), main, and the tool panel on the right (the tool's navigation and details). On the phone both sliding panels close when the screen changes |
 | `api/settings.ts` | Server address and token in `localStorage` |
 | `api/client.ts` | `call()`: every direct server call. It adds the token, reads the clock offset and marks online/offline |
 | `api/schema.ts` | Generated from the server's OpenAPI (`pnpm gen:api`). Never edit by hand |
@@ -75,7 +75,7 @@ Start reading at `main.tsx`, which starts sync and the voice-notes uploads, then
 | `voice-notes/recorder.ts` | MediaRecorder with the phase 0 settings. It lives outside React, so recording continues across screens |
 | `voice-notes/uploads.ts` | Recovery on start and the upload queue (after Stop, on start, when back online), plus the state the list shows |
 | `voice-notes/rows.ts` | Writes to the `voice_notes` collection |
-| `voice-notes/audio.ts` | Reading a file's duration, fetching audio from the server, one player at a time |
+| `voice-notes/audio.ts` | Reading a file's duration, fetching audio from the server, and the player: one recording at a time, with position kept per recording, seeking and speed |
 | `archive/archive.ts` | Archive page calls and display rules |
 | `screens/` | One screen per route: `NotesScreen`, `VoiceNotesScreen`, `ArchiveScreen`, `SettingsScreen`. `Placeholders.tsx` holds Home, Tools, Clients and Projects |
 | `*_test.ts` | Vitest tests next to the code they test (`pnpm test`) |

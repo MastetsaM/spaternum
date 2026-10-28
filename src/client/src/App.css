@@ -306,4 +306,8 @@ button.danger { color: var(--error); border-color: var(--error); }
 .vn-state.vn-uploaded { color: var(--ok); }
 .vn-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .vn-actions button { display: inline-flex; align-items: center; gap: 6px; }
+.vn-player { display: flex; align-items: center; gap: 8px; }
+.vn-player button { display: inline-flex; padding: 6px 8px; }
+.vn-player input[type="range"] { flex: 1; min-width: 0; padding: 0; border: none; accent-color: var(--accent); }
+.vn-time { font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .vn-edit { display: flex; flex-direction: column; gap: 8px; }
