@@ -177,3 +177,11 @@ def test_later_edit_brings_an_archived_note_back(client, notes_db):
     archive(client, "notes", n)
     push(client, "notes", {**n, "body": "v2", "updated_at": "2026-10-25T12:00:00.000Z"})
     assert archived(notes_db, "notes", n["id"]) is None
+
+
+def test_title_round_trips_and_defaults_to_empty(client, notes_db):
+    with_title = note("first line\nbody", title="My title")
+    without = note("only a body")  # an older app sends no title
+    push(client, "notes", with_title, without)
+    titles = {d["id"]: d["title"] for d in pull(client, "notes")["documents"]}
+    assert titles == {with_title["id"]: "My title", without["id"]: ""}
