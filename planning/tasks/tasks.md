@@ -143,6 +143,7 @@ Moved ahead of notes with recordings because it's more urgent (Mihail, 2026-10-2
 - [x] Archiving a series archives its exceptions with the same `archived_at`; restore brings back only those
 - [x] `list_archived()` and `restore(id)`; one Archive entry per series
 - [x] Tests (calendar criteria 7–10, server side)
+- [x] Archived rows are locked until restored (Mihail, 2026-10-29)
 
 ### C2. Calendar client (`feature/calendar-client`)
 - [ ] Install `@fullcalendar/react`, `temporal-polyfill`, `rrule-temporal`; log them in `wiki/installed.md`, pin versions in [[TECH]]

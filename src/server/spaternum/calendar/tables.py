@@ -1,4 +1,5 @@
-"""The synced table, with archiving a series hooked into the sync helper."""
+"""The synced table, with the calendar rules hooked into the sync helper: archiving a series,
+and archived rows being locked."""
 
 from datetime import datetime
 from uuid import UUID
@@ -38,4 +39,19 @@ def archive_exceptions(conn: Connection, event_id: UUID, archived_at: datetime) 
     )
 
 
-EVENTS = sync.SyncTable("calendar_events", Event, on_archive=archive_exceptions)
+def is_archived(conn: Connection, event: Event) -> bool:
+    """An archived row can't be changed; it has to be restored from the Archive page first.
+
+    Archiving it again is fine. Unlike notes, a later edit doesn't bring it back.
+    """
+    if event.deleted:
+        return False
+    row = conn.execute(
+        "SELECT 1 FROM calendar_events WHERE id = %s AND archived_at IS NOT NULL", (event.id,)
+    ).fetchone()
+    return row is not None
+
+
+EVENTS = sync.SyncTable(
+    "calendar_events", Event, on_archive=archive_exceptions, reject=is_archived
+)

@@ -79,6 +79,7 @@ Using FullCalendar's free views:
   - *This and following* → ends the old series the day before (`UNTIL`) and creates a new series from this occurrence.
   - *All* → edits the series row. If the time or the rule changes, the series' exceptions are archived, because they may no longer match an occurrence.
 - **Archiving** works the same way: only this one (cancelled exception), this and following (`UNTIL`), or all (the series and its exceptions are archived together and restored together, like a folder in [[notes_spec]]).
+- **Archived = locked** (Mihail, 2026-10-29): an archived event, series or exception can't be changed. To change it, restore it from the Archive page first. The server refuses a change to an archived row and sends the archived row back, so the device drops it. This differs from notes, where a later edit brings a note back.
 - **On the Archive page** each archived one-off event or series is one entry (a series shows how many changed occurrences were archived with it). Exceptions never show on their own: they come back only with their series.
 - **End before start** is refused in the form; the server stores what it gets, like empty notes ([[notes_spec]]).
 
@@ -110,6 +111,7 @@ Using FullCalendar's free views:
 - **An exception arrives before its series** → nothing shows for it until the series arrives. A cancelled exception on its own shows nothing anyway.
 - **An exception whose occurrence no longer exists** (the series changed on another device) → not shown; it stays in the database.
 - **A rule the device can't read** (corrupt text) → the event shows once at its start, with a mark, and doesn't crash the view.
+- **Edited offline on one device, archived on the other** → if the archive reached the server first, the edit is refused and the event leaves the editing device; it stays in the Archive unchanged, and the offline edit is lost.
 - **Endless repeats** → fine, since only the dates on screen are expanded.
 - **"Every month on the 31st"** → months without a 31st are skipped (standard `RRULE` behaviour).
 
@@ -124,8 +126,9 @@ Using FullCalendar's free views:
 - FullCalendar's paid views (timeline, resources).
 
 ## Results — server (2026-10-29)
-Built in `src/server/spaternum/calendar/`; 14 tests in `tests/calendar_test.py` pass (54 server tests in total). The tests were written from this spec by a separate agent that didn't see the code. Covers the server part of criteria 7–10: sync of one-offs, series and exceptions; latest write wins; an exception arriving before its series; archiving a series archives its exceptions (earlier-archived ones keep their time); Archive page entries and restore.
-- Not decided by the spec, left as built: a later edit that un-archives a series doesn't bring its exceptions back (same as a note folder). An exception archived while its series stays active can't be restored on its own; that only happens through *All*, which archives them on purpose.
+Built in `src/server/spaternum/calendar/`; 15 tests in `tests/calendar_test.py` pass. The tests were written from this spec by a separate agent that didn't see the code. Covers the server part of criteria 7–10: sync of one-offs, series and exceptions; latest write wins; an exception arriving before its series; archiving a series archives its exceptions (earlier-archived ones keep their time); Archive page entries and restore.
+- Archived rows are locked (added the same day): a change pushed to an archived row is refused; 2 tests cover it (55 server tests in total).
+- An exception archived while its series stays active can't be restored on its own; that only happens through *All*, which archives them on purpose.
 
 ## Related
 [[PRD]] · [[TECH]] · [[tasks]] · [[2026-10-29-calendar-fullcalendar]] · [[2026-10-21-sync-rxdb]] · [[2026-10-20-offline-latest-write-wins]] · [[2026-10-21-database-access-plain-sql]] · [[2026-10-20-architecture-modular-monolith]] · [[notes_spec]] · [[archive_spec]] · [[favorites_spec]] · [[notes-recordings_spec]]
