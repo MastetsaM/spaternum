@@ -11,8 +11,12 @@ import {
   type Occurrence,
   type Repeat,
   type Scope,
+  type Weekday,
   type Writes,
 } from "./calendar";
+
+/** Monday first, like the calendar. */
+export const WEEKDAYS: Weekday[] = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
 
 // ---- View and slot size, per device ----
 
@@ -150,6 +154,24 @@ export function inputTimes(o: Pick<Occurrence, "allDay" | "start" | "end">): { s
   return { start: toLocalInput(o.start), end: toLocalInput(o.end) };
 }
 
+/** A new start moves the end with it, so the length stays (unless the old times were invalid). */
+export function moveStart(values: FormValues, start: string): FormValues {
+  if (values.allDay) {
+    const valid = /^\d{4}-\d{2}-\d{2}$/;
+    if (!valid.test(start) || !valid.test(values.start) || !valid.test(values.end)) return { ...values, start };
+    const days = Temporal.PlainDate.from(values.start).until(values.end).days;
+    return { ...values, start, end: addDays(start, days) };
+  }
+  const length = Date.parse(values.end) - Date.parse(values.start);
+  const moved = Date.parse(start) + length;
+  return { ...values, start, end: isNaN(moved) ? values.end : toLocalInput(new Date(moved).toISOString()) };
+}
+
+/** The weekday of a "YYYY-MM-DD" day, as the repeat form names it. */
+export function weekdayOf(day: string): Weekday {
+  return WEEKDAYS[Temporal.PlainDate.from(day).dayOfWeek - 1];
+}
+
 /** All-day on keeps the days; off puts the event at 09:00–09:30 on its first day. */
 export function switchAllDay(values: FormValues, allDay: boolean): FormValues {
   if (allDay === values.allDay) return values;
@@ -208,13 +230,14 @@ function occurrenceAt(rows: CalendarEvent[], at: string, pick: (o: Occurrence) =
 
 /**
  * The occurrence a key points at (keys are in the form's URL). A plain occurrence that has
- * since become an exception is still found, through its series and original start.
+ * since become an exception is still found, through its series and original start; a row id
+ * also finds the row's first occurrence (a one-off that was just made to repeat).
  */
 export function findOccurrence(rows: CalendarEvent[], key: string): Occurrence | null {
   const at = key.indexOf("@");
   if (at < 0) {
     const row = rows.find((r) => r.id === key);
-    return row ? occurrenceAt(rows, row.start_at, (o) => o.key === key) : null;
+    return row ? occurrenceAt(rows, row.start_at, (o) => o.key === key || o.eventId === key) : null;
   }
   const seriesId = key.slice(0, at);
   const originalStart = key.slice(at + 1);
@@ -227,7 +250,7 @@ export function findOccurrence(rows: CalendarEvent[], key: string): Occurrence |
  * The occurrence the form edits after a save, so the next save builds on what's stored now.
  * - one-off: the same row; "only": its exception; "following": the new series' first
  *   occurrence (on the first occurrence "following" = "all");
- * - "all": the series' occurrence now at the form's start.
+ * - "all": the series' occurrence now at the form's start (or the one-off it became, with no repeat).
  * `rows` are the rows after the writes. null = it can't be found any more.
  */
 export function nextOccurrence(
@@ -247,5 +270,5 @@ export function nextOccurrence(
     const series = writes.put.find((r) => r.rrule && !r.series_id && r.id !== seriesId);
     if (series) return occurrenceAt(rows, series.start_at, (o) => o.seriesId === series.id);
   }
-  return occurrenceAt(rows, startAt, (o) => o.seriesId === seriesId);
+  return occurrenceAt(rows, startAt, (o) => o.seriesId === seriesId || o.eventId === seriesId);
 }

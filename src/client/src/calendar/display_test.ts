@@ -12,10 +12,12 @@ import {
   fromSelection,
   inputTimes,
   midnight,
+  moveStart,
   parsePrefs,
   storedTimes,
   switchAllDay,
   toLocalInput,
+  weekdayOf,
   type FormValues,
 } from "./display";
 
@@ -130,6 +132,18 @@ describe("the event form", () => {
     const on = switchAllDay(values({}), true);
     expect(on).toMatchObject({ allDay: true, start: "2026-10-29", end: "2026-10-29" });
     expect(switchAllDay(on, false)).toMatchObject({ allDay: false, start: "2026-10-29T09:00", end: "2026-10-29T09:30" });
+  });
+
+  it("keeps the length when the start moves", () => {
+    expect(moveStart(values({}), "2026-10-30T14:00")).toMatchObject({ start: "2026-10-30T14:00", end: "2026-10-30T14:30" });
+    const days = values({ allDay: true, start: "2026-10-29", end: "2026-10-31" });
+    expect(moveStart(days, "2026-11-30")).toMatchObject({ start: "2026-11-30", end: "2026-12-02" });
+    expect(moveStart(values({ end: "" }), "2026-10-30T14:00").end).toBe(""); // invalid before: end left alone
+  });
+
+  it("names the weekday of a day", () => {
+    expect(weekdayOf("2026-10-26")).toBe("MO");
+    expect(weekdayOf("2026-11-01")).toBe("SU");
   });
 
   it("stores the form's times", () => {
