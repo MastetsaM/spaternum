@@ -123,5 +123,9 @@ Using FullCalendar's free views:
 - Links to notes, projects or clients (later, through IDs as in [[2026-10-20-architecture-modular-monolith]]).
 - FullCalendar's paid views (timeline, resources).
 
+## Results — server (2026-10-29)
+Built in `src/server/spaternum/calendar/`; 14 tests in `tests/calendar_test.py` pass (54 server tests in total). The tests were written from this spec by a separate agent that didn't see the code. Covers the server part of criteria 7–10: sync of one-offs, series and exceptions; latest write wins; an exception arriving before its series; archiving a series archives its exceptions (earlier-archived ones keep their time); Archive page entries and restore.
+- Not decided by the spec, left as built: a later edit that un-archives a series doesn't bring its exceptions back (same as a note folder). An exception archived while its series stays active can't be restored on its own; that only happens through *All*, which archives them on purpose.
+
 ## Related
 [[PRD]] · [[TECH]] · [[tasks]] · [[2026-10-29-calendar-fullcalendar]] · [[2026-10-21-sync-rxdb]] · [[2026-10-20-offline-latest-write-wins]] · [[2026-10-21-database-access-plain-sql]] · [[2026-10-20-architecture-modular-monolith]] · [[notes_spec]] · [[archive_spec]] · [[favorites_spec]] · [[notes-recordings_spec]]

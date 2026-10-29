@@ -138,11 +138,11 @@ Moved ahead of notes with recordings because it's more urgent (Mihail, 2026-10-2
 - [x] Answer the open questions in [[calendar_spec]] (2026-10-29)
 
 ### C1. Calendar server (`feature/calendar-server`)
-- [ ] Migration: `calendar_events` with `seq` and the sync trigger (no foreign keys)
-- [ ] Pull/push through the sync helper (end before start is refused in the app's form, not by the server — same as empty notes)
-- [ ] Archiving a series archives its exceptions with the same `archived_at`; restore brings back only those
-- [ ] `list_archived()` and `restore(id)`; one Archive entry per series
-- [ ] Tests (calendar criteria 7–10, server side)
+- [x] Migration: `calendar_events` with `seq` and the sync trigger (no foreign keys)
+- [x] Pull/push through the sync helper (end before start is refused in the app's form, not by the server — same as empty notes)
+- [x] Archiving a series archives its exceptions with the same `archived_at`; restore brings back only those
+- [x] `list_archived()` and `restore(id)`; one Archive entry per series
+- [x] Tests (calendar criteria 7–10, server side)
 
 ### C2. Calendar client (`feature/calendar-client`)
 - [ ] Install `@fullcalendar/react`, `temporal-polyfill`, `rrule-temporal`; log them in `wiki/installed.md`, pin versions in [[TECH]]
