@@ -1,6 +1,6 @@
 # Spec — Calendar (draft)
 
-Status: **draft, 2026-10-29**. Open questions are at the end; nothing is built until they're answered.
+Status: **agreed, 2026-10-29**. All open questions answered (see "Decided 2026-10-29").
 
 ## What and why
 A personal calendar for daily use on PC and Android, in the style of Teams: **year, month and week views**, with the day split into **15- or 30-minute slots**. It works **offline**, like notes: Mihail shouldn't have to think about the connection (decided 2026-10-29). Repeating events are in from the start.
@@ -15,6 +15,13 @@ The calendar UI comes from a library, not from scratch: **FullCalendar v7** for 
 - **Reminders / phone notifications:** later, not in this spec.
 - **Sync with Google / Outlook / Teams:** no. It's Spaternum's own calendar.
 - **Order:** the calendar comes before notes with recordings.
+- **Year view:** days with events get a dot; a tap opens that day.
+- **Day view:** yes, next to year, month and week.
+- **Week start:** Monday.
+- **Edit "All" with changed occurrences:** if the time or the rule changes, the exceptions are archived.
+- **Colours / categories:** later.
+- **New event from a tap:** 30 minutes long.
+- **Hours in week/day:** the full 24 h, scrolled to 08:00 when opened.
 
 ## Data model
 Owned by the new `calendar` module. Plain SQL ([[2026-10-21-database-access-plain-sql]]). One synced table.
@@ -53,23 +60,24 @@ Choices:
 
 ## Views
 Using FullCalendar's free views:
-- **Year:** 12 small months (`multiMonthYear`). A tap on a day opens that day's week. *(open question 1: what a year cell shows)*
+- **Year:** 12 small months (`multiMonthYear`). Days with events get a dot. A tap on a day opens the day view.
 - **Month:** classic month grid (`dayGridMonth`).
 - **Week:** 7 columns with time rows (`timeGridWeek`), all-day events in a strip at the top.
-- **Day:** one column with time rows (`timeGridDay`) *(open question 2)*.
+- **Day:** one column with time rows (`timeGridDay`).
 - **Slot size:** 15 or 30 minutes, switchable from the view. Saved per device, like favorites ([[favorites_spec]]).
-- A **Today** button and back/forward arrows. Weeks start on **Monday** *(open question 3)*.
+- A **Today** button and back/forward arrows. Weeks start on **Monday**.
+- Week and day show the **full 24 h**, scrolled to **08:00** when opened.
 - The app opens the calendar on the view used last on that device.
 
 ## Creating and editing
-- **PC:** click or drag on empty slots to create an event; drag an event to move it; drag its bottom edge to change its length.
-- **Phone:** long-press on a slot to create; long-press an event, then drag, to move it (FullCalendar's touch behaviour). A tap opens the event.
+- **PC:** click an empty slot to create a **30-minute** event, or drag across slots to choose its length; drag an event to move it; drag its bottom edge to change its length.
+- **Phone:** long-press on a slot to create a 30-minute event; long-press an event, then drag, to move it (FullCalendar's touch behaviour). A tap opens the event.
 - The **event form** (main area, like the notes editor) has: title, all-day, start, end, repeat, notes. It saves on its own, like notes (no Save button).
 - **Repeat** options in the form: none, every day, every week (choose days), every month (same date), every year, plus "every N" and an end (never / on a date / after N times). The rule is written as `RRULE` text, so other patterns can be added later without changing data.
 - **Changing one occurrence of a repeating event** asks: *Only this one* / *This and following* / *All*.
   - *Only this one* → writes an exception row.
   - *This and following* → ends the old series the day before (`UNTIL`) and creates a new series from this occurrence.
-  - *All* → edits the series row. If the time or the rule changes, the series' exceptions are archived, because they may no longer match an occurrence *(open question 4)*.
+  - *All* → edits the series row. If the time or the rule changes, the series' exceptions are archived, because they may no longer match an occurrence.
 - **Archiving** works the same way: only this one (cancelled exception), this and following (`UNTIL`), or all (the series and its exceptions are archived together and restored together, like a folder in [[notes_spec]]).
 
 ## Offline and sync
@@ -83,7 +91,7 @@ Using FullCalendar's free views:
 - **Server:** `calendar` module with pull/push, `list_archived()` and `restore(id)`.
 
 ## Acceptance criteria (done when…)
-1. Year, month, week (and day) views work on PC and Android; the week view switches between 15- and 30-minute slots.
+1. Year, month, week and day views work on PC and Android; the week view switches between 15- and 30-minute slots.
 2. Events can be created, edited, moved, resized and archived, with the mouse on the PC and by touch on the phone.
 3. All-day events show in the all-day strip and in the month/year views.
 4. Repeating events (daily, weekly on chosen days, monthly, yearly, every N, with an end) show on the right dates.
@@ -107,21 +115,11 @@ Using FullCalendar's free views:
 - Reminders and phone notifications (later, own spec).
 - Sync or import/export with Google, Outlook, Teams or `.ics` files.
 - Invites and other people (single user, [[PRD]]).
-- Several calendars or categories *(open question 5)*.
+- Colours, several calendars or categories (later).
 - Showing events in a time zone other than the device's.
 - Search over events.
 - Links to notes, projects or clients (later, through IDs as in [[2026-10-20-architecture-modular-monolith]]).
 - FullCalendar's paid views (timeline, resources).
-
-## Open questions
-Answer these before building:
-1. **Year view:** should a day show a dot when it has events, or just the plain year (with a tap opening that day)?
-2. **Day view:** do you want it too? It's useful on the phone, where seven columns are narrow.
-3. **Week start:** Monday?
-4. **Edit "All" when exceptions exist:** archive the exceptions if the time or rule changes (what Google does), or keep them?
-5. **Colours / categories** (e.g. work, personal): needed in the first version, or later?
-6. **Default event length** when you tap a slot: 30 minutes, 1 hour, or the slot size?
-7. **Hours shown in week/day:** the full 24 h, or a range like 07:00–22:00 with the rest reachable by scrolling?
 
 ## Related
 [[PRD]] · [[TECH]] · [[tasks]] · [[2026-10-29-calendar-fullcalendar]] · [[2026-10-21-sync-rxdb]] · [[2026-10-20-offline-latest-write-wins]] · [[2026-10-21-database-access-plain-sql]] · [[2026-10-20-architecture-modular-monolith]] · [[notes_spec]] · [[archive_spec]] · [[favorites_spec]] · [[notes-recordings_spec]]

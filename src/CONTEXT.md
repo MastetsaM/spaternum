@@ -5,7 +5,7 @@ Application code, and the map of what lives where. Read the first comment of eac
 **Status (2026-10-28):**
 - `server/` is done and running on the Pi. It covers the foundation, `notes/`, `voice_notes/` and `archive/` ([[server-foundation_spec]], [[notes_spec]], [[voice-notes_spec]], [[archive_spec]]).
 - `client/`: phase 1 is done and on `main`: the foundation, Notes, Voice notes, Archive, resizable PC panels and favorite tools ([[client-foundation_spec]], [[ui-design_spec]], [[favorites_spec]]). The PC app runs with `pnpm tauri dev` and needs `gst-plugins-good` for audio ([[TECH]]).
-- Next: [[calendar_spec]] (draft), then [[notes-recordings_spec]] (draft). Other ideas are in [[tasks]] under "Later".
+- Next: [[calendar_spec]], then [[notes-recordings_spec]] (draft). Other ideas are in [[tasks]] under "Later".
 
 ## Folders
 | Path | Contents |

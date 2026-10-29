@@ -134,9 +134,26 @@ Specs: [[notes_spec]], [[voice-notes_spec]]. One branch per block (name in brack
 - [x] Last device checks (2026-10-29): two devices editing the same note, killing the app during an upload, and the Archive page's offline message with Retry. Results are in [[notes_spec]], [[voice-notes_spec]] and [[archive_spec]].
 
 ## Next: calendar
-Moved ahead of notes with recordings because it's more urgent (Mihail, 2026-10-29). Spec: [[calendar_spec]] (draft). Library choice: [[2026-10-29-calendar-fullcalendar]].
-- [ ] Answer the open questions in [[calendar_spec]]
-- [ ] Task list for the calendar, once the spec is agreed
+Moved ahead of notes with recordings because it's more urgent (Mihail, 2026-10-29). Spec: [[calendar_spec]]. Library choice: [[2026-10-29-calendar-fullcalendar]].
+- [x] Answer the open questions in [[calendar_spec]] (2026-10-29)
+
+### C1. Calendar server (`feature/calendar-server`)
+- [ ] Migration: `calendar_events` with `seq` and the sync trigger (no foreign keys)
+- [ ] Pull/push through the sync helper; refuse `end_at` before `start_at`
+- [ ] Archiving a series archives its exceptions with the same `archived_at`; restore brings back only those
+- [ ] `list_archived()` and `restore(id)`; one Archive entry per series
+- [ ] Tests (calendar criteria 7–10, server side)
+
+### C2. Calendar client (`feature/calendar-client`)
+- [ ] Install `@fullcalendar/react`, `temporal-polyfill`, `rrule-temporal`; log them in `wiki/installed.md`, pin versions in [[TECH]]
+- [ ] RxDB collection `calendar_events` + replication; regenerate client types
+- [ ] Occurrence expansion for the dates on screen (rrule-temporal, in the event's time zone, exceptions applied); Vitest incl. the DST case
+- [ ] Calendar tool in the side panel: year (dots), month, week, day; Today and arrows; 15/30-minute switch and last view saved per device; Monday start; 24 h scrolled to 08:00
+- [ ] Create by click/drag (PC) and long-press (phone), 30 minutes by default; move and resize
+- [ ] Event form: title, all-day, start, end, repeat, notes; saves on its own; end before start refused
+- [ ] Only this one / This and following / All, for editing and archiving; Vitest for the three modes
+- [ ] Archive page shows calendar events
+- [ ] Check every calendar acceptance criterion on the phone and the PC; write results in [[calendar_spec]]
 
 ## Later (ideas and loose ends, not scheduled)
 - **Notes with recordings:** merge notes and voice notes into one note with text and/or recordings, plus a Pinned section, folder tags, a full tree and notes settings in the tool panel. Draft with Mihail's decisions: [[notes-recordings_spec]]. Next after the calendar.
