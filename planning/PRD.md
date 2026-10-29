@@ -57,7 +57,8 @@ All free software.
 1. **Notes + voice notes:** server, Postgres, Docker install, desktop + Android clients. Both offline-capable. Voice notes = mic recording on Android only (the PC views and listens), offline-first with upload queue. Notes: [[notes_spec]]. Also the shared **Archive page** — archived items from every module, kept only on the server.
 2. **Transcription:** faster-whisper background worker on the server.
 3. **Transcript analysis / RAG.**
-4. Further modules, one at a time: project manager, agile dashboard, clients, code editor (file explorer + Monaco + Claude Code panel).
+4. **Calendar** — moved ahead of the other modules and of notes with recordings (2026-10-29): year/month/week views, offline, repeating events. [[calendar_spec]].
+5. Further modules, one at a time: project manager, agile dashboard, clients, code editor (file explorer + Monaco + Claude Code panel).
 
 ## Cut / parked
 - **Phone call recording** — Android 10+ blocks apps from capturing call audio, and the stock dialer on Mihail's phone has no record button. Speakerphone + normal voice note works as a manual fallback. Revisit only if the phone or OS changes.
@@ -76,4 +77,4 @@ All free software.
 - Voice notes spec (phase 1): [[voice-notes_spec]]
 
 ## Related
-[[CLAUDE]] · [[portfolio]] · [[projects]] · [[TECH]] · [[risks]] · [[tasks]] · [[notes_spec]]
+[[CLAUDE]] · [[portfolio]] · [[projects]] · [[TECH]] · [[risks]] · [[tasks]] · [[notes_spec]] · [[calendar_spec]]
