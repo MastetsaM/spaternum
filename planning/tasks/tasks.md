@@ -133,8 +133,13 @@ Specs: [[notes_spec]], [[voice-notes_spec]]. One branch per block (name in brack
 - [x] Pi updated to `main` with `ops/update.sh` (2026-10-28, Mihail). No new migrations.
 - [x] Last device checks (2026-10-29): two devices editing the same note, killing the app during an upload, and the Archive page's offline message with Retry. Results are in [[notes_spec]], [[voice-notes_spec]] and [[archive_spec]].
 
+## Next: calendar
+Moved ahead of notes with recordings because it's more urgent (Mihail, 2026-10-29). Spec: [[calendar_spec]] (draft). Library choice: [[2026-10-29-calendar-fullcalendar]].
+- [ ] Answer the open questions in [[calendar_spec]]
+- [ ] Task list for the calendar, once the spec is agreed
+
 ## Later (ideas and loose ends, not scheduled)
-- **Notes with recordings:** merge notes and voice notes into one note with text and/or recordings, plus a Pinned section, folder tags, a full tree and notes settings in the tool panel. Draft with Mihail's decisions: [[notes-recordings_spec]]. Next feature.
+- **Notes with recordings:** merge notes and voice notes into one note with text and/or recordings, plus a Pinned section, folder tags, a full tree and notes settings in the tool panel. Draft with Mihail's decisions: [[notes-recordings_spec]]. Next after the calendar.
 - **Claude talking to the server directly (MCP-like):** let Claude read and create notes (and later other items) on Mihail's server, e.g. "make a note about this". Asked for on 2026-10-28; needs a spec first, covering what it may do, the token, and Tailscale-only access ([[2026-10-20-auth-tailscale-api-token]]).
 - **Tool groups on the Tools page:** Android-style folders to sort tools by use, **synced across devices**. Dropped for now as too much work (Mihail, 2026-10-28).
 - **Updates for other users:** only when someone else wants to use the app. Publish builds to GitHub Releases, use the Tauri updater on the PC and Obtainium on Android, sign with one fixed release key (not the debug key), and have the app warn when the server is older than the app (Mihail, 2026-10-29).
@@ -149,4 +154,4 @@ Specs: [[notes_spec]], [[voice-notes_spec]]. One branch per block (name in brack
   - a real PC install (Arch package depending on `gst-plugins-good`, or an AppImage) instead of `pnpm tauri dev`
 
 ## Related
-[[PRD]] · [[TECH]] · [[risks]] · [[notes_spec]] · [[voice-notes_spec]] · [[archive_spec]] · [[client-foundation_spec]] · [[ui-design_spec]] · [[favorites_spec]] · [[notes-recordings_spec]] · [[2026-10-21-sync-rxdb]] · [[2026-10-20-git-workflow]]
+[[PRD]] · [[TECH]] · [[risks]] · [[notes_spec]] · [[voice-notes_spec]] · [[archive_spec]] · [[client-foundation_spec]] · [[ui-design_spec]] · [[favorites_spec]] · [[notes-recordings_spec]] · [[calendar_spec]] · [[2026-10-21-sync-rxdb]] · [[2026-10-20-git-workflow]]
