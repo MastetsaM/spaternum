@@ -331,3 +331,85 @@ button.danger { color: var(--error); border-color: var(--error); }
 .fav-label { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .fav-row .icon-button { display: inline-flex; border: none; padding: 6px; color: var(--muted); }
 .fav-row .icon-button.on { color: var(--accent); }
+
+/* ---- Calendar ---- */
+
+/* FullCalendar's classic theme, with its colours set from ours (dark mode follows them) */
+.cal {
+  height: 100%;
+  --fc-classic-button: var(--bg);
+  --fc-classic-button-border: var(--line);
+  --fc-classic-button-strong: var(--panel);
+  --fc-classic-button-strong-border: var(--accent);
+  --fc-classic-button-outline: var(--accent);
+  --fc-classic-button-foreground: var(--text);
+  --fc-classic-primary: var(--accent);
+  --fc-classic-primary-foreground: var(--on-accent);
+  --fc-classic-highlight: color-mix(in srgb, var(--accent) 20%, transparent);
+  --fc-classic-today: color-mix(in srgb, var(--accent) 8%, transparent);
+  --fc-classic-now: var(--error);
+  --fc-classic-background: var(--bg);
+  --fc-classic-faint: rgb(128 128 128 / 0.06);
+  --fc-classic-muted: rgb(128 128 128 / 0.12);
+  --fc-classic-strong: rgb(128 128 128 / 0.2);
+  --fc-classic-foreground: var(--text);
+  --fc-classic-faint-foreground: var(--muted);
+  --fc-classic-muted-foreground: var(--muted);
+  --fc-classic-border: var(--line);
+  --fc-classic-strong-border: var(--muted);
+}
+/* Year view: a dot on days with events */
+.cal-dot::after {
+  content: "";
+  position: absolute;
+  bottom: 2px;
+  left: calc(50% - 3px);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  pointer-events: none;
+}
+/* A repeat rule the device can't read: shown once, marked */
+.cal-broken { outline: 1px dashed var(--error); }
+
+.cal-choices { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* Only this one / This and following / All */
+.cal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgb(0 0 0 / 0.3);
+}
+.cal-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(100%, 320px);
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+}
+.cal-dialog p { margin: 0 0 4px; font-weight: 600; }
+
+/* Event form: the notes editor's look, a bit narrower */
+.cal-form { height: auto; max-width: 560px; }
+.cal-form textarea { flex: none; min-height: 120px; resize: vertical; }
+.cal-check { display: flex; align-items: center; gap: 8px; }
+.cal-check input { width: auto; }
+.cal-times { display: flex; flex-wrap: wrap; gap: 8px; }
+.cal-times label,
+.cal-repeat > label:first-child { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 200px; color: var(--muted); }
+.cal-repeat { display: flex; flex-direction: column; gap: 8px; min-width: 0; margin: 0; padding: 0; border: none; }
+.cal-repeat p { margin: 0; }
+.cal-label { color: var(--muted); }
+.cal-inline { display: flex; align-items: center; gap: 8px; color: var(--muted); }
+.cal-inline input { width: 90px; }
+.cal-inline select { width: auto; flex: 1; }
+.cal-archive { align-self: flex-start; }
