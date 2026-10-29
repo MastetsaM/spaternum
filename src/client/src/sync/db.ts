@@ -8,6 +8,7 @@ import { getRxStorageDexie } from "rxdb/plugins/storage-dexie";
 import { Subject } from "rxjs";
 import { call } from "../api/client";
 import type { components } from "../api/schema";
+import type { CalendarEvent } from "../calendar/calendar";
 import type { Settings } from "../api/settings";
 import { listen } from "./events";
 
@@ -24,6 +25,7 @@ type Collections = {
   note_folders: RxCollection<Folder>;
   notes: RxCollection<Note>;
   voice_notes: RxCollection<VoiceNote>;
+  calendar_events: RxCollection<CalendarEvent>;
 };
 export type Db = RxDatabase<Collections>;
 
@@ -68,11 +70,34 @@ const voiceNoteSchema: RxJsonSchema<VoiceNote> = {
   required: ["id", "title", "tags", "recorded_at", "duration_ms", "size_bytes", "mime_type", "created_at", "updated_at"],
 };
 
+const bool = { type: "boolean" } as const;
+
+const calendarEventSchema: RxJsonSchema<CalendarEvent> = {
+  version: 0,
+  primaryKey: "id",
+  type: "object",
+  properties: {
+    ...synced,
+    title: text,
+    notes: text,
+    all_day: bool,
+    start_at: text,
+    end_at: text,
+    time_zone: text,
+    rrule: nullableText, // set = a series
+    series_id: nullableText, // set = an exception of that series
+    original_start: nullableText,
+    cancelled: bool,
+  },
+  required: ["id", "title", "notes", "all_day", "start_at", "end_at", "time_zone", "cancelled", "created_at", "updated_at"],
+};
+
 // Collection name = server table name; path = where its pull/push endpoints live
 const TABLES = {
   note_folders: { schema: folderSchema, path: "/api/notes/note_folders" },
   notes: { schema: noteSchema, path: "/api/notes/notes" },
   voice_notes: { schema: voiceNoteSchema, path: "/api/voice-notes/voice_notes" },
+  calendar_events: { schema: calendarEventSchema, path: "/api/calendar/calendar_events" },
 } as const;
 type Table = keyof typeof TABLES;
 
@@ -104,6 +129,7 @@ async function open(settings: Settings): Promise<Db> {
     note_folders: { schema: folderSchema },
     notes: { schema: noteSchema, migrationStrategies: noteMigrations },
     voice_notes: { schema: voiceNoteSchema },
+    calendar_events: { schema: calendarEventSchema },
   });
 
   const resync: Record<string, Subject<"RESYNC">> = {};
@@ -121,7 +147,9 @@ async function open(settings: Settings): Promise<Db> {
         stream$: pulls.asObservable(),
       },
       push: {
-        // The server answers with its own rows for the documents it didn't take
+        // The server answers with its own rows for the documents it didn't take. RxDB's default
+        // conflict handler keeps the server's row, so a refused change to an archived calendar
+        // row (archived = locked) comes back with _deleted and the row leaves the device
         handler: (rows) =>
           call(settings, `${path}/push`, {
             method: "POST",
