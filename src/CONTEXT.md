@@ -49,6 +49,7 @@ Run, migrate and test commands are at the top of `spaternum/main.py`, `spaternum
 | `spaternum/core/migrations/` | `sync_notify()`, the trigger function every synced table uses |
 | `spaternum/notes/` | Tables `note_folders` and `notes`. `tables.py`: models, the folder-loop check, archiving a folder archives its contents. `archive.py`: list and restore for the Archive page |
 | `spaternum/voice_notes/` | Table `voice_notes`. `audio.py`: upload (size check, 507 when the disk is full) and streaming with Range. `archive.py`: list and restore |
+| `spaternum/calendar/` | Table `calendar_events` (one-offs, series and their exceptions). `tables.py`: the model, archiving a series archives its exceptions. `archive.py`: list and restore (a series with its exceptions) |
 | `spaternum/archive/` | Owns no tables. `/api/archive` asks each module's `archive.py` |
 | `tests/` | pytest against a real Postgres: one `*_test.py` per module, plus `conftest.py` (database and client fixtures) |
 | `Dockerfile` | Image built on the machine that runs it (see `ops/`) |
