@@ -138,7 +138,8 @@ Client built (`src/client/src/voice-notes/`, `screens/VoiceNotesScreen.tsx`); th
 
 
 **Device check (Mihail, 2026-10-28, phone and PC against the Pi):** recording, the list, upload, offline recording with upload once back online, recovery after closing the app mid-recording, playback on both devices with the player, edit, archive and restore all work. Criteria 1–5, 8 pass, and 9 holds by design (no delete code, no fs remove permission).
-- Not checked on the device: 6 (repeat upload; server-tested) and 7 (killing the app during an upload).
+- Not checked on the device: 6 (repeat upload; server-tested).
+- 7 (Mihail, 2026-10-29): the app was killed during an upload and the upload finished after the next start. In his words, it works "from what I tested".
 - **Sound:** recordings sounded off at first. That was headphones plugged in during recording; through the phone's microphone it's fine.
 - **PC playback needs `gst-plugins-good`** on Linux. Without it the PC app's page crashed on Play ([[TECH]]).
 

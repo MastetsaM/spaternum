@@ -131,7 +131,7 @@ Specs: [[notes_spec]], [[voice-notes_spec]]. One branch per block (name in brack
 - [x] Acceptance criteria checked and results written in each spec. The device checks ran directly against the Pi, which already had every server change from `main`.
 - [x] Install the latest APK on the phone and check ★ Favorites (2026-10-28, works on the PC and the phone)
 - [x] Pi updated to `main` with `ops/update.sh` (2026-10-28, Mihail). No new migrations.
-- [ ] Not checked on the device yet: two devices editing the same note at once, killing the app during an upload, and the Archive page's offline message with Retry
+- [x] Last device checks (2026-10-29): two devices editing the same note, killing the app during an upload, and the Archive page's offline message with Retry. Results are in [[notes_spec]], [[voice-notes_spec]] and [[archive_spec]].
 
 ## Later (ideas and loose ends, not scheduled)
 - **Notes with recordings:** merge notes and voice notes into one note with text and/or recordings, plus a Pinned section, folder tags, a full tree and notes settings in the tool panel. Draft with Mihail's decisions: [[notes-recordings_spec]]. Next feature.
@@ -143,6 +143,7 @@ Specs: [[notes_spec]], [[voice-notes_spec]]. One branch per block (name in brack
 - **Housekeeping:**
   - the Starlette `httpx` deprecation warning in server tests
   - the client bundle is over 500 kB (Vite warning)
+  - Archive page offline: it waits until the request gives up before showing "needs the server". A short time limit would show it sooner.
   - the old `spike-db` container can be removed
   - a real PC install (Arch package depending on `gst-plugins-good`, or an AppImage) instead of `pnpm tauri dev`
 

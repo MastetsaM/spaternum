@@ -36,7 +36,7 @@ Client criteria:
 
 Client results (2026-10-28): built (`src/client/src/archive/`, `screens/ArchiveScreen.tsx`); 9 passes (5 tests in `archive_test.ts`, 13 client tests in total); `pnpm build` passes. 6–8 still to check on the phone and the PC.
 
-Device check (Mihail, 2026-10-28): 6 and 7 pass on the phone and the PC; restoring a note and a voice note brings them back. 8 (the offline message with Retry) wasn't checked separately.
+Device check (Mihail, 2026-10-28): 6 and 7 pass on the phone and the PC; restoring a note and a voice note brings them back. 8 checked on 2026-10-29: offline, the page spins for a long time, then shows the message and Retry; after reconnecting, Retry brings the list back.
 
 ## Out of scope
 - Paging (single user; revisit if the list gets long).
