@@ -76,7 +76,7 @@ Using FullCalendar's free views:
 - **Repeat** options in the form: none, every day, every week (choose days), every month (same date), every year, plus "every N" and an end (never / on a date / after N times). The rule is written as `RRULE` text, so other patterns can be added later without changing data.
 - **Changing one occurrence of a repeating event** asks: *Only this one* / *This and following* / *All*.
   - *Only this one* → writes an exception row.
-  - *This and following* → ends the old series the day before (`UNTIL`) and creates a new series from this occurrence.
+  - *This and following* → ends the old series just before this occurrence (`UNTIL` = 1 second before; a `COUNT` is split between the two) and creates a new series from this occurrence. Ending it "the day before" would drop other occurrences on the same day.
   - *All* → edits the series row. If the time or the rule changes, the series' exceptions are archived, because they may no longer match an occurrence.
 - **Archiving** works the same way: only this one (cancelled exception), this and following (`UNTIL`), or all (the series and its exceptions are archived together and restored together, like a folder in [[notes_spec]]).
 - **Archived = locked** (Mihail, 2026-10-29): an archived event, series or exception can't be changed. To change it, restore it from the Archive page first. The server refuses a change to an archived row and sends the archived row back, so the device drops it. This differs from notes, where a later edit brings a note back.
@@ -124,6 +124,24 @@ Using FullCalendar's free views:
 - Search over events.
 - Links to notes, projects or clients (later, through IDs as in [[2026-10-20-architecture-modular-monolith]]).
 - FullCalendar's paid views (timeline, resources).
+
+## Client details (2026-10-29)
+Decided while building, from the defaults the screens needed. Change any of them after the device check.
+- **First open:** week view, 30-minute slots. After that, the last view and slot size used on that device.
+- **Times** in 24-hour format.
+- **All-day off** → the event goes to 09:00–09:30 on its first day. **All-day end** is shown as an inclusive "Last day".
+- **Changing the start** moves the end with it, so the length stays.
+- **"After N times"** starts at 10.
+- **"Only this one"** greys out the repeat part (one occurrence can't repeat).
+- **A rule the app can't read** shows with ⚠ and a dashed red outline, and can't be dragged.
+- **Year view** shows dots only; creating events there is off; a tap on a day opens the day view.
+- **Phone:** the view and slot buttons sit in a bar at the bottom of the calendar.
+- **The form** is its own screen (`/tools/calendar/<occurrence>`), so Android's back gesture returns to the calendar, on the same dates. The scope question comes at the first change in the form, and the answer holds until you leave.
+
+Known limits:
+- The open form doesn't follow edits made on another device meanwhile. It only notices when the event is archived elsewhere.
+- Going back while the scope question is open drops that one change.
+- Devices with a saved favorites list don't show Calendar there until it's starred.
 
 ## Results — server (2026-10-29)
 Built in `src/server/spaternum/calendar/`; 15 tests in `tests/calendar_test.py` pass. The tests were written from this spec by a separate agent that didn't see the code. Covers the server part of criteria 7–10: sync of one-offs, series and exceptions; latest write wins; an exception arriving before its series; archiving a series archives its exceptions (earlier-archived ones keep their time); Archive page entries and restore.

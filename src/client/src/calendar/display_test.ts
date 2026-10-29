@@ -1,18 +1,20 @@
 // Dates are built from local parts, so these pass in any time zone.
 
 import { describe, expect, it } from "vitest";
-import type { CalendarEvent, Occurrence } from "./calendar";
+import { applyChange, newEvent, type CalendarEvent, type Occurrence } from "./calendar";
 import {
   addDays,
   applyWrites,
   daysWithEvents,
   DEFAULT_PREFS,
   droppedTimes,
+  findOccurrence,
   formChange,
   fromSelection,
   inputTimes,
   midnight,
   moveStart,
+  nextOccurrence,
   parsePrefs,
   storedTimes,
   switchAllDay,
@@ -189,5 +191,66 @@ describe("applyWrites", () => {
   it("replaces put rows, adds new ones and drops archived ones", () => {
     const after = applyWrites([row("a"), row("b"), row("c")], { put: [row("a", "new"), row("d")], archive: ["b"] });
     expect(after.map((r) => [r.id, r.title])).toEqual([["c", ""], ["a", "new"], ["d", ""]]);
+  });
+});
+
+// ---- Finding the occurrence the form edits (with the real rules from calendar.ts) ----
+
+describe("finding occurrences", () => {
+  const T = "2026-10-01T00:00:00.000Z";
+  let n = 0;
+  const ctx = { now: "2026-10-29T12:00:00.000Z", newId: () => `id-${++n}` };
+  const weekly: CalendarEvent = {
+    ...newEvent("s", "2026-11-02T10:00:00.000Z", "2026-11-02T11:00:00.000Z", false, "UTC", T),
+    title: "Standup",
+    rrule: "FREQ=WEEKLY",
+  };
+  const second = "2026-11-09T10:00:00.000Z";
+
+  it("finds a one-off by its id", () => {
+    const one = newEvent("o", "2026-11-03T09:00:00.000Z", null, false, "UTC", T);
+    expect(findOccurrence([one], "o")?.start).toBe("2026-11-03T09:00:00.000Z");
+  });
+
+  it("finds a plain occurrence by its series key", () => {
+    expect(findOccurrence([weekly], `s@${second}`)?.start).toBe(second);
+  });
+
+  it("finds the exception that replaced a plain occurrence", () => {
+    const occ = findOccurrence([weekly], `s@${second}`)!;
+    const writes = applyChange([weekly], occ, "only", { title: "Moved" }, ctx);
+    const rows = applyWrites([weekly], writes);
+    expect(findOccurrence(rows, `s@${second}`)?.title).toBe("Moved");
+  });
+
+  it("an unknown key finds nothing", () => {
+    expect(findOccurrence([weekly], "nope")).toBeNull();
+    expect(findOccurrence([weekly], `s@2026-11-10T10:00:00.000Z`)).toBeNull();
+  });
+
+  it("after 'only', the form edits the exception", () => {
+    const occ = findOccurrence([weekly], `s@${second}`)!;
+    const writes = applyChange([weekly], occ, "only", { title: "Moved" }, ctx);
+    const next = nextOccurrence(applyWrites([weekly], writes), occ, "only", writes, occ.start);
+    expect(next?.eventId).toBe(writes.put[0].id);
+  });
+
+  it("after 'following', the form edits the new series' first occurrence", () => {
+    const occ = findOccurrence([weekly], `s@${second}`)!;
+    const writes = applyChange([weekly], occ, "following", { title: "New" }, ctx);
+    const next = nextOccurrence(applyWrites([weekly], writes), occ, "following", writes, occ.start);
+    expect(next?.title).toBe("New");
+    expect(next?.seriesId).not.toBe("s");
+    expect(next?.start).toBe(second);
+  });
+
+  it("after 'all' with a new time, the form edits the occurrence at the new start", () => {
+    const occ = findOccurrence([weekly], `s@${second}`)!;
+    const start = "2026-11-09T12:00:00.000Z";
+    const change = { start_at: start, end_at: "2026-11-09T13:00:00.000Z" };
+    const writes = applyChange([weekly], occ, "all", change, ctx);
+    const next = nextOccurrence(applyWrites([weekly], writes), occ, "all", writes, start);
+    expect(next?.seriesId).toBe("s");
+    expect(next?.start).toBe(start);
   });
 });
