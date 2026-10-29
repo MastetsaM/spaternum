@@ -149,7 +149,7 @@ Built in `src/client/src/notes/` (rules + database writes) and `screens/NotesScr
 - Built, waiting for the phone/PC check: 1, 2, 5, 6, 8. Criterion 9's restore needs the Archive page (block 9); the client only archives the folder, the server cascade does the rest (server-tested).
 
 
-**Device check (Mihail, 2026-10-28, phone and PC against the Pi):** notes, folders, title, tags, pin, search and archive work; offline writes sync back; live sync between the PC and the phone is quick; archive and restore from the Archive page work. Criteria 1–5, 7–9 pass. Criterion 6 (the same note edited on two devices at once) wasn't checked separately; the server side is tested.
+**Device check (Mihail, 2026-10-28, phone and PC against the Pi):** notes, folders, title, tags, pin, search and archive work; offline writes sync back; live sync between the PC and the phone is quick; archive and restore from the Archive page work. Criteria 1–5, 7–9 pass. Criterion 6 checked on 2026-10-29: the phone edited the note offline, the PC edited it later, and after the phone reconnected both kept the PC's text (the later edit). Nothing crashed.
 - Feedback that changed the design during the check is in "Client details" above (folders browsed like a file manager, title-only rows, optional title).
 - Feedback for later is in [[notes-recordings_spec]]: merge with voice notes, a "Pinned" section at the top level, folder tags, a full tree with notes settings in the tool panel. Mihail also found navigation still a bit hard.
 
