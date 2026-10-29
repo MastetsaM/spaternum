@@ -79,6 +79,8 @@ Using FullCalendar's free views:
   - *This and following* → ends the old series the day before (`UNTIL`) and creates a new series from this occurrence.
   - *All* → edits the series row. If the time or the rule changes, the series' exceptions are archived, because they may no longer match an occurrence.
 - **Archiving** works the same way: only this one (cancelled exception), this and following (`UNTIL`), or all (the series and its exceptions are archived together and restored together, like a folder in [[notes_spec]]).
+- **On the Archive page** each archived one-off event or series is one entry (a series shows how many changed occurrences were archived with it). Exceptions never show on their own: they come back only with their series.
+- **End before start** is refused in the form; the server stores what it gets, like empty notes ([[notes_spec]]).
 
 ## Offline and sync
 - Same as notes: RxDB collection `calendar_events`, pull/push through the sync helper, SSE for live updates, `serverNow()` for `updated_at`.

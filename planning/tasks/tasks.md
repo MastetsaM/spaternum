@@ -139,7 +139,7 @@ Moved ahead of notes with recordings because it's more urgent (Mihail, 2026-10-2
 
 ### C1. Calendar server (`feature/calendar-server`)
 - [ ] Migration: `calendar_events` with `seq` and the sync trigger (no foreign keys)
-- [ ] Pull/push through the sync helper; refuse `end_at` before `start_at`
+- [ ] Pull/push through the sync helper (end before start is refused in the app's form, not by the server — same as empty notes)
 - [ ] Archiving a series archives its exceptions with the same `archived_at`; restore brings back only those
 - [ ] `list_archived()` and `restore(id)`; one Archive entry per series
 - [ ] Tests (calendar criteria 7–10, server side)
