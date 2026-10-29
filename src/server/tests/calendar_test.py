@@ -231,10 +231,19 @@ def test_restoring_an_unknown_id_is_404(client, cal_db):
     assert restore(client, uuid.uuid4()).status_code == 404
 
 
-def test_later_edit_brings_an_archived_event_back(client, cal_db):
+def test_an_archived_event_cannot_be_edited(client, cal_db):
     e = event("v1")
     push(client, e)
     archive(client, e)
-    push(client, {**e, "title": "v2", "updated_at": T2})
+    conflicts = push(client, {**e, "title": "v2", "updated_at": T2})
+    assert [(d["title"], d["_deleted"]) for d in conflicts] == [("v1", True)]
+    assert archived(cal_db, e["id"]) is not None
+
+
+def test_an_archived_event_can_be_edited_after_restore(client, cal_db):
+    e = event("v1")
+    push(client, e)
+    archive(client, e)
+    restore(client, e["id"])
+    assert push(client, {**e, "title": "v2", "updated_at": "2099-01-01T00:00:00.000Z"}) == []
     assert archived(cal_db, e["id"]) is None
-    assert [(d["title"], d["_deleted"]) for d in pull(client)["documents"]] == [("v2", False)]
