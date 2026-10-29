@@ -137,6 +137,7 @@ Specs: [[notes_spec]], [[voice-notes_spec]]. One branch per block (name in brack
 - **Notes with recordings:** merge notes and voice notes into one note with text and/or recordings, plus a Pinned section, folder tags, a full tree and notes settings in the tool panel. Draft with Mihail's decisions: [[notes-recordings_spec]]. Next feature.
 - **Claude talking to the server directly (MCP-like):** let Claude read and create notes (and later other items) on Mihail's server, e.g. "make a note about this". Asked for on 2026-10-28; needs a spec first, covering what it may do, the token, and Tailscale-only access ([[2026-10-20-auth-tailscale-api-token]]).
 - **Tool groups on the Tools page:** Android-style folders to sort tools by use, **synced across devices**. Dropped for now as too much work (Mihail, 2026-10-28).
+- **Updates for other users:** only when someone else wants to use the app. Publish builds to GitHub Releases, use the Tauri updater on the PC and Obtainium on Android, sign with one fixed release key (not the debug key), and have the app warn when the server is older than the app (Mihail, 2026-10-29).
 - **Drag and drop:** for reordering favorites (arrows for now), and for groups if they come.
 - **Notes order:** pin, tag and move change `updated_at`, so the note jumps up the list. Fixing it needs a separate edited time ([[notes_spec]]).
 - **Name of the first section, Home or Dashboard:** still open in [[ui-design_spec]]. Home is kept for now.
