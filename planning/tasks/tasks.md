@@ -165,7 +165,12 @@ Moved ahead of notes with recordings because it's more urgent (Mihail, 2026-10-2
 ## After the calendar (2026-10-30)
 - [x] Sync warning: a red line under the header when the server answers but a module's sync fails ([[client-foundation_spec]])
 - [x] Archive filters: Events and Repeating events ([[archive_spec]])
-- [ ] Check both on a device
+- [ ] Check both on a device. Steps still open for Mihail:
+  - Pi: run `ops/update.sh`. No migration; it should end at `c48683c` (already pushed).
+  - Phone: install `spaternum-main-3.apk` (sent 2026-10-30) in Second Space.
+  - PC: rebuild the desktop app from `main`.
+  - Use it day to day: the red sync line should never show while things work; the Archive filters Events and Repeating events should list only those.
+- Next after this check: notes with recordings ([[notes-recordings_spec]], draft).
 
 ## Later (ideas and loose ends, not scheduled)
 - **Notes with recordings:** merge notes and voice notes into one note with text and/or recordings, plus a Pinned section, folder tags, a full tree and notes settings in the tool panel. Draft with Mihail's decisions: [[notes-recordings_spec]]. Next after the calendar.
