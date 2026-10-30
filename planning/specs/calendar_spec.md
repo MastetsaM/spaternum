@@ -1,6 +1,6 @@
 # Spec — Calendar (draft)
 
-Status: **agreed, 2026-10-29**. All open questions answered (see "Decided 2026-10-29").
+Status: **done, 2026-10-30** (agreed 2026-10-29). All open questions answered (see "Decided 2026-10-29").
 
 ## What and why
 A personal calendar for daily use on PC and Android, in the style of Teams: **year, month and week views**, with the day split into **30-minute slots**. It works **offline**, like notes: Mihail shouldn't have to think about the connection (decided 2026-10-29). Repeating events are in from the start.
@@ -165,6 +165,12 @@ Known limits:
 Built in `src/server/spaternum/calendar/`; 15 tests in `tests/calendar_test.py` pass. The tests were written from this spec by a separate agent that didn't see the code. Covers the server part of criteria 7–10: sync of one-offs, series and exceptions; latest write wins; an exception arriving before its series; archiving a series archives its exceptions (earlier-archived ones keep their time); Archive page entries and restore.
 - Archived rows are locked (added the same day): a change pushed to an archived row is refused; 2 tests cover it (55 server tests in total).
 - An exception archived while its series stays active can't be restored on its own; that only happens through *All*, which archives them on purpose.
+
+## Results — client and devices (2026-10-30)
+Mihail checked every acceptance criterion (1–12) on the phone (APK, over Tailscale) and the PC against the PC's dev server: all pass. 157 client tests (Vitest) and 57 server tests pass. The device check brought three rounds of changes, all in the sections above: 30-minute slots only; show as busy / tentative / free; date + time list; the PC form in the right panel; Save / Discard for repeating events; the short phone title; Busy-only month and year; the PC day list.
+- Fixed on the way: the weekday buttons didn't show after picking "Every week" on an existing series (the scope question, answered *Only this one*, put the repeat back and locked it).
+- Compared with the spec before merging: the code matches the scope, the criteria and the out-of-scope list. *Show as* isn't the "colours / categories" left out of scope: it's three fixed states, not user-made categories.
+- Still open: the client bundle is about 1 MB (Vite's chunk-size warning); fine for a local app, not split for now.
 
 ## Related
 [[PRD]] · [[TECH]] · [[tasks]] · [[2026-10-29-calendar-fullcalendar]] · [[2026-10-21-sync-rxdb]] · [[2026-10-20-offline-latest-write-wins]] · [[2026-10-21-database-access-plain-sql]] · [[2026-10-20-architecture-modular-monolith]] · [[notes_spec]] · [[archive_spec]] · [[favorites_spec]] · [[notes-recordings_spec]]
