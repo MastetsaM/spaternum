@@ -149,7 +149,7 @@ Moved ahead of notes with recordings because it's more urgent (Mihail, 2026-10-2
 - [x] Install `@fullcalendar/react`, `temporal-polyfill`, `rrule-temporal`; log them in `wiki/installed.md`, pin versions in [[TECH]]
 - [x] RxDB collection `calendar_events` + replication; regenerate client types
 - [x] Occurrence expansion for the dates on screen (rrule-temporal, in the event's time zone, exceptions applied); Vitest incl. the DST case
-- [x] Calendar tool in the side panel: year (dots), month, week, day; Today and arrows; 15/30-minute switch and last view saved per device; Monday start; 24 h scrolled to 08:00
+- [x] Calendar tool in the side panel: year (dots), month, week, day; Today and arrows; 30-minute slots (no switch, 2026-10-30) and last view saved per device; Monday start; 24 h scrolled to 08:00
 - [x] Create by click/drag (PC) and long-press (phone), 30 minutes by default; move and resize
 - [x] Event form: title, all-day, start, end, repeat, notes; saves on its own; end before start refused
 - [x] Only this one / This and following / All, for editing and archiving; Vitest for the three modes

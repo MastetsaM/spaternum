@@ -49,15 +49,15 @@ const values = (over: Partial<FormValues>): FormValues => ({
   ...over,
 });
 
-describe("saved view and slot size", () => {
+describe("saved view", () => {
   it("falls back to week and 30 minutes when missing or broken", () => {
     expect(parsePrefs(null)).toEqual(DEFAULT_PREFS);
     expect(parsePrefs("not json")).toEqual(DEFAULT_PREFS);
-    expect(parsePrefs('{"view":"listWeek","slot":20}')).toEqual({ view: "timeGridWeek", slot: 30 });
+    expect(parsePrefs('{"view":"listWeek"}')).toEqual({ view: "timeGridWeek" });
   });
 
-  it("keeps a known view and slot size", () => {
-    expect(parsePrefs('{"view":"multiMonthYear","slot":15}')).toEqual({ view: "multiMonthYear", slot: 15 });
+  it("keeps a known view", () => {
+    expect(parsePrefs('{"view":"multiMonthYear","slot":15}')).toEqual({ view: "multiMonthYear" }); // an old saved slot size is ignored
   });
 });
 
@@ -94,14 +94,13 @@ describe("days with a dot in the year view", () => {
 describe("creating from the calendar", () => {
   it("gives a tap the default length, a drag its own", () => {
     const start = local(2026, 10, 29, 10);
-    expect(fromSelection(start, local(2026, 10, 29, 10, 30), false, 30)).toEqual({ start: start.toISOString(), end: null });
-    expect(fromSelection(start, local(2026, 10, 29, 10, 15), false, 15).end).toBeNull();
-    expect(fromSelection(start, local(2026, 10, 29, 11), false, 30).end).toBe(iso(2026, 10, 29, 11));
+    expect(fromSelection(start, local(2026, 10, 29, 10, 30), false)).toEqual({ start: start.toISOString(), end: null });
+    expect(fromSelection(start, local(2026, 10, 29, 11), false).end).toBe(iso(2026, 10, 29, 11));
   });
 
   it("uses days for all-day", () => {
-    expect(fromSelection(local(2026, 10, 29), local(2026, 10, 30), true, 30)).toEqual({ start: "2026-10-29", end: null });
-    expect(fromSelection(local(2026, 10, 29), local(2026, 11, 1), true, 30)).toEqual({ start: "2026-10-29", end: "2026-11-01" });
+    expect(fromSelection(local(2026, 10, 29), local(2026, 10, 30), true)).toEqual({ start: "2026-10-29", end: null });
+    expect(fromSelection(local(2026, 10, 29), local(2026, 11, 1), true)).toEqual({ start: "2026-10-29", end: "2026-11-01" });
   });
 });
 

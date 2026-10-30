@@ -1,5 +1,5 @@
 // Calendar: FullCalendar's year / month / week / day views in the main area, or the event form.
-// The tool panel switches view and slot size. Rules live in calendar/calendar.ts, screen helpers in
+// The tool panel switches view; days are split into 30-minute slots. Rules live in calendar/calendar.ts, screen helpers in
 // calendar/display.ts, database writes in calendar/store.ts. Spec: calendar_spec.
 
 import FullCalendar, {
@@ -51,6 +51,7 @@ import {
   savePrefs,
   storedTimes,
   switchAllDay,
+  SLOT_MINUTES,
   VIEWS,
   weekdayOf,
   WEEKDAYS,
@@ -77,9 +78,9 @@ let shownDate: Date | null = null;
 
 const PLUGINS = [classicThemePlugin, dayGridPlugin, timeGridPlugin, multiMonthPlugin, interactionPlugin];
 const VIEW_BUTTONS = VIEWS.map((v) => v.id).join(",");
-const PC_HEADER = { start: "prev,next today", center: "title", end: `${VIEW_BUTTONS} slot` };
+const PC_HEADER = { start: "prev,next today", center: "title", end: VIEW_BUTTONS };
 const PHONE_HEADER = { start: "prev,next", center: "title", end: "today" };
-const PHONE_FOOTER = { center: `${VIEW_BUTTONS} slot` };
+const PHONE_FOOTER = { center: VIEW_BUTTONS };
 const BUTTONS = { today: { text: "Today" }, ...Object.fromEntries(VIEWS.map((v) => [v.id, { text: v.label }])) };
 const TIME_FORMAT = { hour: "2-digit", minute: "2-digit", hour12: false } as const; // 24 h
 const VIEW_OPTIONS = { multiMonthYear: { selectable: false, editable: false } }; // the year view only shows dots
@@ -106,7 +107,7 @@ function CalendarView() {
   const updatePrefs = (change: (current: Prefs) => Partial<Prefs>) =>
     setPrefs((current) => {
       const next = { ...current, ...change(current) };
-      if (next.view === current.view && next.slot === current.slot) return current;
+      if (next.view === current.view) return current;
       savePrefs(next);
       return next;
     });
@@ -122,7 +123,7 @@ function CalendarView() {
   // A tap on a slot (or a long-press on the phone) makes a 30-minute event; a drag, that length
   async function create(info: DateSelectInfo) {
     api()?.unselect();
-    const { start, end } = fromSelection(info.start, info.end, info.allDay, prefs.slot);
+    const { start, end } = fromSelection(info.start, info.end, info.allDay);
     const event = newEvent(crypto.randomUUID(), start, end, info.allDay, deviceTimeZone(), ctx().now);
     await write({ put: [event], archive: [] });
     navigate(`${formUrl(event.id)}?new=1`);
@@ -154,14 +155,6 @@ function CalendarView() {
     write(applyChange(rows, occurrence, scope, change, ctx())).catch(console.error);
   }
 
-  // Options FullCalendar compares: built only when what they show changes
-  const buttons = useMemo(
-    () => ({
-      ...BUTTONS,
-      slot: { text: `${prefs.slot} min`, hint: "Slot size", click: () => updatePrefs((p) => ({ slot: p.slot === 30 ? 15 : 30 })) },
-    }),
-    [prefs.slot],
-  );
   const dayCellClass = useCallback((info: DayCellInfo) => (dots.has(localDay(info.date)) ? "cal-dot" : ""), [dots]);
 
   return (
@@ -170,9 +163,7 @@ function CalendarView() {
       tools={
         <CalendarTools
           view={range?.view}
-          slot={prefs.slot}
           onView={(view) => api()?.changeView(view)}
-          onSlot={(slot) => updatePrefs(() => ({ slot }))}
           onToday={() => api()?.today()}
         />
       }
@@ -189,11 +180,11 @@ function CalendarView() {
             // The phone has no room for everything in one row: the views go under the calendar
             headerToolbar={phone ? PHONE_HEADER : PC_HEADER}
             footerToolbar={phone ? PHONE_FOOTER : false}
-            buttons={buttons}
+            buttons={BUTTONS}
             height="100%"
             firstDay={1}
             scrollTime="08:00:00"
-            slotDuration={prefs.slot === 15 ? "00:15:00" : "00:30:00"}
+            slotDuration={{ minutes: SLOT_MINUTES }}
             slotHeaderFormat={TIME_FORMAT}
             eventTimeFormat={TIME_FORMAT}
             nowIndicator
@@ -246,13 +237,11 @@ function toInput(o: Occurrence): EventInput {
 
 type ToolsProps = {
   view: string | undefined;
-  slot: number;
   onView: (view: ViewId) => void;
-  onSlot: (slot: 15 | 30) => void;
   onToday: () => void;
 };
 
-function CalendarTools({ view, slot, onView, onSlot, onToday }: ToolsProps) {
+function CalendarTools({ view, onView, onToday }: ToolsProps) {
   return (
     <div className="details">
       <button onClick={onToday}>Today</button>
@@ -261,14 +250,6 @@ function CalendarTools({ view, slot, onView, onSlot, onToday }: ToolsProps) {
         {VIEWS.map((v) => (
           <button key={v.id} className={v.id === view ? "on" : ""} onClick={() => onView(v.id)}>
             {v.label}
-          </button>
-        ))}
-      </div>
-      <h3>Slot size</h3>
-      <div className="cal-choices">
-        {([15, 30] as const).map((minutes) => (
-          <button key={minutes} className={minutes === slot ? "on" : ""} onClick={() => onSlot(minutes)}>
-            {minutes} min
           </button>
         ))}
       </div>

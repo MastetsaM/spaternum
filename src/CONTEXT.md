@@ -81,7 +81,7 @@ Start reading at `main.tsx`, which starts sync and the voice-notes uploads, then
 | `voice-notes/rows.ts` | Writes to the `voice_notes` collection |
 | `voice-notes/audio.ts` | Reading a file's duration, fetching audio from the server, and the player: one recording at a time, with position kept per recording, seeking and speed |
 | `calendar/store.ts` | Calendar events read from RxDB, and the writes `calendar.ts` decides (put rows, archive ids) stored |
-| `calendar/display.ts` | Screen rules: the view and slot size kept in `localStorage`, days with a dot in the year view, form inputs ↔ stored times, finding an occurrence by its key and again after a save |
+| `calendar/display.ts` | Screen rules: the view kept in `localStorage`, days with a dot in the year view, form inputs ↔ stored times, finding an occurrence by its key and again after a save |
 | `archive/archive.ts` | Archive page calls and display rules |
 | `screens/` | One screen per route: `NotesScreen`, `VoiceNotesScreen`, `CalendarScreen` (FullCalendar, event form, the *only this one / following / all* question), `ArchiveScreen`, `FavoritesScreen`, `SettingsScreen`. `Placeholders.tsx` holds Home, Tools, Clients and Projects |
 | `*_test.ts` | Vitest tests next to the code they test (`pnpm test`) |

@@ -1,5 +1,4 @@
-// What the calendar screen needs besides the rules in calendar.ts: the view and slot size kept
-// per device, the days that get a dot in the year view, the form's inputs ↔ stored times, and
+// What the calendar screen needs besides the rules in calendar.ts: the view kept per device, the days that get a dot in the year view, the form's inputs ↔ stored times, and
 // finding an occurrence again by its key. Spec: calendar_spec.
 
 import { Temporal } from "temporal-polyfill";
@@ -18,7 +17,7 @@ import {
 /** Monday first, like the calendar. */
 export const WEEKDAYS: Weekday[] = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
 
-// ---- View and slot size, per device ----
+// ---- View, per device ----
 
 export const VIEWS = [
   { id: "multiMonthYear", label: "Year" },
@@ -27,13 +26,15 @@ export const VIEWS = [
   { id: "timeGridDay", label: "Day" },
 ] as const;
 export type ViewId = (typeof VIEWS)[number]["id"];
-export type Slot = 15 | 30; // minutes
-export type Prefs = { view: ViewId; slot: Slot };
+export type Prefs = { view: ViewId };
+
+/** Every day is split into 30-minute slots (Mihail, 2026-10-30: no switch). */
+export const SLOT_MINUTES = 30;
 
 const PREFS_KEY = "spaternum.calendar";
-export const DEFAULT_PREFS: Prefs = { view: "timeGridWeek", slot: 30 };
+export const DEFAULT_PREFS: Prefs = { view: "timeGridWeek" };
 
-/** The saved view and slot size; anything missing or unknown falls back to week / 30 min. */
+/** The saved view; anything missing or unknown falls back to week. */
 export function parsePrefs(value: string | null): Prefs {
   let saved: unknown;
   try {
@@ -41,11 +42,8 @@ export function parsePrefs(value: string | null): Prefs {
   } catch {
     return DEFAULT_PREFS;
   }
-  const { view, slot } = (saved ?? {}) as Partial<Record<keyof Prefs, unknown>>;
-  return {
-    view: VIEWS.some((v) => v.id === view) ? (view as ViewId) : DEFAULT_PREFS.view,
-    slot: slot === 15 || slot === 30 ? slot : DEFAULT_PREFS.slot,
-  };
+  const { view } = (saved ?? {}) as Partial<Record<keyof Prefs, unknown>>;
+  return { view: VIEWS.some((v) => v.id === view) ? (view as ViewId) : DEFAULT_PREFS.view };
 }
 
 export function loadPrefs(): Prefs {
@@ -115,13 +113,13 @@ export function daysWithEvents(list: Occurrence[]): Set<string> {
  * What newEvent() gets from a tap or a drag across slots. A tap (one slot, or one day) leaves
  * the end out, so the event gets the default length (30 minutes, or one day).
  */
-export function fromSelection(start: Date, end: Date, allDay: boolean, slot: Slot): { start: string; end: string | null } {
+export function fromSelection(start: Date, end: Date, allDay: boolean): { start: string; end: string | null } {
   if (allDay) {
     const first = localDay(start);
     const after = localDay(end);
     return { start: first, end: after === addDays(first, 1) ? null : after };
   }
-  return { start: start.toISOString(), end: end.getTime() - start.getTime() > slot * MINUTE ? end.toISOString() : null };
+  return { start: start.toISOString(), end: end.getTime() - start.getTime() > SLOT_MINUTES * MINUTE ? end.toISOString() : null };
 }
 
 /** The stored times after a move or resize. An all-day event dropped without an end lasts one day. */

@@ -3,7 +3,7 @@
 Status: **agreed, 2026-10-29**. All open questions answered (see "Decided 2026-10-29").
 
 ## What and why
-A personal calendar for daily use on PC and Android, in the style of Teams: **year, month and week views**, with the day split into **15- or 30-minute slots**. It works **offline**, like notes: Mihail shouldn't have to think about the connection (decided 2026-10-29). Repeating events are in from the start.
+A personal calendar for daily use on PC and Android, in the style of Teams: **year, month and week views**, with the day split into **30-minute slots**. It works **offline**, like notes: Mihail shouldn't have to think about the connection (decided 2026-10-29). Repeating events are in from the start.
 
 It moves ahead of [[notes-recordings_spec]] because it's more urgent (Mihail, 2026-10-29).
 
@@ -64,7 +64,7 @@ Using FullCalendar's free views:
 - **Month:** classic month grid (`dayGridMonth`).
 - **Week:** 7 columns with time rows (`timeGridWeek`), all-day events in a strip at the top.
 - **Day:** one column with time rows (`timeGridDay`).
-- **Slot size:** 15 or 30 minutes, switchable from the view. Saved per device, like favorites ([[favorites_spec]]).
+- **Slots:** always 30 minutes, no switch (Mihail, 2026-10-30, after trying it on the phone; the 15/30 switch was dropped). The last view used is saved per device, like favorites ([[favorites_spec]]).
 - A **Today** button and back/forward arrows. Weeks start on **Monday**.
 - Week and day show the **full 24 h**, scrolled to **08:00** when opened.
 - The app opens the calendar on the view used last on that device.
@@ -89,12 +89,12 @@ Using FullCalendar's free views:
 - **The year view** is the widest range, at one year. Expanding a year of daily events is ~365 items per series, which is fine.
 
 ## Inputs and outputs
-- **Input:** create, edit, move, resize, repeat, archive events; switch view and slot size; jump to a date.
+- **Input:** create, edit, move, resize, repeat, archive events; switch view; jump to a date.
 - **Output:** year / month / week / day views; event form; archived events on the shared Archive page ([[archive_spec]]).
 - **Server:** `calendar` module with pull/push, `list_archived()` and `restore(id)`.
 
 ## Acceptance criteria (done when…)
-1. Year, month, week and day views work on PC and Android; the week view switches between 15- and 30-minute slots.
+1. Year, month, week and day views work on PC and Android; week and day are split into 30-minute slots.
 2. Events can be created, edited, moved, resized and archived, with the mouse on the PC and by touch on the phone.
 3. All-day events show in the all-day strip and in the month/year views.
 4. Repeating events (daily, weekly on chosen days, monthly, yearly, every N, with an end) show on the right dates.
@@ -127,7 +127,7 @@ Using FullCalendar's free views:
 
 ## Client details (2026-10-29)
 Decided while building, from the defaults the screens needed. Change any of them after the device check.
-- **First open:** week view, 30-minute slots. After that, the last view and slot size used on that device.
+- **First open:** week view. After that, the last view used on that device.
 - **Times** in 24-hour format.
 - **All-day off** → the event goes to 09:00–09:30 on its first day. **All-day end** is shown as an inclusive "Last day".
 - **Changing the start** moves the end with it, so the length stays.
@@ -135,7 +135,7 @@ Decided while building, from the defaults the screens needed. Change any of them
 - **"Only this one"** greys out the repeat part (one occurrence can't repeat).
 - **A rule the app can't read** shows with ⚠ and a dashed red outline, and can't be dragged.
 - **Year view** shows dots only; creating events there is off; a tap on a day opens the day view.
-- **Phone:** the view and slot buttons sit in a bar at the bottom of the calendar.
+- **Phone:** the view buttons sit in a bar at the bottom of the calendar.
 - **The form** is its own screen (`/tools/calendar/<occurrence>`), so Android's back gesture returns to the calendar, on the same dates. The scope question comes at the first change in the form, and the answer holds until you leave.
 
 Known limits:
