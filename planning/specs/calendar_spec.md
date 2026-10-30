@@ -23,6 +23,11 @@ The calendar UI comes from a library, not from scratch: **FullCalendar v7** for 
 - **New event from a tap:** 30 minutes long.
 - **Hours in week/day:** the full 24 h, scrolled to 08:00 when opened.
 
+## Decided 2026-10-30 (after trying it on the devices)
+- **Show as:** each event is *Busy*, *Tentative* or *Free*, like Teams. New events are Busy. Tentative = not confirmed yet; Free = doesn't take the time.
+- **Picking the time:** a date field plus a list of times every 30 minutes (00:00 … 23:30), on PC and phone. The PC app's browser engine (WebKitGTK on Linux) only offers a date picker for a combined date-time field.
+- **Where the form goes:** PC: in the tool panel on the right, next to the calendar. Phone: its own screen, as before.
+
 ## Data model
 Owned by the new `calendar` module. Plain SQL ([[2026-10-21-database-access-plain-sql]]). One synced table.
 
@@ -39,6 +44,7 @@ CREATE TABLE calendar_events (
     series_id      uuid,                           -- set on an exception: the repeating event it changes
     original_start timestamptz,                    -- set on an exception: which occurrence it replaces
     cancelled      boolean NOT NULL DEFAULT false, -- exception that removes one occurrence
+    show_as        text NOT NULL DEFAULT 'busy',   -- 'busy' | 'tentative' | 'free' (added 2026-10-30)
     created_at     timestamptz NOT NULL,
     updated_at     timestamptz NOT NULL,           -- latest write wins
     archived_at    timestamptz,                    -- NULL = active
@@ -56,6 +62,7 @@ Choices:
 - **`time_zone` is stored** so that "every Monday at 10:00" stays at 10:00 after the clocks change (Portugal has summer time). Occurrences are expanded in that zone, not in UTC.
 - **No foreign keys** (same reason as notes, [[notes_spec]]): an exception can reach the server before its series.
 - **Archive, never delete**, like every module. The server keeps archived rows.
+- **`show_as` is per row**, like the title: an exception can be Tentative while the rest of its series is Busy. A row from an app that doesn't send it yet is stored as Busy.
 - **The `RRULE` text is the standard format**, so a later export to `.ics` or a switch of library doesn't change the data.
 
 ## Views
@@ -72,7 +79,9 @@ Using FullCalendar's free views:
 ## Creating and editing
 - **PC:** click an empty slot to create a **30-minute** event, or drag across slots to choose its length; drag an event to move it; drag its bottom edge to change its length.
 - **Phone:** long-press on a slot to create a 30-minute event; long-press an event, then drag, to move it (FullCalendar's touch behaviour). A tap opens the event.
-- The **event form** (main area, like the notes editor) has: title, all-day, start, end, repeat, notes. It saves on its own, like notes (no Save button).
+- The **event form** has: title, all-day, start, end, show as, repeat, notes. It saves on its own, like notes (no Save button). On the PC it opens in the tool panel on the right, with the calendar still in view; on the phone it's its own screen.
+- **Start and end** are a date field plus a list of times every 30 minutes. An event at another minute (e.g. 10:15, synced from elsewhere) keeps that time as an extra entry in the list.
+- **Show as** on screen: *Busy* = the normal block; *Tentative* = striped; *Free* = faded. The same in every view except the year view (dots only).
 - **Repeat** options in the form: none, every day, every week (choose days), every month (same date), every year, plus "every N" and an end (never / on a date / after N times). The rule is written as `RRULE` text, so other patterns can be added later without changing data.
 - **Changing one occurrence of a repeating event** asks: *Only this one* / *This and following* / *All*.
   - *Only this one* → writes an exception row.
@@ -104,6 +113,8 @@ Using FullCalendar's free views:
 8. The same event edited on two devices: the later edit wins, nothing crashes.
 9. Archived events appear on the Archive page; restoring a series brings back its exceptions with it.
 10. Tests pass: server (sync, archive, restore) and client (Vitest: occurrence expansion, the three edit modes, the DST case).
+11. Each event can be set to Busy, Tentative or Free, and each looks different in month, week and day views; the setting syncs.
+12. On the PC the form opens in the right panel and the start and end time can be picked; on the phone it's its own screen.
 
 ## Edge cases and failure modes
 - **End before start** → refused in the form.
@@ -136,7 +147,8 @@ Decided while building, from the defaults the screens needed. Change any of them
 - **A rule the app can't read** shows with ⚠ and a dashed red outline, and can't be dragged.
 - **Year view** shows dots only; creating events there is off; a tap on a day opens the day view.
 - **Phone:** the view buttons sit in a bar at the bottom of the calendar.
-- **The form** is its own screen (`/tools/calendar/<occurrence>`), so Android's back gesture returns to the calendar, on the same dates. The scope question comes at the first change in the form, and the answer holds until you leave.
+- **The form** has its own address (`/tools/calendar/<occurrence>`). On the phone it's its own screen, so Android's back gesture returns to the calendar, on the same dates. On the PC the address opens it in the tool panel (the panel opens if it was closed); a ✕ closes it and brings back the view buttons. The scope question comes at the first change in the form, and the answer holds until you leave.
+- **PC, while an event is open in the panel:** that event (and every occurrence of its series) can't be dragged on the calendar; its times change in the form. This keeps the form and a drag from overwriting each other. Other events drag as usual.
 
 Known limits:
 - The open form doesn't follow edits made on another device meanwhile. It only notices when the event is archived elsewhere.

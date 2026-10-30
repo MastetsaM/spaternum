@@ -2,6 +2,7 @@
 and archived rows being locked."""
 
 from datetime import datetime
+from typing import Literal
 from uuid import UUID
 
 from psycopg import Connection
@@ -20,6 +21,7 @@ class Event(sync.SyncDoc):
     series_id: UUID | None = None  # set = an exception of that series
     original_start: datetime | None = None
     cancelled: bool = False
+    show_as: Literal["busy", "tentative", "free"] = "busy"  # missing = from an older app
 
 
 def archive_exceptions(conn: Connection, event_id: UUID, archived_at: datetime) -> None:
