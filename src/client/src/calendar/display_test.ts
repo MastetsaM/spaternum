@@ -16,6 +16,9 @@ import {
   moveStart,
   nextOccurrence,
   parsePrefs,
+  dayHeading,
+  eventsOfDay,
+  timeLabel,
   shortTitle,
   storedTimes,
   switchAllDay,
@@ -77,6 +80,29 @@ describe("short title on the phone", () => {
     expect(shortTitle("timeGridWeek", d(2026, 10, 19))).toBe("19 – 25 Oct 26");
     expect(shortTitle("timeGridWeek", d(2026, 10, 26))).toBe("26 Oct – 01 Nov 26");
     expect(shortTitle("timeGridWeek", d(2026, 12, 28))).toBe("28 Dec 26 – 03 Jan 27");
+  });
+});
+
+describe("the PC's day list", () => {
+  const row = (id: string, start: string, end: string, show_as: CalendarEvent["show_as"] = "busy"): CalendarEvent => ({
+    ...newEvent(id, start, end, false, "Europe/Lisbon", ""),
+    show_as,
+  });
+  it("lists every event touching the day, all statuses", () => {
+    const rows = [
+      row("a", iso(2026, 10, 27, 8), iso(2026, 10, 27, 17), "tentative"),
+      row("b", iso(2026, 10, 26, 23), iso(2026, 10, 27, 1)),
+      row("c", iso(2026, 10, 28, 9), iso(2026, 10, 28, 10)),
+    ];
+    expect(eventsOfDay(rows, "2026-10-27").map((o) => [o.key, o.showAs])).toEqual([
+      ["b", "busy"],
+      ["a", "tentative"],
+    ]);
+  });
+  it("labels the day and the times", () => {
+    expect(dayHeading("2026-10-27")).toBe("Tue 27 Oct 26");
+    expect(timeLabel({ allDay: false, start: iso(2026, 10, 27, 8), end: iso(2026, 10, 27, 17, 30) })).toBe("08:00 – 17:30");
+    expect(timeLabel({ allDay: true, start: "2026-10-27", end: "2026-10-28" })).toBe("All day");
   });
 });
 

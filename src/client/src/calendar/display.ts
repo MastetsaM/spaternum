@@ -130,6 +130,31 @@ export function daysWithEvents(list: Occurrence[]): Set<string> {
   return days;
 }
 
+// ---- Month and year views (Mihail, 2026-10-30) ----
+
+/** Month and year show only Busy events (and dots): tentative and free ones are seen in week and day. */
+export const shownInMonthAndYear = (o: Occurrence) => o.showAs === "busy";
+
+const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+/** Every occurrence that touches a "YYYY-MM-DD" day in the device's time, all statuses: the PC's day list. */
+export function eventsOfDay(rows: CalendarEvent[], day: string): Occurrence[] {
+  const start = (d: string) => new Date(`${d}T00:00`).toISOString(); // no zone = the device's time
+  return occurrences(rows, start(day), start(addDays(day, 1)));
+}
+
+/** "Tue 27 Oct 26" */
+export function dayHeading(day: string): string {
+  const d = Temporal.PlainDate.from(day);
+  return `${DAY_NAMES[d.dayOfWeek - 1]} ${shortTitle("timeGridDay", d)}`;
+}
+
+/** "08:00 – 17:00" in the device's time, or "All day". */
+export function timeLabel(o: Pick<Occurrence, "allDay" | "start" | "end">): string {
+  if (o.allDay) return "All day";
+  return `${toLocalInput(o.start).slice(11)} – ${toLocalInput(o.end).slice(11)}`;
+}
+
 // ---- Creating and dragging on the calendar ----
 
 /**

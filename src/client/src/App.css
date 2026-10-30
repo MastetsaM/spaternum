@@ -380,6 +380,26 @@ button.danger { color: var(--error); border-color: var(--error); }
 .cal-broken { outline: 1px dashed var(--error); }
 
 .cal-choices { display: flex; flex-wrap: wrap; gap: 6px; }
+/* Phone: ‹ › Today and the short title share one row */
+.cal .cal-title { font-size: 17px; font-weight: 600; margin: 0; white-space: nowrap; }
+/* PC, month/year: the day listed in the panel */
+.cal .cal-picked { box-shadow: inset 0 0 0 2px var(--accent); }
+.cal-day-list { list-style: none; margin: 0; padding: 0; }
+.cal-day-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  padding: 10px 0;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  text-align: left;
+}
+.cal-day-title { font-weight: 600; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.cal-day-meta { font-size: 13px; color: var(--muted); }
+.cal-day-item.cal-tentative .cal-day-title { font-style: italic; }
+.cal-day-item.cal-free { opacity: 0.55; }
 
 /* Only this one / This and following / All */
 .cal-backdrop {

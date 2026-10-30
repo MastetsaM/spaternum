@@ -28,7 +28,9 @@ The calendar UI comes from a library, not from scratch: **FullCalendar v7** for 
 - **Picking the time:** a date field plus a list of times every 30 minutes (00:00 … 23:30), on PC and phone. The PC app's browser engine (WebKitGTK on Linux) only offers a date picker for a combined date-time field.
 - **Where the form goes:** PC: in the tool panel on the right, next to the calendar. Phone: its own screen, as before.
 - **Save button for repeating events:** the scope question used to pop up at the first keystroke, while still typing. Now a repeating event has *Save* and *Discard*; *Save* asks which events. Leaving with unsaved changes asks *Save* / *Discard* / *Keep editing*. One-off events still save on their own.
-- **Phone header:** *Today* sits next to the arrows, and the title is short: DD MMM YY (e.g. 27 Oct 26). The PC keeps the long title.
+- **Phone header:** *Today* sits next to the arrows, and the title is short: DD MMM YY (e.g. 27 Oct 26). The PC keeps the long title. ‹ › Today are one joined group and the title is 17px, so the week title fits on one line ([[ui-design_spec]]).
+- **Month and year show only Busy events** (and the year's dots only Busy days). Tentative and free events are seen in week and day; once one is set to Busy it shows in month and year too.
+- **PC, month and year:** a click on a day lists that day's events in the right panel, all statuses, each marked; a click on one opens it in the form. In month view a click no longer creates an event; a drag does (even within one day). The phone is unchanged: in year view a tap opens the day.
 
 ## Data model
 Owned by the new `calendar` module. Plain SQL ([[2026-10-21-database-access-plain-sql]]). One synced table.
@@ -83,7 +85,7 @@ Using FullCalendar's free views:
 - **Phone:** long-press on a slot to create a 30-minute event; long-press an event, then drag, to move it (FullCalendar's touch behaviour). A tap opens the event.
 - The **event form** has: title, all-day, start, end, show as, repeat, notes. A one-off event saves on its own, like notes; a repeating event has *Save* and *Discard*. On the PC it opens in the tool panel on the right, with the calendar still in view; on the phone it's its own screen.
 - **Start and end** are a date field plus a list of times every 30 minutes. An event at another minute (e.g. 10:15, synced from elsewhere) keeps that time as an extra entry in the list.
-- **Show as** on screen: *Busy* = the normal block; *Tentative* = striped and in italics (italics only where an event has no block, like timed events in the month view); *Free* = faded. The same in every view except the year view (dots only).
+- **Show as** on screen (week and day; month and year show only Busy): *Busy* = the normal block; *Tentative* = striped and in italics (italics only where an event has no block, like timed events in the month view); *Free* = faded. The same in every view except the year view (dots only).
 - **Repeat** options in the form: none, every day, every week (choose days), every month (same date), every year, plus "every N" and an end (never / on a date / after N times). The rule is written as `RRULE` text, so other patterns can be added later without changing data.
 - **Saving changes to an occurrence of a repeating event** asks: *Only this one* / *This and following* / *All*. Leaving the form with unsaved changes asks *Save* / *Discard* / *Keep editing* first.
   - *Only this one* → writes an exception row.
@@ -148,7 +150,7 @@ Decided while building, from the defaults the screens needed. Change any of them
 - **"Only this one"** is greyed out when the repeat was changed (one occurrence can't take a new rule).
 - **A one-off made to repeat** saves on its own once more (that save makes it a series); after that the form has Save and Discard.
 - **A rule the app can't read** shows with ⚠ and a dashed red outline, and can't be dragged.
-- **Year view** shows dots only; creating events there is off; a tap on a day opens the day view.
+- **Year view** shows dots only (Busy days); creating events there is off; on the phone a tap on a day opens the day view, on the PC it lists the day in the panel.
 - **Phone:** the view buttons sit in a bar at the bottom of the calendar. The top row is ‹ › Today, then the short title: day "27 Oct 26", week "26 Oct – 01 Nov 26" (one month: "19 – 25 Oct 26"), month "Oct 26", year "2026".
 - **The form** has its own address (`/tools/calendar/<occurrence>`). On the phone it's its own screen, so Android's back gesture returns to the calendar, on the same dates. On the PC the address opens it in the tool panel (the panel opens if it was closed); a ✕ closes it and brings back the view buttons.
 - **PC, while an event is open in the panel:** that event (and every occurrence of its series) can't be dragged on the calendar; its times change in the form. This keeps the form and a drag from overwriting each other. Other events drag as usual.

@@ -40,7 +40,9 @@ import {
 } from "../calendar/calendar";
 import {
   applyWrites,
+  dayHeading,
   daysWithEvents,
+  eventsOfDay,
   droppedTimes,
   findOccurrence,
   formChange,
@@ -52,10 +54,12 @@ import {
   nextOccurrence,
   savePrefs,
   shortTitle,
+  shownInMonthAndYear,
   storedTimes,
   switchAllDay,
   SLOT_MINUTES,
   timeChoices,
+  timeLabel,
   VIEWS,
   weekdayOf,
   WEEKDAYS,
@@ -92,11 +96,13 @@ let shownDate: Date | null = null;
 const PLUGINS = [classicThemePlugin, dayGridPlugin, timeGridPlugin, multiMonthPlugin, interactionPlugin];
 const VIEW_BUTTONS = VIEWS.map((v) => v.id).join(",");
 const PC_HEADER = { start: "prev,next today", center: "title", end: VIEW_BUTTONS };
-const PHONE_HEADER = { start: "prev,next today", center: "", end: "title" };
+const PHONE_HEADER = { start: "prev,next,today", center: "", end: "title" }; // one button group
 const PHONE_FOOTER = { center: VIEW_BUTTONS };
 const BUTTONS = { today: { text: "Today" }, ...Object.fromEntries(VIEWS.map((v) => [v.id, { text: v.label }])) };
 const TIME_FORMAT = { hour: "2-digit", minute: "2-digit", hour12: false } as const; // 24 h
 const VIEW_OPTIONS = { multiMonthYear: { selectable: false, editable: false } }; // the year view only shows dots
+// PC month view: a click shows the day's events in the panel; a drag (even inside one day) creates
+const PC_VIEW_OPTIONS = { ...VIEW_OPTIONS, dayGridMonth: { selectMinDistance: 5 } };
 // The phone's title is short (DD MMM YY), so Today fits next to the arrows
 type TitleInfo = { start: { year: number; month: number; day: number } }; // month 0-11
 const shortTitleOf = (view: ViewId) => (info: TitleInfo) =>
@@ -117,12 +123,18 @@ function CalendarView({ openKey }: { openKey: string | undefined }) {
   const [range, setRange] = useState<Range | null>(null);
   const [pending, setPending] = useState<Pending | null>(null);
   const [phone] = useState(() => window.matchMedia(PHONE).matches);
+  const [picked, setPicked] = useState<string | null>(null); // PC, month/year: the day listed in the panel
 
   const shown = useMemo(() => (rows && range ? occurrences(rows, range.from, range.to) : []), [rows, range]);
   const byKey = useMemo(() => new Map(shown.map((o) => [o.key, o])), [shown]);
   const isYear = range?.view === "multiMonthYear";
+  const isWide = isYear || range?.view === "dayGridMonth"; // month and year: Busy only
   // The year view shows a dot on days with events instead of the events
-  const dots = useMemo(() => (isYear ? daysWithEvents(shown) : new Set<string>()), [shown, isYear]);
+  const dots = useMemo(
+    () => (isYear ? daysWithEvents(shown.filter(shownInMonthAndYear)) : new Set<string>()),
+    [shown, isYear],
+  );
+  const dayList = useMemo(() => (rows && picked && isWide && !phone ? eventsOfDay(rows, picked) : null), [rows, picked, isWide, phone]);
   // The event open in the panel, and the rest of its series, can't be dragged: its times change in
   // the form, so a drag and the form don't overwrite each other
   const locked = useMemo(() => {
@@ -130,8 +142,13 @@ function CalendarView({ openKey }: { openKey: string | undefined }) {
     return new Set([open?.eventId, open?.seriesId].filter((id) => id != null));
   }, [rows, openKey]);
   const events = useMemo(
-    () => (isYear ? [] : shown.map((o) => toInput(o, locked.has(o.eventId) || locked.has(o.seriesId ?? "")))),
-    [shown, isYear, locked],
+    () =>
+      isYear
+        ? []
+        : shown
+            .filter((o) => !isWide || shownInMonthAndYear(o))
+            .map((o) => toInput(o, locked.has(o.eventId) || locked.has(o.seriesId ?? ""))),
+    [shown, isYear, isWide, locked],
   );
   const openForm = (key: string, search = "") => navigate(formUrl(key) + search, { state: { form: Date.now() } });
 
@@ -160,9 +177,11 @@ function CalendarView({ openKey }: { openKey: string | undefined }) {
     openForm(event.id, "?new=1");
   }
 
-  // Year view: a tap on a day opens that day
+  // PC, month/year: a click lists that day's events in the panel. Phone, year: a tap opens that day.
   function dateClick(info: DateClickInfo) {
-    if (info.view.type === "multiMonthYear") api()?.changeView("timeGridDay", info.date);
+    const view = info.view.type;
+    if (!phone && (view === "multiMonthYear" || view === "dayGridMonth")) setPicked(localDay(info.date));
+    else if (view === "multiMonthYear") api()?.changeView("timeGridDay", info.date);
   }
 
   function open(info: EventClickInfo) {
@@ -186,7 +205,13 @@ function CalendarView({ openKey }: { openKey: string | undefined }) {
     write(applyChange(rows, occurrence, scope, change, ctx())).catch(console.error);
   }
 
-  const dayCellClass = useCallback((info: DayCellInfo) => (dots.has(localDay(info.date)) ? "cal-dot" : ""), [dots]);
+  const dayCellClass = useCallback(
+    (info: DayCellInfo) => {
+      const day = localDay(info.date);
+      return [dots.has(day) && "cal-dot", dayList && day === picked && "cal-picked"].filter(Boolean).join(" ");
+    },
+    [dots, dayList, picked],
+  );
 
   return (
     <Layout
@@ -200,6 +225,9 @@ function CalendarView({ openKey }: { openKey: string | undefined }) {
             view={range?.view}
             onView={(view) => api()?.changeView(view)}
             onToday={() => api()?.today()}
+            day={dayList && picked}
+            dayEvents={dayList ?? []}
+            onOpen={openForm}
           />
         )
       }
@@ -228,7 +256,8 @@ function CalendarView({ openKey }: { openKey: string | undefined }) {
             selectable
             selectMirror
             forceEventDuration
-            views={phone ? PHONE_VIEW_OPTIONS : VIEW_OPTIONS}
+            views={phone ? PHONE_VIEW_OPTIONS : PC_VIEW_OPTIONS}
+            toolbarTitleClass={phone ? "cal-title" : undefined}
             events={events}
             dayCellClass={dayCellClass}
             datesSet={datesSet}
@@ -284,9 +313,14 @@ type ToolsProps = {
   view: string | undefined;
   onView: (view: ViewId) => void;
   onToday: () => void;
+  day: string | null; // PC, month/year: the clicked day, listed below the views
+  dayEvents: Occurrence[];
+  onOpen: (key: string) => void;
 };
 
-function CalendarTools({ view, onView, onToday }: ToolsProps) {
+const SHOW_AS_LABEL: Record<ShowAs, string> = { busy: "", tentative: " · Tentative", free: " · Free" };
+
+function CalendarTools({ view, onView, onToday, day, dayEvents, onOpen }: ToolsProps) {
   return (
     <div className="details">
       <button onClick={onToday}>Today</button>
@@ -298,6 +332,28 @@ function CalendarTools({ view, onView, onToday }: ToolsProps) {
           </button>
         ))}
       </div>
+      {day && (
+        <>
+          <h3>{dayHeading(day)}</h3>
+          {dayEvents.length === 0 ? (
+            <p className="muted">No events.</p>
+          ) : (
+            <ul className="cal-day-list">
+              {dayEvents.map((o) => (
+                <li key={o.key}>
+                  <button className={`cal-day-item cal-${o.showAs}`} onClick={() => onOpen(o.key)}>
+                    <span className="cal-day-title">{o.title.trim() || "(no title)"}</span>
+                    <span className="cal-day-meta">
+                      {timeLabel(o)}
+                      {SHOW_AS_LABEL[o.showAs]}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      )}
     </div>
   );
 }
