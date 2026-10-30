@@ -159,6 +159,8 @@ main header {
 }
 main h1 { font-size: 17px; margin: 0; flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .content { flex: 1; overflow: auto; padding: 16px; }
+/* A module the server refuses to sync, while online: one line each under the header */
+.sync-warning { margin: 0; padding: 6px 16px; border-bottom: 1px solid var(--line); }
 
 .tabs, .phone-only { display: none; }
 

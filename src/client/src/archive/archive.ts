@@ -13,6 +13,8 @@ export const FILTERS = [
   { type: "note", label: "Notes" },
   { type: "folder", label: "Folders" },
   { type: "voice_note", label: "Voice notes" },
+  { type: "event", label: "Events" },
+  { type: "series", label: "Repeating events" },
 ] as const;
 
 const TYPE_LABELS: Record<string, string> = {

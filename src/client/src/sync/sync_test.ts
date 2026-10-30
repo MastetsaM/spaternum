@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { offsetFrom, serverNow, updateOffset } from "./clock";
 import { parseEvents, reconnectDelay } from "./events";
+import { currentStatus, markSynced, markSyncFailed, syncWarnings } from "./status";
 
 describe("clock offset", () => {
   it("measures server minus device time from the Date header", () => {
@@ -36,5 +37,23 @@ describe("live stream", () => {
 
   it("waits longer after each failed reconnect, up to 30 s", () => {
     expect([0, 1, 2, 3, 4, 5, 10].map(reconnectDelay)).toEqual([1000, 2000, 4000, 8000, 16000, 30000, 30000]);
+  });
+});
+
+describe("sync warning", () => {
+  it("writes one line per module, with the server's answer", () => {
+    expect(syncWarnings({})).toEqual([]);
+    expect(syncWarnings({ "calendar_events pull": 404 })).toEqual(["Calendar isn't syncing (server: 404)"]);
+    expect(syncWarnings({ "calendar_events pull": 404, "calendar_events push": 404 })).toEqual([
+      "Calendar isn't syncing (server: 404)",
+    ]);
+    expect(syncWarnings({ "notes push": 500, "note_folders pull": 404 })).toEqual(["Notes isn't syncing (server: 404, 500)"]);
+  });
+
+  it("clears a module after a success", () => {
+    markSyncFailed("voice_notes pull", 502);
+    expect(syncWarnings(currentStatus().failing)).toEqual(["Voice notes isn't syncing (server: 502)"]);
+    markSynced("voice_notes pull");
+    expect(currentStatus().failing).toEqual({});
   });
 });

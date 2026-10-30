@@ -162,6 +162,11 @@ Moved ahead of notes with recordings because it's more urgent (Mihail, 2026-10-2
 - [x] Merge into `main` (2026-10-30)
 - [x] Update the Pi from `main` (Mihail, 2026-10-30): calendar syncs between phone and PC through the Pi
 
+## After the calendar (2026-10-30)
+- [x] Sync warning: a red line under the header when the server answers but a module's sync fails ([[client-foundation_spec]])
+- [x] Archive filters: Events and Repeating events ([[archive_spec]])
+- [ ] Check both on a device
+
 ## Later (ideas and loose ends, not scheduled)
 - **Notes with recordings:** merge notes and voice notes into one note with text and/or recordings, plus a Pinned section, folder tags, a full tree and notes settings in the tool panel. Draft with Mihail's decisions: [[notes-recordings_spec]]. Next after the calendar.
 - **Claude talking to the server directly (MCP-like):** let Claude read and create notes (and later other items) on Mihail's server, e.g. "make a note about this". Asked for on 2026-10-28; needs a spec first, covering what it may do, the token, and Tailscale-only access ([[2026-10-20-auth-tailscale-api-token]]).

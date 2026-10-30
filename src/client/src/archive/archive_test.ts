@@ -42,7 +42,7 @@ describe("archive display", () => {
   });
 
   it("offers All plus one filter per server type", () => {
-    expect(FILTERS.map((f) => f.type)).toEqual(["", "note", "folder", "voice_note"]);
+    expect(FILTERS.map((f) => f.type)).toEqual(["", "note", "folder", "voice_note", "event", "series"]);
   });
 
   it("explains failures", () => {

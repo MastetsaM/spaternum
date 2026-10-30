@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState, type CSSProperties, type PointerEvent, type ReactNode } from "react";
 import { NavLink, useLocation } from "react-router";
-import { useStatus } from "../sync/status";
+import { syncWarnings, useStatus } from "../sync/status";
 import { useFavorites } from "./favorites";
 import { clampWidth, DEFAULTS, loadWidths, saveWidths, type Panel, type Widths } from "./widths";
 
@@ -59,7 +59,8 @@ export function Layout({ title, tools, showTools, actions, children }: Props) {
   const [toolsOpen, setToolsOpen] = useState(() => !window.matchMedia(PHONE).matches);
   const [widths, setWidths] = useState(loadWidths);
   const favorites = useFavorites(TOOL_KEYS);
-  const { online } = useStatus();
+  const { online, failing } = useStatus();
+  const warnings = online ? syncWarnings(failing) : []; // offline: the status dot says it
   const close = () => setDrawerOpen(false);
   useEffect(() => {
     if (showTools) setToolsOpen(true);
@@ -129,6 +130,11 @@ export function Layout({ title, tools, showTools, actions, children }: Props) {
           {actions}
           <span className={`status phone-only ${online ? "online" : ""}`} />
         </header>
+        {warnings.map((warning) => (
+          <p key={warning} className="error sync-warning">
+            {warning}
+          </p>
+        ))}
         <div className="content">{children}</div>
       </main>
 

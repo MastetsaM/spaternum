@@ -6,11 +6,12 @@ import { RxDBMigrationSchemaPlugin } from "rxdb/plugins/migration-schema";
 import { replicateRxCollection, type RxReplicationState } from "rxdb/plugins/replication";
 import { getRxStorageDexie } from "rxdb/plugins/storage-dexie";
 import { Subject } from "rxjs";
-import { call } from "../api/client";
+import { ApiError, call } from "../api/client";
 import type { components } from "../api/schema";
 import type { CalendarEvent } from "../calendar/calendar";
 import type { Settings } from "../api/settings";
 import { listen } from "./events";
+import { markSynced, markSyncFailed } from "./status";
 
 // Schema changes on the device: each new schema version comes with a migration function
 addRxPlugin(RxDBMigrationSchemaPlugin);
@@ -106,6 +107,21 @@ type Table = keyof typeof TABLES;
 
 type Checkpoint = { seq: number };
 
+/**
+ * A pull or push, tracked for the sync warning: an error answer from the server marks it failing,
+ * the next success clears it. Offline (0) and a rejected token (401) have their own signs.
+ */
+async function tracked<T>(key: string, request: Promise<T>): Promise<T> {
+  try {
+    const result = await request;
+    markSynced(key);
+    return result;
+  } catch (error) {
+    if (error instanceof ApiError && error.status !== 0 && error.status !== 401) markSyncFailed(key, error.status);
+    throw error;
+  }
+}
+
 // React's StrictMode runs effects twice in development: open the database only once
 let opened: Promise<Db> | null = null;
 const replications: Partial<Record<Table, RxReplicationState<any, Checkpoint>>> = {};
@@ -146,7 +162,7 @@ async function open(settings: Settings): Promise<Db> {
       retryTime: 5000,
       pull: {
         handler: (checkpoint, batchSize) =>
-          call(settings, `${path}/pull?seq=${checkpoint?.seq ?? 0}&limit=${batchSize}`),
+          tracked(`${table} pull`, call(settings, `${path}/pull?seq=${checkpoint?.seq ?? 0}&limit=${batchSize}`)),
         stream$: pulls.asObservable(),
       },
       push: {
@@ -154,10 +170,13 @@ async function open(settings: Settings): Promise<Db> {
         // conflict handler keeps the server's row, so a refused change to an archived calendar
         // row (archived = locked) comes back with _deleted and the row leaves the device
         handler: (rows) =>
-          call(settings, `${path}/push`, {
-            method: "POST",
-            body: JSON.stringify(rows.map((row) => row.newDocumentState)),
-          }),
+          tracked(
+            `${table} push`,
+            call(settings, `${path}/push`, {
+              method: "POST",
+              body: JSON.stringify(rows.map((row) => row.newDocumentState)),
+            }),
+          ),
       },
     });
   }

@@ -14,6 +14,7 @@ The base of the one app that runs on the PC and on Android: the Tauri project, t
   - **Live stream:** one `fetch` to `/api/events` (EventSource can't send the token); each event names a table → that collection pulls. Reconnects with a growing pause (1 s → 30 s) when the stream drops; on reconnect every collection pulls once to catch up.
   - **Clock drift:** the offset from the server's `Date` header is measured on each successful call; `updated_at` = device time + offset.
   - **Online indicator:** from the last sync result (stream connected, last call OK) — not `navigator.onLine`.
+  - **Sync warning** (added 2026-10-30): the indicator only says whether the server answers. When the server answers but one module's sync fails (e.g. the Pi didn't have the calendar yet and answered 404), a red line under the header, on every screen, says so: "Calendar isn't syncing (server: 404)". It shows at the first failed pull or push and goes away by itself at the next successful one. Being offline never shows it (the indicator covers that), nor does a rejected token (Settings opens). Pull and push are tracked apart, so a working pull doesn't hide a failing push.
 - **Layout** (Teams / VS Code style; structure corrected by Mihail 2026-10-26):
   - **Sections:** Home (dashboard), **Tools**, Clients, Projects. PC: left rail; phone: bottom bar. Home, Clients and Projects are placeholders until their phases.
   - **Settings** only from Home: a gear at the top right of the Home screen, PC and phone (changed 2026-10-28, [[ui-design_spec]]).
@@ -56,6 +57,10 @@ Token and address in `localStorage` · plain CSS · `lucide-react` icons · `rea
 - 5: moved to block 7 — offline writes need the Notes screen; the PC runs the same sync code.
 - Block 7 check (Mihail, 2026-10-28): 4 passes on the PC too (live and quick between the PC and the phone); 5 passes (offline writes kept and synced back).
 - Added after the checks (2026-10-28): resizable PC panels ([[ui-design_spec]]) and favorite tools ([[favorites_spec]]).
+
+## Sync warning (2026-10-30)
+Asked for by Mihail after the calendar didn't sync while the indicator showed online: the Pi hadn't been updated, every calendar request got 404, and nothing on screen said so.
+- Done when: a module whose sync gets an error answer from the server shows the red line within one try (≤ 5 s, the retry pause); it goes away after a successful try; offline shows only the indicator. Vitest covers the text.
 
 ## Related
 [[tasks]] · [[TECH]] · [[PRD]] · [[sync-spike_spec]] · [[notes_spec]] · [[voice-notes_spec]] · [[archive_spec]] · [[server-foundation_spec]] · [[2026-10-21-sync-rxdb]] · [[2026-10-20-clients-tauri-react]] · [[ui-design_spec]] · [[favorites_spec]]

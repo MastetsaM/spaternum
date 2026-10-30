@@ -23,7 +23,7 @@ All 5 criteria met; 4 tests in `tests/archive_test.py` pass (37 server tests in 
 ## Client page (block 9)
 The Archive tool (`/tools/archive`) shows the list above. Online only: it calls the server directly, nothing is kept on the device ([[2026-10-21-sync-rxdb]]).
 - **List:** one row per entry, newest first as the server sends it: type, title, archived date-time in local time, **Restore**. A folder adds "N items". A voice note with an empty title shows its `recorded_at` in local time instead ([[voice-notes_spec]]).
-- **Filter:** All · Notes · Folders · Voice notes, above the list; picking one calls `?type=`.
+- **Filter:** All · Notes · Folders · Voice notes · Events · Repeating events, above the list; picking one calls `?type=` (`event`, `series`; the last two added 2026-10-30 with the calendar, [[calendar_spec]]).
 - **Restore:** one tap, no confirmation (nothing is lost — it can be archived again). The row leaves the list; the item comes back to devices through sync. A `404` means it was already restored elsewhere → the row leaves the list with a short note.
 - **Offline / errors:** server not reachable → "The archive needs the server" + Retry; other errors show the status. A rejected token opens the settings, as everywhere ([[client-foundation_spec]]).
 - **PC and phone:** the same page; filter and list in the main area, no side or tool panel content.
@@ -44,4 +44,4 @@ Device check (Mihail, 2026-10-28): 6 and 7 pass on the phone and the PC; restori
 - Searching the archive.
 
 ## Related
-[[tasks]] · [[notes_spec]] · [[voice-notes_spec]] · [[server-foundation_spec]] · [[client-foundation_spec]] · [[2026-10-20-architecture-modular-monolith]] · [[2026-10-21-sync-rxdb]]
+[[tasks]] · [[notes_spec]] · [[voice-notes_spec]] · [[server-foundation_spec]] · [[client-foundation_spec]] · [[2026-10-20-architecture-modular-monolith]] · [[2026-10-21-sync-rxdb]] · [[calendar_spec]]
