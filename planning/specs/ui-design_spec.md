@@ -59,6 +59,7 @@ Colours come only from these tokens. A new colour needs a new token, and that ge
 | **Status dot** | 10px circle: `--ok` online, `--muted` offline |
 | **Empty state** | One short line in `--muted`, e.g. "Nothing archived." |
 | **Error** | One line in `--error`, with a Retry button when retrying helps |
+| **Sync warning** | One `--error` line per module under the header, on every screen: "Calendar isn't syncing (server: 404)". Goes away by itself |
 | **Loading** | "Loading…" in `--muted`; no spinners |
 | **Confirmation** | Inline: the question as text, then the danger button and Cancel |
 
