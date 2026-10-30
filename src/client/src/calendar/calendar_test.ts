@@ -30,6 +30,7 @@ function ev(id: string, fields: Partial<CalendarEvent> = {}): CalendarEvent {
     series_id: null,
     original_start: null,
     cancelled: false,
+    show_as: "busy",
     created_at: T,
     updated_at: T,
     ...fields,
@@ -71,6 +72,7 @@ describe("occurrences: one-off", () => {
         allDay: false,
         start: "2026-10-19T09:00:00.000Z",
         end: "2026-10-19T10:00:00.000Z",
+        showAs: "busy",
         broken: false,
       },
     ]);
@@ -350,6 +352,7 @@ describe("newEvent", () => {
       series_id: null,
       original_start: null,
       cancelled: false,
+      show_as: "busy",
       created_at: NOW,
       updated_at: NOW,
     });

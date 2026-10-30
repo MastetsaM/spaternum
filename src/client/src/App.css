@@ -370,10 +370,36 @@ button.danger { color: var(--error); border-color: var(--error); }
   background: var(--accent);
   pointer-events: none;
 }
+/* Show as: tentative = striped (italic where there's no block, e.g. month view); free = faded */
+.cal .cal-tentative {
+  font-style: italic;
+  background-image: repeating-linear-gradient(135deg, transparent 0 6px, rgb(255 255 255 / 0.35) 6px 12px);
+}
+.cal .cal-free { opacity: 0.45; }
 /* A repeat rule the device can't read: shown once, marked */
 .cal-broken { outline: 1px dashed var(--error); }
 
 .cal-choices { display: flex; flex-wrap: wrap; gap: 6px; }
+/* Phone: ‹ › Today and the short title share one row */
+.cal .cal-title { font-size: 17px; font-weight: 600; margin: 0; white-space: nowrap; }
+/* PC, month/year: the day listed in the panel */
+.cal .cal-picked { box-shadow: inset 0 0 0 2px var(--accent); }
+.cal-day-list { list-style: none; margin: 0; padding: 0; }
+.cal-day-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  padding: 10px 0;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  text-align: left;
+}
+.cal-day-title { font-weight: 600; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.cal-day-meta { font-size: 13px; color: var(--muted); }
+.cal-day-item.cal-tentative .cal-day-title { font-style: italic; }
+.cal-day-item.cal-free { opacity: 0.55; }
 
 /* Only this one / This and following / All */
 .cal-backdrop {
@@ -405,6 +431,7 @@ button.danger { color: var(--error); border-color: var(--error); }
 .cal-check input { width: auto; }
 .cal-times { display: flex; flex-wrap: wrap; gap: 8px; }
 .cal-times label,
+.cal-field,
 .cal-repeat > label:first-child { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 200px; color: var(--muted); }
 .cal-repeat { display: flex; flex-direction: column; gap: 8px; min-width: 0; margin: 0; padding: 0; border: none; }
 .cal-repeat p { margin: 0; }
@@ -413,3 +440,14 @@ button.danger { color: var(--error); border-color: var(--error); }
 .cal-inline input { width: 90px; }
 .cal-inline select { width: auto; flex: 1; }
 .cal-archive { align-self: flex-start; }
+/* Back / close, then Discard and Save for a repeating event */
+.cal-form-bar { display: flex; align-items: center; gap: 8px; }
+.cal-form-bar .back { margin-right: auto; }
+.cal-save:not(:disabled) { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+/* Start / end: date, then the time list */
+.cal-when { display: flex; gap: 6px; }
+.cal-when input { flex: 1; min-width: 0; }
+.cal-when select { width: auto; }
+/* In the PC's tool panel: the fields stack, since the panel is narrow */
+.tools .cal-form { max-width: none; }
+.tools .cal-times label { min-width: 0; flex-basis: 100%; }

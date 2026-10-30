@@ -1,5 +1,4 @@
-// What the calendar screen needs besides the rules in calendar.ts: the view and slot size kept
-// per device, the days that get a dot in the year view, the form's inputs ↔ stored times, and
+// What the calendar screen needs besides the rules in calendar.ts: the view kept per device, the days that get a dot in the year view, the form's inputs ↔ stored times, and
 // finding an occurrence again by its key. Spec: calendar_spec.
 
 import { Temporal } from "temporal-polyfill";
@@ -11,6 +10,7 @@ import {
   type Occurrence,
   type Repeat,
   type Scope,
+  type ShowAs,
   type Weekday,
   type Writes,
 } from "./calendar";
@@ -18,7 +18,7 @@ import {
 /** Monday first, like the calendar. */
 export const WEEKDAYS: Weekday[] = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
 
-// ---- View and slot size, per device ----
+// ---- View, per device ----
 
 export const VIEWS = [
   { id: "multiMonthYear", label: "Year" },
@@ -27,13 +27,15 @@ export const VIEWS = [
   { id: "timeGridDay", label: "Day" },
 ] as const;
 export type ViewId = (typeof VIEWS)[number]["id"];
-export type Slot = 15 | 30; // minutes
-export type Prefs = { view: ViewId; slot: Slot };
+export type Prefs = { view: ViewId };
+
+/** Every day is split into 30-minute slots (Mihail, 2026-10-30: no switch). */
+export const SLOT_MINUTES = 30;
 
 const PREFS_KEY = "spaternum.calendar";
-export const DEFAULT_PREFS: Prefs = { view: "timeGridWeek", slot: 30 };
+export const DEFAULT_PREFS: Prefs = { view: "timeGridWeek" };
 
-/** The saved view and slot size; anything missing or unknown falls back to week / 30 min. */
+/** The saved view; anything missing or unknown falls back to week. */
 export function parsePrefs(value: string | null): Prefs {
   let saved: unknown;
   try {
@@ -41,11 +43,8 @@ export function parsePrefs(value: string | null): Prefs {
   } catch {
     return DEFAULT_PREFS;
   }
-  const { view, slot } = (saved ?? {}) as Partial<Record<keyof Prefs, unknown>>;
-  return {
-    view: VIEWS.some((v) => v.id === view) ? (view as ViewId) : DEFAULT_PREFS.view,
-    slot: slot === 15 || slot === 30 ? slot : DEFAULT_PREFS.slot,
-  };
+  const { view } = (saved ?? {}) as Partial<Record<keyof Prefs, unknown>>;
+  return { view: VIEWS.some((v) => v.id === view) ? (view as ViewId) : DEFAULT_PREFS.view };
 }
 
 export function loadPrefs(): Prefs {
@@ -62,6 +61,28 @@ export function savePrefs(prefs: Prefs) {
   } catch {
     // not saved: the calendar opens on the default view next time
   }
+}
+
+// ---- Short title on the phone ----
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/**
+ * The phone's title, DD MMM YY (Mihail, 2026-10-30): day "27 Oct 26", week "26 Oct – 01 Nov 26"
+ * (one month: "19 – 25 Oct 26"), month "Oct 26", year "2026". `start`: the view's first day.
+ */
+export function shortTitle(view: ViewId, start: { year: number; month: number; day: number }): string {
+  const day = (d: Temporal.PlainDate) => pad(d.day);
+  const month = (d: Temporal.PlainDate) => MONTHS[d.month - 1];
+  const year = (d: Temporal.PlainDate) => pad(d.year % 100);
+  const first = new Temporal.PlainDate(start.year, start.month, start.day);
+  if (view === "multiMonthYear") return String(first.year);
+  if (view === "dayGridMonth") return `${month(first)} ${year(first)}`;
+  if (view === "timeGridDay") return `${day(first)} ${month(first)} ${year(first)}`;
+  const last = first.add({ days: 6 });
+  if (first.year !== last.year) return `${day(first)} ${month(first)} ${year(first)} – ${day(last)} ${month(last)} ${year(last)}`;
+  if (first.month !== last.month) return `${day(first)} ${month(first)} – ${day(last)} ${month(last)} ${year(last)}`;
+  return `${day(first)} – ${day(last)} ${month(last)} ${year(last)}`;
 }
 
 // ---- Dates ----
@@ -109,19 +130,44 @@ export function daysWithEvents(list: Occurrence[]): Set<string> {
   return days;
 }
 
+// ---- Month and year views (Mihail, 2026-10-30) ----
+
+/** Month and year show only Busy events (and dots): tentative and free ones are seen in week and day. */
+export const shownInMonthAndYear = (o: Occurrence) => o.showAs === "busy";
+
+const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+/** Every occurrence that touches a "YYYY-MM-DD" day in the device's time, all statuses: the PC's day list. */
+export function eventsOfDay(rows: CalendarEvent[], day: string): Occurrence[] {
+  const start = (d: string) => new Date(`${d}T00:00`).toISOString(); // no zone = the device's time
+  return occurrences(rows, start(day), start(addDays(day, 1)));
+}
+
+/** "Tue 27 Oct 26" */
+export function dayHeading(day: string): string {
+  const d = Temporal.PlainDate.from(day);
+  return `${DAY_NAMES[d.dayOfWeek - 1]} ${shortTitle("timeGridDay", d)}`;
+}
+
+/** "08:00 – 17:00" in the device's time, or "All day". */
+export function timeLabel(o: Pick<Occurrence, "allDay" | "start" | "end">): string {
+  if (o.allDay) return "All day";
+  return `${toLocalInput(o.start).slice(11)} – ${toLocalInput(o.end).slice(11)}`;
+}
+
 // ---- Creating and dragging on the calendar ----
 
 /**
  * What newEvent() gets from a tap or a drag across slots. A tap (one slot, or one day) leaves
  * the end out, so the event gets the default length (30 minutes, or one day).
  */
-export function fromSelection(start: Date, end: Date, allDay: boolean, slot: Slot): { start: string; end: string | null } {
+export function fromSelection(start: Date, end: Date, allDay: boolean): { start: string; end: string | null } {
   if (allDay) {
     const first = localDay(start);
     const after = localDay(end);
     return { start: first, end: after === addDays(first, 1) ? null : after };
   }
-  return { start: start.toISOString(), end: end.getTime() - start.getTime() > slot * MINUTE ? end.toISOString() : null };
+  return { start: start.toISOString(), end: end.getTime() - start.getTime() > SLOT_MINUTES * MINUTE ? end.toISOString() : null };
 }
 
 /** The stored times after a move or resize. An all-day event dropped without an end lasts one day. */
@@ -145,8 +191,17 @@ export type FormValues = {
   allDay: boolean;
   start: string;
   end: string;
+  showAs: ShowAs;
   repeat: Repeat | null;
 };
+
+/** The form's start/end time list: every 30 minutes, plus `current` if it's another minute (e.g. 10:15 synced from elsewhere). */
+export function timeChoices(current: string): string[] {
+  const times: string[] = [];
+  for (let m = 0; m < 24 * 60; m += SLOT_MINUTES) times.push(`${pad(Math.floor(m / 60))}:${pad(m % 60)}`);
+  if (/^\d{2}:\d{2}$/.test(current) && !times.includes(current)) times.push(current);
+  return times.sort();
+}
 
 /** The form's start and end for an occurrence. */
 export function inputTimes(o: Pick<Occurrence, "allDay" | "start" | "end">): { start: string; end: string } {
@@ -202,6 +257,7 @@ export function formChange(values: FormValues, saved: FormValues, timeZone: stri
   if (values.title !== saved.title) change.title = values.title;
   if (values.notes !== saved.notes) change.notes = values.notes;
   if (values.allDay !== saved.allDay) change.all_day = values.allDay;
+  if (values.showAs !== saved.showAs) change.show_as = values.showAs;
   if (values.allDay !== saved.allDay || values.start !== saved.start || values.end !== saved.end) {
     Object.assign(change, storedTimes(values, timeZone));
   }

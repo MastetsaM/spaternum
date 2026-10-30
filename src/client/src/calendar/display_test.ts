@@ -16,8 +16,13 @@ import {
   moveStart,
   nextOccurrence,
   parsePrefs,
+  dayHeading,
+  eventsOfDay,
+  timeLabel,
+  shortTitle,
   storedTimes,
   switchAllDay,
+  timeChoices,
   toLocalInput,
   weekdayOf,
   type FormValues,
@@ -35,6 +40,7 @@ const occ = (over: Partial<Occurrence>): Occurrence => ({
   allDay: false,
   start: iso(2026, 10, 29, 10),
   end: iso(2026, 10, 29, 11),
+  showAs: "busy",
   broken: false,
   ...over,
 });
@@ -45,19 +51,58 @@ const values = (over: Partial<FormValues>): FormValues => ({
   allDay: false,
   start: "2026-10-29T10:00",
   end: "2026-10-29T10:30",
+  showAs: "busy",
   repeat: { freq: "none", interval: 1, byDay: [], end: { kind: "never" } },
   ...over,
 });
 
-describe("saved view and slot size", () => {
+describe("saved view", () => {
   it("falls back to week and 30 minutes when missing or broken", () => {
     expect(parsePrefs(null)).toEqual(DEFAULT_PREFS);
     expect(parsePrefs("not json")).toEqual(DEFAULT_PREFS);
-    expect(parsePrefs('{"view":"listWeek","slot":20}')).toEqual({ view: "timeGridWeek", slot: 30 });
+    expect(parsePrefs('{"view":"listWeek"}')).toEqual({ view: "timeGridWeek" });
   });
 
-  it("keeps a known view and slot size", () => {
-    expect(parsePrefs('{"view":"multiMonthYear","slot":15}')).toEqual({ view: "multiMonthYear", slot: 15 });
+  it("keeps a known view", () => {
+    expect(parsePrefs('{"view":"multiMonthYear","slot":15}')).toEqual({ view: "multiMonthYear" }); // an old saved slot size is ignored
+  });
+});
+
+describe("short title on the phone", () => {
+  const d = (year: number, month: number, day: number) => ({ year, month, day });
+  it("writes DD MMM YY", () => {
+    expect(shortTitle("timeGridDay", d(2026, 10, 27))).toBe("27 Oct 26");
+    expect(shortTitle("timeGridDay", d(2026, 11, 3))).toBe("03 Nov 26");
+    expect(shortTitle("dayGridMonth", d(2026, 10, 1))).toBe("Oct 26");
+    expect(shortTitle("multiMonthYear", d(2026, 1, 1))).toBe("2026");
+  });
+  it("shows a week's first and last day", () => {
+    expect(shortTitle("timeGridWeek", d(2026, 10, 19))).toBe("19 – 25 Oct 26");
+    expect(shortTitle("timeGridWeek", d(2026, 10, 26))).toBe("26 Oct – 01 Nov 26");
+    expect(shortTitle("timeGridWeek", d(2026, 12, 28))).toBe("28 Dec 26 – 03 Jan 27");
+  });
+});
+
+describe("the PC's day list", () => {
+  const row = (id: string, start: string, end: string, show_as: CalendarEvent["show_as"] = "busy"): CalendarEvent => ({
+    ...newEvent(id, start, end, false, "Europe/Lisbon", ""),
+    show_as,
+  });
+  it("lists every event touching the day, all statuses", () => {
+    const rows = [
+      row("a", iso(2026, 10, 27, 8), iso(2026, 10, 27, 17), "tentative"),
+      row("b", iso(2026, 10, 26, 23), iso(2026, 10, 27, 1)),
+      row("c", iso(2026, 10, 28, 9), iso(2026, 10, 28, 10)),
+    ];
+    expect(eventsOfDay(rows, "2026-10-27").map((o) => [o.key, o.showAs])).toEqual([
+      ["b", "busy"],
+      ["a", "tentative"],
+    ]);
+  });
+  it("labels the day and the times", () => {
+    expect(dayHeading("2026-10-27")).toBe("Tue 27 Oct 26");
+    expect(timeLabel({ allDay: false, start: iso(2026, 10, 27, 8), end: iso(2026, 10, 27, 17, 30) })).toBe("08:00 – 17:30");
+    expect(timeLabel({ allDay: true, start: "2026-10-27", end: "2026-10-28" })).toBe("All day");
   });
 });
 
@@ -94,14 +139,13 @@ describe("days with a dot in the year view", () => {
 describe("creating from the calendar", () => {
   it("gives a tap the default length, a drag its own", () => {
     const start = local(2026, 10, 29, 10);
-    expect(fromSelection(start, local(2026, 10, 29, 10, 30), false, 30)).toEqual({ start: start.toISOString(), end: null });
-    expect(fromSelection(start, local(2026, 10, 29, 10, 15), false, 15).end).toBeNull();
-    expect(fromSelection(start, local(2026, 10, 29, 11), false, 30).end).toBe(iso(2026, 10, 29, 11));
+    expect(fromSelection(start, local(2026, 10, 29, 10, 30), false)).toEqual({ start: start.toISOString(), end: null });
+    expect(fromSelection(start, local(2026, 10, 29, 11), false).end).toBe(iso(2026, 10, 29, 11));
   });
 
   it("uses days for all-day", () => {
-    expect(fromSelection(local(2026, 10, 29), local(2026, 10, 30), true, 30)).toEqual({ start: "2026-10-29", end: null });
-    expect(fromSelection(local(2026, 10, 29), local(2026, 11, 1), true, 30)).toEqual({ start: "2026-10-29", end: "2026-11-01" });
+    expect(fromSelection(local(2026, 10, 29), local(2026, 10, 30), true)).toEqual({ start: "2026-10-29", end: null });
+    expect(fromSelection(local(2026, 10, 29), local(2026, 11, 1), true)).toEqual({ start: "2026-10-29", end: "2026-11-01" });
   });
 });
 
@@ -168,6 +212,15 @@ describe("the event form", () => {
       start_at: iso(2026, 10, 29, 10),
       end_at: iso(2026, 10, 29, 11),
     });
+    expect(formChange(values({ showAs: "tentative" }), saved, "Europe/Lisbon")).toEqual({ show_as: "tentative" });
+  });
+
+  it("lists times every 30 minutes, keeping another minute that's already set", () => {
+    const list = timeChoices("10:00");
+    expect(list.length).toBe(48);
+    expect([list[0], list[1], list[47]]).toEqual(["00:00", "00:30", "23:30"]);
+    expect(timeChoices("10:15").slice(20, 23)).toEqual(["10:00", "10:15", "10:30"]);
+    expect(timeChoices("").length).toBe(48);
   });
 });
 
@@ -184,6 +237,7 @@ describe("applyWrites", () => {
     series_id: null,
     original_start: null,
     cancelled: false,
+    show_as: "busy",
     created_at: "",
     updated_at: "",
   });

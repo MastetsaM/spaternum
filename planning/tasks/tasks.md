@@ -149,12 +149,18 @@ Moved ahead of notes with recordings because it's more urgent (Mihail, 2026-10-2
 - [x] Install `@fullcalendar/react`, `temporal-polyfill`, `rrule-temporal`; log them in `wiki/installed.md`, pin versions in [[TECH]]
 - [x] RxDB collection `calendar_events` + replication; regenerate client types
 - [x] Occurrence expansion for the dates on screen (rrule-temporal, in the event's time zone, exceptions applied); Vitest incl. the DST case
-- [x] Calendar tool in the side panel: year (dots), month, week, day; Today and arrows; 15/30-minute switch and last view saved per device; Monday start; 24 h scrolled to 08:00
+- [x] Calendar tool in the side panel: year (dots), month, week, day; Today and arrows; 30-minute slots (no switch, 2026-10-30) and last view saved per device; Monday start; 24 h scrolled to 08:00
 - [x] Create by click/drag (PC) and long-press (phone), 30 minutes by default; move and resize
 - [x] Event form: title, all-day, start, end, repeat, notes; saves on its own; end before start refused
 - [x] Only this one / This and following / All, for editing and archiving; Vitest for the three modes
 - [x] Archive page shows calendar events
-- [~] Check every calendar acceptance criterion on the phone and the PC; write results in [[calendar_spec]]
+- [x] Device feedback (2026-10-30): show as busy / tentative / free (server column + form + look); start/end as date + 30-minute time list (the PC had no time picker); PC form in the right panel
+- [x] Device feedback 2 (2026-10-30): Save / Discard for repeating events, asked at Save instead of at the first keystroke; phone header with Today beside the arrows and a DD MMM YY title
+- [x] Device feedback 3 (2026-10-30): phone toolbar on one row; month/year show only Busy; PC day list in the panel for month/year
+- [x] Repeat: the weekday buttons didn't show on the phone after picking "Every week". Cause: on an existing series the scope question popped up at that change, and *Only this one* put the repeat back and locked it. Gone with Save/Discard; Mihail checked it on the phone (2026-10-30)
+- [x] Check every calendar acceptance criterion on the phone and the PC; write results in [[calendar_spec]] (all pass, 2026-10-30)
+- [x] Merge into `main` (2026-10-30)
+- [ ] Update the Pi from `main` (Mihail)
 
 ## Later (ideas and loose ends, not scheduled)
 - **Notes with recordings:** merge notes and voice notes into one note with text and/or recordings, plus a Pinned section, folder tags, a full tree and notes settings in the tool panel. Draft with Mihail's decisions: [[notes-recordings_spec]]. Next after the calendar.

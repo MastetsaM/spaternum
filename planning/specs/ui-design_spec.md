@@ -80,6 +80,13 @@ Asked for by Mihail on 2026-10-28.
 - Narrow window = `max-width: 700px`. Sections go in the bottom bar. The side panel and tool panel slide over the content (85% wide, max 320px) with a dim backdrop. The slide is the only animation (0.2s).
 - The app is padded clear of the status bar, navigation bar and keyboard (`MainActivity.kt`).
 
+## Calendar
+Added 2026-10-30, after Mihail tried the calendar on the phone. FullCalendar's look comes from our tokens (the `.cal` block in `App.css`).
+- **Phone toolbar:** one row. ‹ › Today are one joined button group on the left; the title sits on the right in the screen-title size (17px, 600), on one line. Titles are short, DD MMM YY (see [[calendar_spec]]). The view buttons sit in a bar under the calendar.
+- **Show as:** *Busy* = the normal accent block; *Tentative* = the same block with light diagonal stripes, title in italics; *Free* = the block at 45% opacity. Words go with the looks wherever there's a list ("· Tentative", "· Free").
+- **PC day list** (tool panel, month and year views): list rows as above, title 600 and a 13px `--muted` meta line with the times and the status. Tentative titles in italics, free rows faded. The listed day has a 2px `--accent` ring in the grid.
+- **Event form:** the notes editor's look. A repeating event's bar has Discard (outline) and Save (primary, filled `--accent` while there's something to save).
+
 ## Settings
 **Decided and built 2026-10-28:**
 - Settings is opened only from the **Home** screen. There's a gear at the top right of Home, on both PC and phone. On the phone it sits just left of the connection dot.

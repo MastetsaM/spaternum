@@ -1,5 +1,6 @@
-// Calendar: FullCalendar's year / month / week / day views in the main area, or the event form.
-// The tool panel switches view and slot size. Rules live in calendar/calendar.ts, screen helpers in
+// Calendar: FullCalendar's year / month / week / day views in the main area. The event form opens
+// in the tool panel on the PC and as its own screen on the phone; otherwise the tool panel switches
+// view. Days are split into 30-minute slots. Rules live in calendar/calendar.ts, screen helpers in
 // calendar/display.ts, database writes in calendar/store.ts. Spec: calendar_spec.
 
 import FullCalendar, {
@@ -20,9 +21,9 @@ import timeGridPlugin from "@fullcalendar/react/timegrid";
 import "@fullcalendar/react/skeleton.css";
 import "@fullcalendar/react/themes/classic/theme.css";
 import "@fullcalendar/react/themes/classic/palette.css";
-import { ArrowLeft } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate, useParams, useSearchParams } from "react-router";
+import { ArrowLeft, X } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Link, useBlocker, useLocation, useNavigate, useParams, useSearchParams } from "react-router";
 import {
   applyChange,
   archiveOccurrence,
@@ -35,10 +36,13 @@ import {
   type Occurrence,
   type Repeat,
   type Scope,
+  type ShowAs,
 } from "../calendar/calendar";
 import {
   applyWrites,
+  dayHeading,
   daysWithEvents,
+  eventsOfDay,
   droppedTimes,
   findOccurrence,
   formChange,
@@ -49,8 +53,13 @@ import {
   moveStart,
   nextOccurrence,
   savePrefs,
+  shortTitle,
+  shownInMonthAndYear,
   storedTimes,
   switchAllDay,
+  SLOT_MINUTES,
+  timeChoices,
+  timeLabel,
   VIEWS,
   weekdayOf,
   WEEKDAYS,
@@ -64,11 +73,20 @@ import { Layout, PHONE } from "../layout/Layout";
 const CALENDAR = "/tools/calendar";
 const formUrl = (key: string) => `${CALENDAR}/${encodeURIComponent(key)}`;
 
-/** /tools/calendar → the calendar; /tools/calendar/<occurrence key> → the event form. */
+/**
+ * /tools/calendar → the calendar; /tools/calendar/<occurrence key> → the event form: in the tool
+ * panel on the PC, its own screen on the phone (so Android's back gesture returns to the calendar).
+ */
 export function CalendarScreen() {
   const { occurrence } = useParams();
-  return occurrence ? <EventForm occurrenceKey={occurrence} /> : <CalendarView />;
+  const [phone] = useState(() => window.matchMedia(PHONE).matches);
+  if (occurrence && phone) return <EventForm occurrenceKey={occurrence} panel={false} />;
+  return <CalendarView openKey={occurrence} />;
 }
+
+// Opening an event puts a new number in the history state; the form is rebuilt for each one. The
+// form's own address changes (a save can give the occurrence a new key) keep the number.
+type OpenState = { form?: number } | null;
 
 // The date on screen, so coming back from the form shows the same week. Kept while the app runs.
 let shownDate: Date | null = null;
@@ -77,36 +95,67 @@ let shownDate: Date | null = null;
 
 const PLUGINS = [classicThemePlugin, dayGridPlugin, timeGridPlugin, multiMonthPlugin, interactionPlugin];
 const VIEW_BUTTONS = VIEWS.map((v) => v.id).join(",");
-const PC_HEADER = { start: "prev,next today", center: "title", end: `${VIEW_BUTTONS} slot` };
-const PHONE_HEADER = { start: "prev,next", center: "title", end: "today" };
-const PHONE_FOOTER = { center: `${VIEW_BUTTONS} slot` };
+const PC_HEADER = { start: "prev,next today", center: "title", end: VIEW_BUTTONS };
+const PHONE_HEADER = { start: "prev,next,today", center: "", end: "title" }; // one button group
+const PHONE_FOOTER = { center: VIEW_BUTTONS };
 const BUTTONS = { today: { text: "Today" }, ...Object.fromEntries(VIEWS.map((v) => [v.id, { text: v.label }])) };
 const TIME_FORMAT = { hour: "2-digit", minute: "2-digit", hour12: false } as const; // 24 h
 const VIEW_OPTIONS = { multiMonthYear: { selectable: false, editable: false } }; // the year view only shows dots
+// PC month view: a click shows the day's events in the panel; a drag (even inside one day) creates
+const PC_VIEW_OPTIONS = { ...VIEW_OPTIONS, dayGridMonth: { selectMinDistance: 5 } };
+// The phone's title is short (DD MMM YY), so Today fits next to the arrows
+type TitleInfo = { start: { year: number; month: number; day: number } }; // month 0-11
+const shortTitleOf = (view: ViewId) => (info: TitleInfo) =>
+  shortTitle(view, { ...info.start, month: info.start.month + 1 });
+const PHONE_VIEW_OPTIONS = Object.fromEntries(
+  VIEWS.map((v) => [v.id, { ...VIEW_OPTIONS[v.id as keyof typeof VIEW_OPTIONS], titleFormat: shortTitleOf(v.id) }]),
+);
 
 type Range = { from: string; to: string; view: string };
 type Pending = { occurrence: Occurrence; change: Change; revert: () => void }; // a dragged series occurrence
 
-function CalendarView() {
+function CalendarView({ openKey }: { openKey: string | undefined }) {
   const rows = useEvents();
   const navigate = useNavigate();
+  const formId = (useLocation().state as OpenState)?.form ?? 0;
   const calendar = useRef<CalendarRef>(null);
   const [prefs, setPrefs] = useState(loadPrefs);
   const [range, setRange] = useState<Range | null>(null);
   const [pending, setPending] = useState<Pending | null>(null);
   const [phone] = useState(() => window.matchMedia(PHONE).matches);
+  const [picked, setPicked] = useState<string | null>(null); // PC, month/year: the day listed in the panel
 
   const shown = useMemo(() => (rows && range ? occurrences(rows, range.from, range.to) : []), [rows, range]);
   const byKey = useMemo(() => new Map(shown.map((o) => [o.key, o])), [shown]);
   const isYear = range?.view === "multiMonthYear";
+  const isWide = isYear || range?.view === "dayGridMonth"; // month and year: Busy only
   // The year view shows a dot on days with events instead of the events
-  const dots = useMemo(() => (isYear ? daysWithEvents(shown) : new Set<string>()), [shown, isYear]);
-  const events = useMemo(() => (isYear ? [] : shown.map(toInput)), [shown, isYear]);
+  const dots = useMemo(
+    () => (isYear ? daysWithEvents(shown.filter(shownInMonthAndYear)) : new Set<string>()),
+    [shown, isYear],
+  );
+  const dayList = useMemo(() => (rows && picked && isWide && !phone ? eventsOfDay(rows, picked) : null), [rows, picked, isWide, phone]);
+  // The event open in the panel, and the rest of its series, can't be dragged: its times change in
+  // the form, so a drag and the form don't overwrite each other
+  const locked = useMemo(() => {
+    const open = rows && openKey ? findOccurrence(rows, openKey) : null;
+    return new Set([open?.eventId, open?.seriesId].filter((id) => id != null));
+  }, [rows, openKey]);
+  const events = useMemo(
+    () =>
+      isYear
+        ? []
+        : shown
+            .filter((o) => !isWide || shownInMonthAndYear(o))
+            .map((o) => toInput(o, locked.has(o.eventId) || locked.has(o.seriesId ?? ""))),
+    [shown, isYear, isWide, locked],
+  );
+  const openForm = (key: string, search = "") => navigate(formUrl(key) + search, { state: { form: Date.now() } });
 
   const updatePrefs = (change: (current: Prefs) => Partial<Prefs>) =>
     setPrefs((current) => {
       const next = { ...current, ...change(current) };
-      if (next.view === current.view && next.slot === current.slot) return current;
+      if (next.view === current.view) return current;
       savePrefs(next);
       return next;
     });
@@ -122,19 +171,21 @@ function CalendarView() {
   // A tap on a slot (or a long-press on the phone) makes a 30-minute event; a drag, that length
   async function create(info: DateSelectInfo) {
     api()?.unselect();
-    const { start, end } = fromSelection(info.start, info.end, info.allDay, prefs.slot);
+    const { start, end } = fromSelection(info.start, info.end, info.allDay);
     const event = newEvent(crypto.randomUUID(), start, end, info.allDay, deviceTimeZone(), ctx().now);
     await write({ put: [event], archive: [] });
-    navigate(`${formUrl(event.id)}?new=1`);
+    openForm(event.id, "?new=1");
   }
 
-  // Year view: a tap on a day opens that day
+  // PC, month/year: a click lists that day's events in the panel. Phone, year: a tap opens that day.
   function dateClick(info: DateClickInfo) {
-    if (info.view.type === "multiMonthYear") api()?.changeView("timeGridDay", info.date);
+    const view = info.view.type;
+    if (!phone && (view === "multiMonthYear" || view === "dayGridMonth")) setPicked(localDay(info.date));
+    else if (view === "multiMonthYear") api()?.changeView("timeGridDay", info.date);
   }
 
   function open(info: EventClickInfo) {
-    navigate(formUrl(info.event.id));
+    if (info.event.id !== openKey) openForm(info.event.id);
   }
 
   // Moved or resized: a series occurrence first asks which part it applies to
@@ -154,27 +205,31 @@ function CalendarView() {
     write(applyChange(rows, occurrence, scope, change, ctx())).catch(console.error);
   }
 
-  // Options FullCalendar compares: built only when what they show changes
-  const buttons = useMemo(
-    () => ({
-      ...BUTTONS,
-      slot: { text: `${prefs.slot} min`, hint: "Slot size", click: () => updatePrefs((p) => ({ slot: p.slot === 30 ? 15 : 30 })) },
-    }),
-    [prefs.slot],
+  const dayCellClass = useCallback(
+    (info: DayCellInfo) => {
+      const day = localDay(info.date);
+      return [dots.has(day) && "cal-dot", dayList && day === picked && "cal-picked"].filter(Boolean).join(" ");
+    },
+    [dots, dayList, picked],
   );
-  const dayCellClass = useCallback((info: DayCellInfo) => (dots.has(localDay(info.date)) ? "cal-dot" : ""), [dots]);
 
   return (
     <Layout
       title="Calendar"
+      showTools={openKey && String(formId)}
       tools={
-        <CalendarTools
-          view={range?.view}
-          slot={prefs.slot}
-          onView={(view) => api()?.changeView(view)}
-          onSlot={(slot) => updatePrefs(() => ({ slot }))}
-          onToday={() => api()?.today()}
-        />
+        openKey ? (
+          <EventForm key={formId} occurrenceKey={openKey} panel />
+        ) : (
+          <CalendarTools
+            view={range?.view}
+            onView={(view) => api()?.changeView(view)}
+            onToday={() => api()?.today()}
+            day={dayList && picked}
+            dayEvents={dayList ?? []}
+            onOpen={openForm}
+          />
+        )
       }
     >
       <div className="cal">
@@ -189,11 +244,11 @@ function CalendarView() {
             // The phone has no room for everything in one row: the views go under the calendar
             headerToolbar={phone ? PHONE_HEADER : PC_HEADER}
             footerToolbar={phone ? PHONE_FOOTER : false}
-            buttons={buttons}
+            buttons={BUTTONS}
             height="100%"
             firstDay={1}
             scrollTime="08:00:00"
-            slotDuration={prefs.slot === 15 ? "00:15:00" : "00:30:00"}
+            slotDuration={{ minutes: SLOT_MINUTES }}
             slotHeaderFormat={TIME_FORMAT}
             eventTimeFormat={TIME_FORMAT}
             nowIndicator
@@ -201,7 +256,8 @@ function CalendarView() {
             selectable
             selectMirror
             forceEventDuration
-            views={VIEW_OPTIONS}
+            views={phone ? PHONE_VIEW_OPTIONS : PC_VIEW_OPTIONS}
+            toolbarTitleClass={phone ? "cal-title" : undefined}
             events={events}
             dayCellClass={dayCellClass}
             datesSet={datesSet}
@@ -231,28 +287,40 @@ function CalendarView() {
   );
 }
 
-/** What FullCalendar draws for an occurrence; the id is the occurrence key. A broken rule gets a mark. */
-function toInput(o: Occurrence): EventInput {
+const SHOW_AS: { value: ShowAs; label: string }[] = [
+  { value: "busy", label: "Busy" },
+  { value: "tentative", label: "Tentative" },
+  { value: "free", label: "Free" },
+];
+
+/**
+ * What FullCalendar draws for an occurrence; the id is the occurrence key. Tentative and free get
+ * their own look; a broken rule gets a mark. `locked` = open in the form: no dragging.
+ */
+function toInput(o: Occurrence, locked: boolean): EventInput {
   return {
     id: o.key,
     title: `${o.broken ? "⚠ " : ""}${o.title.trim() || "(no title)"}`,
     start: o.start,
     end: o.end,
     allDay: o.allDay,
-    editable: !o.broken,
-    className: o.broken ? "cal-broken" : "",
+    editable: !o.broken && !locked,
+    className: [o.broken && "cal-broken", o.showAs !== "busy" && `cal-${o.showAs}`].filter(Boolean).join(" "),
   };
 }
 
 type ToolsProps = {
   view: string | undefined;
-  slot: number;
   onView: (view: ViewId) => void;
-  onSlot: (slot: 15 | 30) => void;
   onToday: () => void;
+  day: string | null; // PC, month/year: the clicked day, listed below the views
+  dayEvents: Occurrence[];
+  onOpen: (key: string) => void;
 };
 
-function CalendarTools({ view, slot, onView, onSlot, onToday }: ToolsProps) {
+const SHOW_AS_LABEL: Record<ShowAs, string> = { busy: "", tentative: " · Tentative", free: " · Free" };
+
+function CalendarTools({ view, onView, onToday, day, dayEvents, onOpen }: ToolsProps) {
   return (
     <div className="details">
       <button onClick={onToday}>Today</button>
@@ -264,25 +332,48 @@ function CalendarTools({ view, slot, onView, onSlot, onToday }: ToolsProps) {
           </button>
         ))}
       </div>
-      <h3>Slot size</h3>
-      <div className="cal-choices">
-        {([15, 30] as const).map((minutes) => (
-          <button key={minutes} className={minutes === slot ? "on" : ""} onClick={() => onSlot(minutes)}>
-            {minutes} min
-          </button>
-        ))}
-      </div>
+      {day && (
+        <>
+          <h3>{dayHeading(day)}</h3>
+          {dayEvents.length === 0 ? (
+            <p className="muted">No events.</p>
+          ) : (
+            <ul className="cal-day-list">
+              {dayEvents.map((o) => (
+                <li key={o.key}>
+                  <button className={`cal-day-item cal-${o.showAs}`} onClick={() => onOpen(o.key)}>
+                    <span className="cal-day-title">{o.title.trim() || "(no title)"}</span>
+                    <span className="cal-day-meta">
+                      {timeLabel(o)}
+                      {SHOW_AS_LABEL[o.showAs]}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      )}
     </div>
   );
 }
 
+type ScopeProps = {
+  question: string;
+  noOnly?: boolean; // the repeat changed: one occurrence can't take a new rule
+  onPick: (scope: Scope) => void;
+  onCancel: () => void;
+};
+
 /** Which part of a repeating event an edit or archive applies to. */
-function ScopeDialog({ question, onPick, onCancel }: { question: string; onPick: (scope: Scope) => void; onCancel: () => void }) {
+function ScopeDialog({ question, noOnly = false, onPick, onCancel }: ScopeProps) {
   return (
     <div className="cal-backdrop" onClick={onCancel}>
       <div className="cal-dialog" role="dialog" aria-label={question} onClick={(e) => e.stopPropagation()}>
         <p>{question}</p>
-        <button onClick={() => onPick("only")}>Only this one</button>
+        <button disabled={noOnly} onClick={() => onPick("only")}>
+          Only this one{noOnly && " (not with a new repeat)"}
+        </button>
         <button onClick={() => onPick("following")}>This and following</button>
         <button onClick={() => onPick("all")}>All</button>
         <button onClick={onCancel}>Cancel</button>
@@ -296,25 +387,28 @@ function ScopeDialog({ question, onPick, onCancel }: { question: string; onPick:
 type FormState = "loading" | "ready" | "missing" | "gone" | "lost";
 
 /**
- * Saves on its own a moment after typing stops and on leaving, like the notes editor. For an
- * occurrence of a repeating event the first change asks which part it applies to; Cancel puts
- * the form back. The URL follows the occurrence when a save gives it a new key.
+ * A one-off saves on its own a moment after typing stops and on leaving, like the notes editor.
+ * An occurrence of a repeating event has Save and Discard instead: Save asks which part the
+ * changes apply to, and leaving with unsaved changes asks Save / Discard / Keep editing
+ * (Mihail, 2026-10-30). The URL follows the occurrence when a save gives it a new key.
+ * panel: inside the calendar's tool panel (PC); otherwise its own screen (phone).
  */
-function EventForm({ occurrenceKey }: { occurrenceKey: string }) {
+function EventForm({ occurrenceKey, panel }: { occurrenceKey: string; panel: boolean }) {
   const rows = useEvents();
   const navigate = useNavigate();
+  const { state: openState } = useLocation();
   const [params] = useSearchParams();
   const [state, setState] = useState<FormState>("loading");
   const [values, setValues] = useState<FormValues | null>(null);
-  const [scope, setScope] = useState<Scope | null>(null); // null = not asked yet (series only)
-  const [asking, setAsking] = useState<"edit" | "archive" | null>(null);
+  const [asking, setAsking] = useState<"save" | "leave" | "archive" | null>(null);
   const [problem, setProblem] = useState("");
+  const [, setSaves] = useState(0); // a save re-renders: Save and Discard grey out
 
   // Refs: read by the save on leaving, after the last render
   const valuesRef = useRef<FormValues | null>(null);
   const saved = useRef<FormValues | null>(null); // what's stored
   const occurrence = useRef<Occurrence | null>(null); // what the next save changes
-  const scopeRef = useRef<Scope | null>(null);
+  const scopeRef = useRef<Scope | null>(null); // "all" for a one-off; null for a series (asked at each Save)
   const rowsRef = useRef<CalendarEvent[]>([]); // the rows the next save builds on
   const timeZone = useRef("");
   const archived = useRef(false);
@@ -335,13 +429,13 @@ function EventForm({ occurrenceKey }: { occurrenceKey: string }) {
         notes: row.notes,
         allDay: found.allDay,
         ...inputTimes(found),
+        showAs: found.showAs,
         repeat: fromRRule(ruleRow.rrule, ruleRow.time_zone),
       };
       occurrence.current = found;
       timeZone.current = row.time_zone;
       saved.current = valuesRef.current = loaded;
       scopeRef.current = found.seriesId ? null : "all";
-      setScope(scopeRef.current);
       setValues(loaded);
       setState("ready");
       return;
@@ -353,10 +447,11 @@ function EventForm({ occurrenceKey }: { occurrenceKey: string }) {
     }
   }, [rows]);
 
-  function save(leaving: boolean) {
+  /** Saves the changes; `picked` = the part of a series they apply to. */
+  function save(leaving: boolean, picked?: Scope) {
     const current = occurrence.current;
     const next = valuesRef.current;
-    const scope = scopeRef.current;
+    const scope = picked ?? scopeRef.current;
     if (archived.current || !current || !next || !saved.current || !scope) return;
     const change = formChange(next, saved.current, timeZone.current);
     if (scope === "only") delete change.rrule; // one occurrence keeps the series' rule
@@ -370,6 +465,9 @@ function EventForm({ occurrenceKey }: { occurrenceKey: string }) {
     rowsRef.current = applyWrites(rowsRef.current, writes);
     saved.current = next;
     occurrence.current = nextOccurrence(rowsRef.current, current, scope, writes, times.start_at);
+    // A one-off that now repeats gets Save and Discard from here on
+    scopeRef.current = occurrence.current?.seriesId ? null : "all";
+    setSaves((n) => n + 1);
     writing.current++;
     queue.current = queue.current
       .then(() => write(writes))
@@ -377,7 +475,7 @@ function EventForm({ occurrenceKey }: { occurrenceKey: string }) {
       .finally(() => writing.current--);
     if (leaving) return;
     if (!occurrence.current) setState("lost");
-    else if (occurrence.current.key !== current.key) navigate(formUrl(occurrence.current.key), { replace: true });
+    else if (occurrence.current.key !== current.key) navigate(formUrl(occurrence.current.key), { replace: true, state: openState });
   }
 
   // Save a moment after typing stops
@@ -385,9 +483,10 @@ function EventForm({ occurrenceKey }: { occurrenceKey: string }) {
     if (state !== "ready") return;
     const timer = setTimeout(() => save(false), 800);
     return () => clearTimeout(timer);
-  }, [values, scope, state]);
+  }, [values, state]);
 
-  // Save when leaving the form, and when the app goes to the background (Android may close it)
+  // A one-off saves when leaving the form, and when the app goes to the background (Android may
+  // close it). A series' unsaved changes stay in the form; leaving asks first (below).
   useEffect(() => {
     const hidden = () => {
       if (document.visibilityState === "hidden") save(true);
@@ -403,21 +502,30 @@ function EventForm({ occurrenceKey }: { occurrenceKey: string }) {
     valuesRef.current = next;
     setValues(next);
     setProblem("");
-    if (scopeRef.current === null) setAsking("edit");
   };
 
-  function pickEditScope(picked: Scope) {
-    scopeRef.current = picked;
-    setScope(picked);
-    setAsking(null);
-    // One occurrence can't change the rule: the repeat part goes back and stays locked
-    if (picked === "only" && valuesRef.current && saved.current) edit({ ...valuesRef.current, repeat: saved.current.repeat });
+  const unsaved = () => {
+    const next = valuesRef.current;
+    return !archived.current && !!next && !!saved.current && Object.keys(formChange(next, saved.current, timeZone.current)).length > 0;
+  };
+  const isSeries = () => occurrence.current?.seriesId != null;
+
+  // Leaving a series with unsaved changes (back, close, another event, another screen) asks first
+  const blocker = useBlocker(() => state === "ready" && isSeries() && unsaved());
+
+  /** The times are checked before asking which part a save applies to. */
+  function timesOk(): boolean {
+    const next = valuesRef.current;
+    const times = next ? storedTimes(next, timeZone.current) : null;
+    if (times && validTimes(times.start_at, times.end_at)) return true;
+    setProblem("The end must be after the start. Not saved.");
+    return false;
   }
 
-  function cancelEdit() {
+  function discard() {
     valuesRef.current = saved.current;
     setValues(saved.current);
-    setAsking(null);
+    setProblem("");
   }
 
   function archive(picked: Scope) {
@@ -429,11 +537,16 @@ function EventForm({ occurrenceKey }: { occurrenceKey: string }) {
     navigate(CALENDAR, { replace: true });
   }
 
-  const back = (
+  const back = panel ? (
+    <button className="back" onClick={() => navigate(CALENDAR)}>
+      <X size={16} /> Close
+    </button>
+  ) : (
     <button className="back" onClick={() => navigate(CALENDAR)}>
       <ArrowLeft size={16} /> Calendar
     </button>
   );
+  const frame = (content: ReactNode) => (panel ? content : <Layout title="Calendar">{content}</Layout>);
 
   if (state === "missing" || state === "gone" || state === "lost") {
     const message = {
@@ -441,29 +554,36 @@ function EventForm({ occurrenceKey }: { occurrenceKey: string }) {
       gone: "This event was archived on another device, so it can't be changed here. Restore it from the Archive page first.",
       lost: "Saved. Open the event again from the calendar to change it further.",
     }[state];
-    return (
-      <Layout title="Calendar">
+    return frame(
+      <>
         <p className="muted">{message}</p>
         <Link to={CALENDAR}>Back to the calendar</Link>
-      </Layout>
+      </>,
     );
   }
 
-  if (!values) {
-    return (
-      <Layout title="Calendar">
-        <p className="muted">Loading…</p>
-      </Layout>
-    );
-  }
+  if (!values) return frame(<p className="muted">Loading…</p>);
 
-  const series = occurrence.current?.seriesId != null;
-  const timeType = values.allDay ? "date" : "datetime-local";
+  const series = isSeries();
+  const changed = unsaved();
+  const repeatChanged = JSON.stringify(values.repeat) !== JSON.stringify(saved.current?.repeat);
 
-  return (
-    <Layout title="Calendar">
+  return frame(
+    <>
       <div className="editor cal-form">
-        {back}
+        <div className="cal-form-bar">
+          {back}
+          {series && (
+            <>
+              <button disabled={!changed} onClick={discard}>
+                Discard
+              </button>
+              <button className="cal-save" disabled={!changed} onClick={() => timesOk() && setAsking("save")}>
+                Save
+              </button>
+            </>
+          )}
+        </div>
         <input
           className="note-title-box"
           value={values.title}
@@ -478,18 +598,27 @@ function EventForm({ occurrenceKey }: { occurrenceKey: string }) {
         <div className="cal-times">
           <label>
             Start
-            <input type={timeType} value={values.start} onChange={(e) => edit(moveStart(values, e.target.value))} />
+            <When value={values.start} allDay={values.allDay} onChange={(start) => edit(moveStart(values, start))} />
           </label>
           <label>
             {values.allDay ? "Last day" : "End"}
-            <input type={timeType} value={values.end} onChange={(e) => edit({ ...values, end: e.target.value })} />
+            <When value={values.end} allDay={values.allDay} onChange={(end) => edit({ ...values, end })} />
           </label>
         </div>
         {problem && <p className="error">{problem}</p>}
+        <label className="cal-field">
+          Show as
+          <select value={values.showAs} onChange={(e) => edit({ ...values, showAs: e.target.value as ShowAs })}>
+            {SHOW_AS.map((s) => (
+              <option key={s.value} value={s.value}>
+                {s.label}
+              </option>
+            ))}
+          </select>
+        </label>
         <RepeatField
           repeat={values.repeat}
           startDay={values.start.slice(0, 10)}
-          locked={scope === "only"}
           onChange={(repeat) => edit({ ...values, repeat })}
         />
         <textarea
@@ -502,11 +631,77 @@ function EventForm({ occurrenceKey }: { occurrenceKey: string }) {
         </button>
       </div>
 
-      {asking === "edit" && <ScopeDialog question="Change which events?" onPick={pickEditScope} onCancel={cancelEdit} />}
+      {asking === "save" && (
+        <ScopeDialog
+          question="Save for which events?"
+          noOnly={repeatChanged}
+          onPick={(picked) => {
+            setAsking(null);
+            save(false, picked);
+          }}
+          onCancel={() => setAsking(null)}
+        />
+      )}
+      {blocker.state === "blocked" && asking === null && (
+        <div className="cal-backdrop">
+          <div className="cal-dialog" role="dialog" aria-label="Unsaved changes">
+            <p>Unsaved changes</p>
+            <button onClick={() => (timesOk() ? setAsking("leave") : blocker.reset())}>Save</button>
+            <button
+              onClick={() => {
+                discard();
+                blocker.proceed();
+              }}
+            >
+              Discard
+            </button>
+            <button onClick={() => blocker.reset()}>Keep editing</button>
+          </div>
+        </div>
+      )}
+      {asking === "leave" && (
+        <ScopeDialog
+          question="Save for which events?"
+          noOnly={repeatChanged}
+          onPick={(picked) => {
+            setAsking(null);
+            save(true, picked);
+            blocker.proceed?.();
+          }}
+          onCancel={() => {
+            setAsking(null);
+            blocker.reset?.();
+          }}
+        />
+      )}
       {asking === "archive" && (
         <ScopeDialog question="Archive which events?" onPick={archive} onCancel={() => setAsking(null)} />
       )}
-    </Layout>
+    </>,
+  );
+}
+
+type WhenProps = { value: string; allDay: boolean; onChange: (value: string) => void };
+
+/**
+ * A start or end: a date, plus a time from a list every 30 minutes. One date-time field would be
+ * simpler, but the PC app's browser engine (WebKitGTK) only offers a date picker for it.
+ */
+function When({ value, allDay, onChange }: WhenProps) {
+  if (allDay) return <input type="date" value={value} onChange={(e) => onChange(e.target.value)} />;
+  const date = value.slice(0, 10);
+  const time = value.slice(11, 16);
+  return (
+    <span className="cal-when">
+      <input type="date" value={date} onChange={(e) => onChange(`${e.target.value}T${time}`)} />
+      <select value={time} onChange={(e) => onChange(`${date}T${e.target.value}`)}>
+        {timeChoices(time).map((t) => (
+          <option key={t} value={t}>
+            {t}
+          </option>
+        ))}
+      </select>
+    </span>
   );
 }
 
@@ -518,10 +713,10 @@ const FREQS: { value: Repeat["freq"]; label: string; unit: string }[] = [
   { value: "yearly", label: "Every year", unit: "years" },
 ];
 
-type RepeatProps = { repeat: Repeat | null; startDay: string; locked: boolean; onChange: (repeat: Repeat) => void };
+type RepeatProps = { repeat: Repeat | null; startDay: string; onChange: (repeat: Repeat) => void };
 
 /** The repeat part of the form. A rule it can't show is left as it is. */
-function RepeatField({ repeat, startDay, locked, onChange }: RepeatProps) {
+function RepeatField({ repeat, startDay, onChange }: RepeatProps) {
   if (!repeat) {
     return (
       <div className="cal-repeat">
@@ -541,9 +736,9 @@ function RepeatField({ repeat, startDay, locked, onChange }: RepeatProps) {
   const freq = FREQS.find((f) => f.value === repeat.freq)!;
 
   return (
-    <fieldset className="cal-repeat" disabled={locked}>
+    <fieldset className="cal-repeat">
       <label>
-        <span className="cal-label">Repeat{locked && " (only this one: the series' rule stays)"}</span>
+        <span className="cal-label">Repeat</span>
         <select value={repeat.freq} onChange={(e) => set({ freq: e.target.value as Repeat["freq"] })}>
           {FREQS.map((f) => (
             <option key={f.value} value={f.value}>
