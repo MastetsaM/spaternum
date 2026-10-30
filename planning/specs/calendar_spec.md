@@ -27,6 +27,8 @@ The calendar UI comes from a library, not from scratch: **FullCalendar v7** for 
 - **Show as:** each event is *Busy*, *Tentative* or *Free*, like Teams. New events are Busy. Tentative = not confirmed yet; Free = doesn't take the time.
 - **Picking the time:** a date field plus a list of times every 30 minutes (00:00 … 23:30), on PC and phone. The PC app's browser engine (WebKitGTK on Linux) only offers a date picker for a combined date-time field.
 - **Where the form goes:** PC: in the tool panel on the right, next to the calendar. Phone: its own screen, as before.
+- **Save button for repeating events:** the scope question used to pop up at the first keystroke, while still typing. Now a repeating event has *Save* and *Discard*; *Save* asks which events. Leaving with unsaved changes asks *Save* / *Discard* / *Keep editing*. One-off events still save on their own.
+- **Phone header:** *Today* sits next to the arrows, and the title is short: DD MMM YY (e.g. 27 Oct 26). The PC keeps the long title.
 
 ## Data model
 Owned by the new `calendar` module. Plain SQL ([[2026-10-21-database-access-plain-sql]]). One synced table.
@@ -79,11 +81,11 @@ Using FullCalendar's free views:
 ## Creating and editing
 - **PC:** click an empty slot to create a **30-minute** event, or drag across slots to choose its length; drag an event to move it; drag its bottom edge to change its length.
 - **Phone:** long-press on a slot to create a 30-minute event; long-press an event, then drag, to move it (FullCalendar's touch behaviour). A tap opens the event.
-- The **event form** has: title, all-day, start, end, show as, repeat, notes. It saves on its own, like notes (no Save button). On the PC it opens in the tool panel on the right, with the calendar still in view; on the phone it's its own screen.
+- The **event form** has: title, all-day, start, end, show as, repeat, notes. A one-off event saves on its own, like notes; a repeating event has *Save* and *Discard*. On the PC it opens in the tool panel on the right, with the calendar still in view; on the phone it's its own screen.
 - **Start and end** are a date field plus a list of times every 30 minutes. An event at another minute (e.g. 10:15, synced from elsewhere) keeps that time as an extra entry in the list.
 - **Show as** on screen: *Busy* = the normal block; *Tentative* = striped and in italics (italics only where an event has no block, like timed events in the month view); *Free* = faded. The same in every view except the year view (dots only).
 - **Repeat** options in the form: none, every day, every week (choose days), every month (same date), every year, plus "every N" and an end (never / on a date / after N times). The rule is written as `RRULE` text, so other patterns can be added later without changing data.
-- **Changing one occurrence of a repeating event** asks: *Only this one* / *This and following* / *All*.
+- **Saving changes to an occurrence of a repeating event** asks: *Only this one* / *This and following* / *All*. Leaving the form with unsaved changes asks *Save* / *Discard* / *Keep editing* first.
   - *Only this one* → writes an exception row.
   - *This and following* → ends the old series just before this occurrence (`UNTIL` = 1 second before; a `COUNT` is split between the two) and creates a new series from this occurrence. Ending it "the day before" would drop other occurrences on the same day.
   - *All* → edits the series row. If the time or the rule changes, the series' exceptions are archived, because they may no longer match an occurrence.
@@ -143,16 +145,18 @@ Decided while building, from the defaults the screens needed. Change any of them
 - **All-day off** → the event goes to 09:00–09:30 on its first day. **All-day end** is shown as an inclusive "Last day".
 - **Changing the start** moves the end with it, so the length stays.
 - **"After N times"** starts at 10.
-- **"Only this one"** greys out the repeat part (one occurrence can't repeat).
+- **"Only this one"** is greyed out when the repeat was changed (one occurrence can't take a new rule).
+- **A one-off made to repeat** saves on its own once more (that save makes it a series); after that the form has Save and Discard.
 - **A rule the app can't read** shows with ⚠ and a dashed red outline, and can't be dragged.
 - **Year view** shows dots only; creating events there is off; a tap on a day opens the day view.
-- **Phone:** the view buttons sit in a bar at the bottom of the calendar.
-- **The form** has its own address (`/tools/calendar/<occurrence>`). On the phone it's its own screen, so Android's back gesture returns to the calendar, on the same dates. On the PC the address opens it in the tool panel (the panel opens if it was closed); a ✕ closes it and brings back the view buttons. The scope question comes at the first change in the form, and the answer holds until you leave.
+- **Phone:** the view buttons sit in a bar at the bottom of the calendar. The top row is ‹ › Today, then the short title: day "27 Oct 26", week "26 Oct – 01 Nov 26" (one month: "19 – 25 Oct 26"), month "Oct 26", year "2026".
+- **The form** has its own address (`/tools/calendar/<occurrence>`). On the phone it's its own screen, so Android's back gesture returns to the calendar, on the same dates. On the PC the address opens it in the tool panel (the panel opens if it was closed); a ✕ closes it and brings back the view buttons.
 - **PC, while an event is open in the panel:** that event (and every occurrence of its series) can't be dragged on the calendar; its times change in the form. This keeps the form and a drag from overwriting each other. Other events drag as usual.
 
 Known limits:
 - The open form doesn't follow edits made on another device meanwhile. It only notices when the event is archived elsewhere.
-- Going back while the scope question is open drops that one change.
+- A repeating event's unsaved changes stay only in the open form: if Android closes the app while it's in the background, they're lost.
+- PC: creating an event on the calendar while another has unsaved changes, then choosing *Keep editing*, leaves the new empty event in the calendar.
 - Devices with a saved favorites list don't show Calendar there until it's starred.
 
 ## Results — server (2026-10-29)

@@ -16,6 +16,7 @@ import {
   moveStart,
   nextOccurrence,
   parsePrefs,
+  shortTitle,
   storedTimes,
   switchAllDay,
   timeChoices,
@@ -61,6 +62,21 @@ describe("saved view", () => {
 
   it("keeps a known view", () => {
     expect(parsePrefs('{"view":"multiMonthYear","slot":15}')).toEqual({ view: "multiMonthYear" }); // an old saved slot size is ignored
+  });
+});
+
+describe("short title on the phone", () => {
+  const d = (year: number, month: number, day: number) => ({ year, month, day });
+  it("writes DD MMM YY", () => {
+    expect(shortTitle("timeGridDay", d(2026, 10, 27))).toBe("27 Oct 26");
+    expect(shortTitle("timeGridDay", d(2026, 11, 3))).toBe("03 Nov 26");
+    expect(shortTitle("dayGridMonth", d(2026, 10, 1))).toBe("Oct 26");
+    expect(shortTitle("multiMonthYear", d(2026, 1, 1))).toBe("2026");
+  });
+  it("shows a week's first and last day", () => {
+    expect(shortTitle("timeGridWeek", d(2026, 10, 19))).toBe("19 – 25 Oct 26");
+    expect(shortTitle("timeGridWeek", d(2026, 10, 26))).toBe("26 Oct – 01 Nov 26");
+    expect(shortTitle("timeGridWeek", d(2026, 12, 28))).toBe("28 Dec 26 – 03 Jan 27");
   });
 });
 

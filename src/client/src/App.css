@@ -420,6 +420,10 @@ button.danger { color: var(--error); border-color: var(--error); }
 .cal-inline input { width: 90px; }
 .cal-inline select { width: auto; flex: 1; }
 .cal-archive { align-self: flex-start; }
+/* Back / close, then Discard and Save for a repeating event */
+.cal-form-bar { display: flex; align-items: center; gap: 8px; }
+.cal-form-bar .back { margin-right: auto; }
+.cal-save:not(:disabled) { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
 /* Start / end: date, then the time list */
 .cal-when { display: flex; gap: 6px; }
 .cal-when input { flex: 1; min-width: 0; }

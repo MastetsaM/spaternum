@@ -23,7 +23,7 @@ import "@fullcalendar/react/themes/classic/theme.css";
 import "@fullcalendar/react/themes/classic/palette.css";
 import { ArrowLeft, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router";
+import { Link, useBlocker, useLocation, useNavigate, useParams, useSearchParams } from "react-router";
 import {
   applyChange,
   archiveOccurrence,
@@ -51,6 +51,7 @@ import {
   moveStart,
   nextOccurrence,
   savePrefs,
+  shortTitle,
   storedTimes,
   switchAllDay,
   SLOT_MINUTES,
@@ -91,11 +92,18 @@ let shownDate: Date | null = null;
 const PLUGINS = [classicThemePlugin, dayGridPlugin, timeGridPlugin, multiMonthPlugin, interactionPlugin];
 const VIEW_BUTTONS = VIEWS.map((v) => v.id).join(",");
 const PC_HEADER = { start: "prev,next today", center: "title", end: VIEW_BUTTONS };
-const PHONE_HEADER = { start: "prev,next", center: "title", end: "today" };
+const PHONE_HEADER = { start: "prev,next today", center: "", end: "title" };
 const PHONE_FOOTER = { center: VIEW_BUTTONS };
 const BUTTONS = { today: { text: "Today" }, ...Object.fromEntries(VIEWS.map((v) => [v.id, { text: v.label }])) };
 const TIME_FORMAT = { hour: "2-digit", minute: "2-digit", hour12: false } as const; // 24 h
 const VIEW_OPTIONS = { multiMonthYear: { selectable: false, editable: false } }; // the year view only shows dots
+// The phone's title is short (DD MMM YY), so Today fits next to the arrows
+type TitleInfo = { start: { year: number; month: number; day: number } }; // month 0-11
+const shortTitleOf = (view: ViewId) => (info: TitleInfo) =>
+  shortTitle(view, { ...info.start, month: info.start.month + 1 });
+const PHONE_VIEW_OPTIONS = Object.fromEntries(
+  VIEWS.map((v) => [v.id, { ...VIEW_OPTIONS[v.id as keyof typeof VIEW_OPTIONS], titleFormat: shortTitleOf(v.id) }]),
+);
 
 type Range = { from: string; to: string; view: string };
 type Pending = { occurrence: Occurrence; change: Change; revert: () => void }; // a dragged series occurrence
@@ -220,7 +228,7 @@ function CalendarView({ openKey }: { openKey: string | undefined }) {
             selectable
             selectMirror
             forceEventDuration
-            views={VIEW_OPTIONS}
+            views={phone ? PHONE_VIEW_OPTIONS : VIEW_OPTIONS}
             events={events}
             dayCellClass={dayCellClass}
             datesSet={datesSet}
@@ -294,13 +302,22 @@ function CalendarTools({ view, onView, onToday }: ToolsProps) {
   );
 }
 
+type ScopeProps = {
+  question: string;
+  noOnly?: boolean; // the repeat changed: one occurrence can't take a new rule
+  onPick: (scope: Scope) => void;
+  onCancel: () => void;
+};
+
 /** Which part of a repeating event an edit or archive applies to. */
-function ScopeDialog({ question, onPick, onCancel }: { question: string; onPick: (scope: Scope) => void; onCancel: () => void }) {
+function ScopeDialog({ question, noOnly = false, onPick, onCancel }: ScopeProps) {
   return (
     <div className="cal-backdrop" onClick={onCancel}>
       <div className="cal-dialog" role="dialog" aria-label={question} onClick={(e) => e.stopPropagation()}>
         <p>{question}</p>
-        <button onClick={() => onPick("only")}>Only this one</button>
+        <button disabled={noOnly} onClick={() => onPick("only")}>
+          Only this one{noOnly && " (not with a new repeat)"}
+        </button>
         <button onClick={() => onPick("following")}>This and following</button>
         <button onClick={() => onPick("all")}>All</button>
         <button onClick={onCancel}>Cancel</button>
@@ -314,9 +331,10 @@ function ScopeDialog({ question, onPick, onCancel }: { question: string; onPick:
 type FormState = "loading" | "ready" | "missing" | "gone" | "lost";
 
 /**
- * Saves on its own a moment after typing stops and on leaving, like the notes editor. For an
- * occurrence of a repeating event the first change asks which part it applies to; Cancel puts
- * the form back. The URL follows the occurrence when a save gives it a new key.
+ * A one-off saves on its own a moment after typing stops and on leaving, like the notes editor.
+ * An occurrence of a repeating event has Save and Discard instead: Save asks which part the
+ * changes apply to, and leaving with unsaved changes asks Save / Discard / Keep editing
+ * (Mihail, 2026-10-30). The URL follows the occurrence when a save gives it a new key.
  * panel: inside the calendar's tool panel (PC); otherwise its own screen (phone).
  */
 function EventForm({ occurrenceKey, panel }: { occurrenceKey: string; panel: boolean }) {
@@ -326,15 +344,15 @@ function EventForm({ occurrenceKey, panel }: { occurrenceKey: string; panel: boo
   const [params] = useSearchParams();
   const [state, setState] = useState<FormState>("loading");
   const [values, setValues] = useState<FormValues | null>(null);
-  const [scope, setScope] = useState<Scope | null>(null); // null = not asked yet (series only)
-  const [asking, setAsking] = useState<"edit" | "archive" | null>(null);
+  const [asking, setAsking] = useState<"save" | "leave" | "archive" | null>(null);
   const [problem, setProblem] = useState("");
+  const [, setSaves] = useState(0); // a save re-renders: Save and Discard grey out
 
   // Refs: read by the save on leaving, after the last render
   const valuesRef = useRef<FormValues | null>(null);
   const saved = useRef<FormValues | null>(null); // what's stored
   const occurrence = useRef<Occurrence | null>(null); // what the next save changes
-  const scopeRef = useRef<Scope | null>(null);
+  const scopeRef = useRef<Scope | null>(null); // "all" for a one-off; null for a series (asked at each Save)
   const rowsRef = useRef<CalendarEvent[]>([]); // the rows the next save builds on
   const timeZone = useRef("");
   const archived = useRef(false);
@@ -362,7 +380,6 @@ function EventForm({ occurrenceKey, panel }: { occurrenceKey: string; panel: boo
       timeZone.current = row.time_zone;
       saved.current = valuesRef.current = loaded;
       scopeRef.current = found.seriesId ? null : "all";
-      setScope(scopeRef.current);
       setValues(loaded);
       setState("ready");
       return;
@@ -374,10 +391,11 @@ function EventForm({ occurrenceKey, panel }: { occurrenceKey: string; panel: boo
     }
   }, [rows]);
 
-  function save(leaving: boolean) {
+  /** Saves the changes; `picked` = the part of a series they apply to. */
+  function save(leaving: boolean, picked?: Scope) {
     const current = occurrence.current;
     const next = valuesRef.current;
-    const scope = scopeRef.current;
+    const scope = picked ?? scopeRef.current;
     if (archived.current || !current || !next || !saved.current || !scope) return;
     const change = formChange(next, saved.current, timeZone.current);
     if (scope === "only") delete change.rrule; // one occurrence keeps the series' rule
@@ -391,6 +409,9 @@ function EventForm({ occurrenceKey, panel }: { occurrenceKey: string; panel: boo
     rowsRef.current = applyWrites(rowsRef.current, writes);
     saved.current = next;
     occurrence.current = nextOccurrence(rowsRef.current, current, scope, writes, times.start_at);
+    // A one-off that now repeats gets Save and Discard from here on
+    scopeRef.current = occurrence.current?.seriesId ? null : "all";
+    setSaves((n) => n + 1);
     writing.current++;
     queue.current = queue.current
       .then(() => write(writes))
@@ -406,9 +427,10 @@ function EventForm({ occurrenceKey, panel }: { occurrenceKey: string; panel: boo
     if (state !== "ready") return;
     const timer = setTimeout(() => save(false), 800);
     return () => clearTimeout(timer);
-  }, [values, scope, state]);
+  }, [values, state]);
 
-  // Save when leaving the form, and when the app goes to the background (Android may close it)
+  // A one-off saves when leaving the form, and when the app goes to the background (Android may
+  // close it). A series' unsaved changes stay in the form; leaving asks first (below).
   useEffect(() => {
     const hidden = () => {
       if (document.visibilityState === "hidden") save(true);
@@ -424,21 +446,30 @@ function EventForm({ occurrenceKey, panel }: { occurrenceKey: string; panel: boo
     valuesRef.current = next;
     setValues(next);
     setProblem("");
-    if (scopeRef.current === null) setAsking("edit");
   };
 
-  function pickEditScope(picked: Scope) {
-    scopeRef.current = picked;
-    setScope(picked);
-    setAsking(null);
-    // One occurrence can't change the rule: the repeat part goes back and stays locked
-    if (picked === "only" && valuesRef.current && saved.current) edit({ ...valuesRef.current, repeat: saved.current.repeat });
+  const unsaved = () => {
+    const next = valuesRef.current;
+    return !archived.current && !!next && !!saved.current && Object.keys(formChange(next, saved.current, timeZone.current)).length > 0;
+  };
+  const isSeries = () => occurrence.current?.seriesId != null;
+
+  // Leaving a series with unsaved changes (back, close, another event, another screen) asks first
+  const blocker = useBlocker(() => state === "ready" && isSeries() && unsaved());
+
+  /** The times are checked before asking which part a save applies to. */
+  function timesOk(): boolean {
+    const next = valuesRef.current;
+    const times = next ? storedTimes(next, timeZone.current) : null;
+    if (times && validTimes(times.start_at, times.end_at)) return true;
+    setProblem("The end must be after the start. Not saved.");
+    return false;
   }
 
-  function cancelEdit() {
+  function discard() {
     valuesRef.current = saved.current;
     setValues(saved.current);
-    setAsking(null);
+    setProblem("");
   }
 
   function archive(picked: Scope) {
@@ -477,12 +508,26 @@ function EventForm({ occurrenceKey, panel }: { occurrenceKey: string; panel: boo
 
   if (!values) return frame(<p className="muted">Loading…</p>);
 
-  const series = occurrence.current?.seriesId != null;
+  const series = isSeries();
+  const changed = unsaved();
+  const repeatChanged = JSON.stringify(values.repeat) !== JSON.stringify(saved.current?.repeat);
 
   return frame(
     <>
       <div className="editor cal-form">
-        {back}
+        <div className="cal-form-bar">
+          {back}
+          {series && (
+            <>
+              <button disabled={!changed} onClick={discard}>
+                Discard
+              </button>
+              <button className="cal-save" disabled={!changed} onClick={() => timesOk() && setAsking("save")}>
+                Save
+              </button>
+            </>
+          )}
+        </div>
         <input
           className="note-title-box"
           value={values.title}
@@ -518,7 +563,6 @@ function EventForm({ occurrenceKey, panel }: { occurrenceKey: string; panel: boo
         <RepeatField
           repeat={values.repeat}
           startDay={values.start.slice(0, 10)}
-          locked={scope === "only"}
           onChange={(repeat) => edit({ ...values, repeat })}
         />
         <textarea
@@ -531,7 +575,49 @@ function EventForm({ occurrenceKey, panel }: { occurrenceKey: string; panel: boo
         </button>
       </div>
 
-      {asking === "edit" && <ScopeDialog question="Change which events?" onPick={pickEditScope} onCancel={cancelEdit} />}
+      {asking === "save" && (
+        <ScopeDialog
+          question="Save for which events?"
+          noOnly={repeatChanged}
+          onPick={(picked) => {
+            setAsking(null);
+            save(false, picked);
+          }}
+          onCancel={() => setAsking(null)}
+        />
+      )}
+      {blocker.state === "blocked" && asking === null && (
+        <div className="cal-backdrop">
+          <div className="cal-dialog" role="dialog" aria-label="Unsaved changes">
+            <p>Unsaved changes</p>
+            <button onClick={() => (timesOk() ? setAsking("leave") : blocker.reset())}>Save</button>
+            <button
+              onClick={() => {
+                discard();
+                blocker.proceed();
+              }}
+            >
+              Discard
+            </button>
+            <button onClick={() => blocker.reset()}>Keep editing</button>
+          </div>
+        </div>
+      )}
+      {asking === "leave" && (
+        <ScopeDialog
+          question="Save for which events?"
+          noOnly={repeatChanged}
+          onPick={(picked) => {
+            setAsking(null);
+            save(true, picked);
+            blocker.proceed?.();
+          }}
+          onCancel={() => {
+            setAsking(null);
+            blocker.reset?.();
+          }}
+        />
+      )}
       {asking === "archive" && (
         <ScopeDialog question="Archive which events?" onPick={archive} onCancel={() => setAsking(null)} />
       )}
@@ -571,10 +657,10 @@ const FREQS: { value: Repeat["freq"]; label: string; unit: string }[] = [
   { value: "yearly", label: "Every year", unit: "years" },
 ];
 
-type RepeatProps = { repeat: Repeat | null; startDay: string; locked: boolean; onChange: (repeat: Repeat) => void };
+type RepeatProps = { repeat: Repeat | null; startDay: string; onChange: (repeat: Repeat) => void };
 
 /** The repeat part of the form. A rule it can't show is left as it is. */
-function RepeatField({ repeat, startDay, locked, onChange }: RepeatProps) {
+function RepeatField({ repeat, startDay, onChange }: RepeatProps) {
   if (!repeat) {
     return (
       <div className="cal-repeat">
@@ -594,9 +680,9 @@ function RepeatField({ repeat, startDay, locked, onChange }: RepeatProps) {
   const freq = FREQS.find((f) => f.value === repeat.freq)!;
 
   return (
-    <fieldset className="cal-repeat" disabled={locked}>
+    <fieldset className="cal-repeat">
       <label>
-        <span className="cal-label">Repeat{locked && " (only this one: the series' rule stays)"}</span>
+        <span className="cal-label">Repeat</span>
         <select value={repeat.freq} onChange={(e) => set({ freq: e.target.value as Repeat["freq"] })}>
           {FREQS.map((f) => (
             <option key={f.value} value={f.value}>

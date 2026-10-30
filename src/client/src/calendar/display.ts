@@ -63,6 +63,28 @@ export function savePrefs(prefs: Prefs) {
   }
 }
 
+// ---- Short title on the phone ----
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/**
+ * The phone's title, DD MMM YY (Mihail, 2026-10-30): day "27 Oct 26", week "26 Oct – 01 Nov 26"
+ * (one month: "19 – 25 Oct 26"), month "Oct 26", year "2026". `start`: the view's first day.
+ */
+export function shortTitle(view: ViewId, start: { year: number; month: number; day: number }): string {
+  const day = (d: Temporal.PlainDate) => pad(d.day);
+  const month = (d: Temporal.PlainDate) => MONTHS[d.month - 1];
+  const year = (d: Temporal.PlainDate) => pad(d.year % 100);
+  const first = new Temporal.PlainDate(start.year, start.month, start.day);
+  if (view === "multiMonthYear") return String(first.year);
+  if (view === "dayGridMonth") return `${month(first)} ${year(first)}`;
+  if (view === "timeGridDay") return `${day(first)} ${month(first)} ${year(first)}`;
+  const last = first.add({ days: 6 });
+  if (first.year !== last.year) return `${day(first)} ${month(first)} ${year(first)} – ${day(last)} ${month(last)} ${year(last)}`;
+  if (first.month !== last.month) return `${day(first)} ${month(first)} – ${day(last)} ${month(last)} ${year(last)}`;
+  return `${day(first)} – ${day(last)} ${month(last)} ${year(last)}`;
+}
+
 // ---- Dates ----
 
 const pad = (n: number) => String(n).padStart(2, "0");

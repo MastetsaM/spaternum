@@ -155,6 +155,7 @@ Moved ahead of notes with recordings because it's more urgent (Mihail, 2026-10-2
 - [x] Only this one / This and following / All, for editing and archiving; Vitest for the three modes
 - [x] Archive page shows calendar events
 - [x] Device feedback (2026-10-30): show as busy / tentative / free (server column + form + look); start/end as date + 30-minute time list (the PC had no time picker); PC form in the right panel
+- [x] Device feedback 2 (2026-10-30): Save / Discard for repeating events, asked at Save instead of at the first keystroke; phone header with Today beside the arrows and a DD MMM YY title
 - [ ] Repeat: the weekday buttons didn't show on the phone after picking "Every week" — not reproduced yet
 - [~] Check every calendar acceptance criterion on the phone and the PC; write results in [[calendar_spec]]
 
