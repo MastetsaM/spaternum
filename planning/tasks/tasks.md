@@ -160,7 +160,7 @@ Moved ahead of notes with recordings because it's more urgent (Mihail, 2026-10-2
 - [x] Repeat: the weekday buttons didn't show on the phone after picking "Every week". Cause: on an existing series the scope question popped up at that change, and *Only this one* put the repeat back and locked it. Gone with Save/Discard; Mihail checked it on the phone (2026-10-30)
 - [x] Check every calendar acceptance criterion on the phone and the PC; write results in [[calendar_spec]] (all pass, 2026-10-30)
 - [x] Merge into `main` (2026-10-30)
-- [ ] Update the Pi from `main` (Mihail)
+- [x] Update the Pi from `main` (Mihail, 2026-10-30): calendar syncs between phone and PC through the Pi
 
 ## Later (ideas and loose ends, not scheduled)
 - **Notes with recordings:** merge notes and voice notes into one note with text and/or recordings, plus a Pinned section, folder tags, a full tree and notes settings in the tool panel. Draft with Mihail's decisions: [[notes-recordings_spec]]. Next after the calendar.
