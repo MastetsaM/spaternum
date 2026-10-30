@@ -117,7 +117,7 @@ Using FullCalendar's free views:
 8. The same event edited on two devices: the later edit wins, nothing crashes.
 9. Archived events appear on the Archive page; restoring a series brings back its exceptions with it.
 10. Tests pass: server (sync, archive, restore) and client (Vitest: occurrence expansion, the three edit modes, the DST case).
-11. Each event can be set to Busy, Tentative or Free, and each looks different in month, week and day views; the setting syncs.
+11. Each event can be set to Busy, Tentative or Free; each looks different in week and day views, month and year show only Busy; the setting syncs.
 12. On the PC the form opens in the right panel and the start and end time can be picked; on the phone it's its own screen.
 
 ## Edge cases and failure modes
