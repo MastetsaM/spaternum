@@ -81,7 +81,7 @@ Using FullCalendar's free views:
 - **Phone:** long-press on a slot to create a 30-minute event; long-press an event, then drag, to move it (FullCalendar's touch behaviour). A tap opens the event.
 - The **event form** has: title, all-day, start, end, show as, repeat, notes. It saves on its own, like notes (no Save button). On the PC it opens in the tool panel on the right, with the calendar still in view; on the phone it's its own screen.
 - **Start and end** are a date field plus a list of times every 30 minutes. An event at another minute (e.g. 10:15, synced from elsewhere) keeps that time as an extra entry in the list.
-- **Show as** on screen: *Busy* = the normal block; *Tentative* = striped; *Free* = faded. The same in every view except the year view (dots only).
+- **Show as** on screen: *Busy* = the normal block; *Tentative* = striped and in italics (italics only where an event has no block, like timed events in the month view); *Free* = faded. The same in every view except the year view (dots only).
 - **Repeat** options in the form: none, every day, every week (choose days), every month (same date), every year, plus "every N" and an end (never / on a date / after N times). The rule is written as `RRULE` text, so other patterns can be added later without changing data.
 - **Changing one occurrence of a repeating event** asks: *Only this one* / *This and following* / *All*.
   - *Only this one* → writes an exception row.

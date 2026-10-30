@@ -72,8 +72,9 @@ const voiceNoteSchema: RxJsonSchema<VoiceNote> = {
 
 const bool = { type: "boolean" } as const;
 
+// Version 1 (2026-10-30): show as busy / tentative / free
 const calendarEventSchema: RxJsonSchema<CalendarEvent> = {
-  version: 0,
+  version: 1,
   primaryKey: "id",
   type: "object",
   properties: {
@@ -88,9 +89,11 @@ const calendarEventSchema: RxJsonSchema<CalendarEvent> = {
     series_id: nullableText, // set = an exception of that series
     original_start: nullableText,
     cancelled: bool,
+    show_as: { type: "string", enum: ["busy", "tentative", "free"] },
   },
-  required: ["id", "title", "notes", "all_day", "start_at", "end_at", "time_zone", "cancelled", "created_at", "updated_at"],
+  required: ["id", "title", "notes", "all_day", "start_at", "end_at", "time_zone", "cancelled", "show_as", "created_at", "updated_at"],
 };
+const calendarEventMigrations = { 1: (doc: CalendarEvent) => ({ ...doc, show_as: "busy" }) };
 
 // Collection name = server table name; path = where its pull/push endpoints live
 const TABLES = {
@@ -129,7 +132,7 @@ async function open(settings: Settings): Promise<Db> {
     note_folders: { schema: folderSchema },
     notes: { schema: noteSchema, migrationStrategies: noteMigrations },
     voice_notes: { schema: voiceNoteSchema },
-    calendar_events: { schema: calendarEventSchema },
+    calendar_events: { schema: calendarEventSchema, migrationStrategies: calendarEventMigrations },
   });
 
   const resync: Record<string, Subject<"RESYNC">> = {};

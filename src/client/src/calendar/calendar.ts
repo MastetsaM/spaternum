@@ -18,9 +18,13 @@ export type CalendarEvent = {
   series_id: string | null; // set = an exception of that series
   original_start: string | null; // set on an exception: the occurrence it replaces (toISOString())
   cancelled: boolean; // exception that removes its occurrence
+  show_as: ShowAs;
   created_at: string;
   updated_at: string;
 };
+
+/** Busy = a normal block; tentative = not confirmed yet; free = doesn't take the time. */
+export type ShowAs = "busy" | "tentative" | "free";
 
 /** One thing drawn on the calendar. */
 export type Occurrence = {
@@ -32,6 +36,7 @@ export type Occurrence = {
   allDay: boolean;
   start: string; // toISOString(); for all-day: "YYYY-MM-DD" in the event's time zone
   end: string; // same format as start; all-day end is exclusive
+  showAs: ShowAs;
   broken: boolean; // the series' rule couldn't be read: shown once at its start, with a mark
 };
 
@@ -209,6 +214,7 @@ export function newEvent(
     series_id: null,
     original_start: null,
     cancelled: false,
+    show_as: "busy",
     created_at: now,
     updated_at: now,
   };
@@ -218,7 +224,7 @@ export function newEvent(
 export type Scope = "only" | "following" | "all";
 
 /** What the form or a drag changes. start_at/end_at are the occurrence's new times. */
-export type Change = Partial<Pick<CalendarEvent, "title" | "notes" | "all_day" | "start_at" | "end_at" | "rrule">>;
+export type Change = Partial<Pick<CalendarEvent, "title" | "notes" | "all_day" | "start_at" | "end_at" | "rrule" | "show_as">>;
 
 /** What to write to the database: rows to insert or replace, and ids to archive. */
 export type Writes = { put: CalendarEvent[]; archive: string[] };
@@ -416,6 +422,7 @@ function draw(
       allDay: row.all_day,
       start: show(start),
       end: show(end),
+      showAs: row.show_as,
       broken,
     },
   };

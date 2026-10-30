@@ -321,6 +321,12 @@ export interface components {
              * @default false
              */
             cancelled: boolean;
+            /**
+             * Show As
+             * @default busy
+             * @enum {string}
+             */
+            show_as: "busy" | "tentative" | "free";
         };
         /** EventPull */
         EventPull: {

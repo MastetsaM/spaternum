@@ -370,6 +370,12 @@ button.danger { color: var(--error); border-color: var(--error); }
   background: var(--accent);
   pointer-events: none;
 }
+/* Show as: tentative = striped (italic where there's no block, e.g. month view); free = faded */
+.cal .cal-tentative {
+  font-style: italic;
+  background-image: repeating-linear-gradient(135deg, transparent 0 6px, rgb(255 255 255 / 0.35) 6px 12px);
+}
+.cal .cal-free { opacity: 0.45; }
 /* A repeat rule the device can't read: shown once, marked */
 .cal-broken { outline: 1px dashed var(--error); }
 
@@ -405,6 +411,7 @@ button.danger { color: var(--error); border-color: var(--error); }
 .cal-check input { width: auto; }
 .cal-times { display: flex; flex-wrap: wrap; gap: 8px; }
 .cal-times label,
+.cal-field,
 .cal-repeat > label:first-child { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 200px; color: var(--muted); }
 .cal-repeat { display: flex; flex-direction: column; gap: 8px; min-width: 0; margin: 0; padding: 0; border: none; }
 .cal-repeat p { margin: 0; }
@@ -413,3 +420,10 @@ button.danger { color: var(--error); border-color: var(--error); }
 .cal-inline input { width: 90px; }
 .cal-inline select { width: auto; flex: 1; }
 .cal-archive { align-self: flex-start; }
+/* Start / end: date, then the time list */
+.cal-when { display: flex; gap: 6px; }
+.cal-when input { flex: 1; min-width: 0; }
+.cal-when select { width: auto; }
+/* In the PC's tool panel: the fields stack, since the panel is narrow */
+.tools .cal-form { max-width: none; }
+.tools .cal-times label { min-width: 0; flex-basis: 100%; }

@@ -10,6 +10,7 @@ import {
   type Occurrence,
   type Repeat,
   type Scope,
+  type ShowAs,
   type Weekday,
   type Writes,
 } from "./calendar";
@@ -143,8 +144,17 @@ export type FormValues = {
   allDay: boolean;
   start: string;
   end: string;
+  showAs: ShowAs;
   repeat: Repeat | null;
 };
+
+/** The form's start/end time list: every 30 minutes, plus `current` if it's another minute (e.g. 10:15 synced from elsewhere). */
+export function timeChoices(current: string): string[] {
+  const times: string[] = [];
+  for (let m = 0; m < 24 * 60; m += SLOT_MINUTES) times.push(`${pad(Math.floor(m / 60))}:${pad(m % 60)}`);
+  if (/^\d{2}:\d{2}$/.test(current) && !times.includes(current)) times.push(current);
+  return times.sort();
+}
 
 /** The form's start and end for an occurrence. */
 export function inputTimes(o: Pick<Occurrence, "allDay" | "start" | "end">): { start: string; end: string } {
@@ -200,6 +210,7 @@ export function formChange(values: FormValues, saved: FormValues, timeZone: stri
   if (values.title !== saved.title) change.title = values.title;
   if (values.notes !== saved.notes) change.notes = values.notes;
   if (values.allDay !== saved.allDay) change.all_day = values.allDay;
+  if (values.showAs !== saved.showAs) change.show_as = values.showAs;
   if (values.allDay !== saved.allDay || values.start !== saved.start || values.end !== saved.end) {
     Object.assign(change, storedTimes(values, timeZone));
   }

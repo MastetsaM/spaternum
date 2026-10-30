@@ -18,6 +18,7 @@ import {
   parsePrefs,
   storedTimes,
   switchAllDay,
+  timeChoices,
   toLocalInput,
   weekdayOf,
   type FormValues,
@@ -35,6 +36,7 @@ const occ = (over: Partial<Occurrence>): Occurrence => ({
   allDay: false,
   start: iso(2026, 10, 29, 10),
   end: iso(2026, 10, 29, 11),
+  showAs: "busy",
   broken: false,
   ...over,
 });
@@ -45,6 +47,7 @@ const values = (over: Partial<FormValues>): FormValues => ({
   allDay: false,
   start: "2026-10-29T10:00",
   end: "2026-10-29T10:30",
+  showAs: "busy",
   repeat: { freq: "none", interval: 1, byDay: [], end: { kind: "never" } },
   ...over,
 });
@@ -167,6 +170,15 @@ describe("the event form", () => {
       start_at: iso(2026, 10, 29, 10),
       end_at: iso(2026, 10, 29, 11),
     });
+    expect(formChange(values({ showAs: "tentative" }), saved, "Europe/Lisbon")).toEqual({ show_as: "tentative" });
+  });
+
+  it("lists times every 30 minutes, keeping another minute that's already set", () => {
+    const list = timeChoices("10:00");
+    expect(list.length).toBe(48);
+    expect([list[0], list[1], list[47]]).toEqual(["00:00", "00:30", "23:30"]);
+    expect(timeChoices("10:15").slice(20, 23)).toEqual(["10:00", "10:15", "10:30"]);
+    expect(timeChoices("").length).toBe(48);
   });
 });
 
@@ -183,6 +195,7 @@ describe("applyWrites", () => {
     series_id: null,
     original_start: null,
     cancelled: false,
+    show_as: "busy",
     created_at: "",
     updated_at: "",
   });

@@ -46,11 +46,12 @@ export const FAVORITES_LINK = { to: "/tools/favorites", label: "Favorites", icon
 type Props = {
   title: string;
   tools?: ReactNode; // the tool's own navigation (e.g. the folder tree) and details
+  showTools?: string; // a new non-empty value opens the tool panel (e.g. an event opened in it)
   actions?: ReactNode; // buttons at the right of the header, e.g. Home's Settings gear
   children: ReactNode; // main content
 };
 
-export function Layout({ title, tools, actions, children }: Props) {
+export function Layout({ title, tools, showTools, actions, children }: Props) {
   const { pathname, search } = useLocation();
   const inTools = pathname.startsWith("/tools");
   const [drawerOpen, setDrawerOpen] = useState(false); // phone only
@@ -60,6 +61,9 @@ export function Layout({ title, tools, actions, children }: Props) {
   const favorites = useFavorites(TOOL_KEYS);
   const { online } = useStatus();
   const close = () => setDrawerOpen(false);
+  useEffect(() => {
+    if (showTools) setToolsOpen(true);
+  }, [showTools]);
   // Any new screen (e.g. a folder picked in the tool panel) closes what slides over it on the phone
   useEffect(() => {
     close();
