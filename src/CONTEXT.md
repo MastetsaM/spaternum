@@ -83,7 +83,7 @@ Start reading at `main.tsx`, which starts sync and the voice-notes uploads, then
 | `calendar/store.ts` | Calendar events read from RxDB, and the writes `calendar.ts` decides (put rows, archive ids) stored |
 | `calendar/display.ts` | Screen rules: the view kept in `localStorage`, days with a dot in the year view, form inputs ↔ stored times, the 30-minute time list, finding an occurrence by its key and again after a save |
 | `archive/archive.ts` | Archive page calls and display rules |
-| `screens/` | One screen per route: `NotesScreen`, `VoiceNotesScreen`, `CalendarScreen` (FullCalendar; the event form, in the tool panel on the PC and its own screen on the phone; the *only this one / following / all* question), `ArchiveScreen`, `FavoritesScreen`, `SettingsScreen`. `Placeholders.tsx` holds Home, Tools, Clients and Projects |
+| `screens/` | One screen per route: `NotesScreen`, `VoiceNotesScreen`, `CalendarScreen` (FullCalendar; the tool panel's day list; the event form, in the tool panel on the PC and its own screen on the phone; the *only this one / following / all* question), `ArchiveScreen`, `FavoritesScreen`, `SettingsScreen`. `Placeholders.tsx` holds Home, Tools, Clients and Projects |
 | `*_test.ts` | Vitest tests next to the code they test (`pnpm test`) |
 
 Other client files:
