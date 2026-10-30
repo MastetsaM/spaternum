@@ -15,7 +15,13 @@ export const FILTERS = [
   { type: "voice_note", label: "Voice notes" },
 ] as const;
 
-const TYPE_LABELS: Record<string, string> = { note: "Note", folder: "Folder", voice_note: "Voice note" };
+const TYPE_LABELS: Record<string, string> = {
+  note: "Note",
+  folder: "Folder",
+  voice_note: "Voice note",
+  event: "Event",
+  series: "Repeating event",
+};
 
 /** "note" → "Note"; a type this app doesn't know yet is shown as it is. */
 export function typeLabel(type: string): string {
@@ -36,10 +42,14 @@ export function itemTitle(item: ArchivedItem): string {
   return "(untitled)";
 }
 
-/** "Folder · 3 items" / "Note" */
+/** "Folder · 3 items" / "Repeating event · 2 changed occurrences" / "Note" */
 export function itemKind(item: ArchivedItem): string {
-  if (item.type !== "folder") return typeLabel(item.type);
-  return `${typeLabel(item.type)} · ${item.items} ${item.items === 1 ? "item" : "items"}`;
+  const count = (one: string, many: string) => `${item.items} ${item.items === 1 ? one : many}`;
+  if (item.type === "folder") return `${typeLabel(item.type)} · ${count("item", "items")}`;
+  if (item.type === "series" && item.items > 0) {
+    return `${typeLabel(item.type)} · ${count("changed occurrence", "changed occurrences")}`;
+  }
+  return typeLabel(item.type);
 }
 
 /** What to show when a call fails. 401 is handled by the app (it opens the settings). */

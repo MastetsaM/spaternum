@@ -16,7 +16,7 @@ Application code, and the map of what lives where. Read the first comment of eac
 
 ## How data moves
 1. **Write:**
-   - A screen writes to the local database (RxDB) through a module's store (`notes/store.ts`, `voice-notes/rows.ts`).
+   - A screen writes to the local database (RxDB) through a module's store (`notes/store.ts`, `voice-notes/rows.ts`, `calendar/store.ts`).
    - Every write sets `updated_at` from the server-corrected clock (`sync/clock.ts`).
 2. **Push:**
    - `sync/db.ts` replicates each collection to `POST /api/<module>/<table>/push`.
@@ -68,7 +68,7 @@ Start reading at `main.tsx`, which starts sync and the voice-notes uploads, then
 | `api/settings.ts` | Server address and token in `localStorage` |
 | `api/client.ts` | `call()`: every direct server call. It adds the token, reads the clock offset and marks online/offline |
 | `api/schema.ts` | Generated from the server's OpenAPI (`pnpm gen:api`). Never edit by hand |
-| `sync/db.ts` | RxDB: the collections `note_folders`, `notes`, `voice_notes`, their replication, and `awaitInSync(table)` |
+| `sync/db.ts` | RxDB: the collections `note_folders`, `notes`, `voice_notes`, `calendar_events`, their replication, and `awaitInSync(table)` |
 | `sync/events.ts` | Reads the SSE stream with fetch, reconnects, 60 s silence watchdog |
 | `sync/clock.ts` | `serverNow()`: the device clock corrected by the server's `Date` header |
 | `sync/status.ts` | Online dot and "token rejected" state; `onStatusChange()` lets code react to coming back online |
@@ -80,8 +80,10 @@ Start reading at `main.tsx`, which starts sync and the voice-notes uploads, then
 | `voice-notes/uploads.ts` | Recovery on start and the upload queue (after Stop, on start, when back online), plus the state the list shows |
 | `voice-notes/rows.ts` | Writes to the `voice_notes` collection |
 | `voice-notes/audio.ts` | Reading a file's duration, fetching audio from the server, and the player: one recording at a time, with position kept per recording, seeking and speed |
+| `calendar/store.ts` | Calendar events read from RxDB, and the writes `calendar.ts` decides (put rows, archive ids) stored |
+| `calendar/display.ts` | Screen rules: the view kept in `localStorage`, days with a dot in the year view, form inputs ↔ stored times, the 30-minute time list, finding an occurrence by its key and again after a save |
 | `archive/archive.ts` | Archive page calls and display rules |
-| `screens/` | One screen per route: `NotesScreen`, `VoiceNotesScreen`, `ArchiveScreen`, `FavoritesScreen`, `SettingsScreen`. `Placeholders.tsx` holds Home, Tools, Clients and Projects |
+| `screens/` | One screen per route: `NotesScreen`, `VoiceNotesScreen`, `CalendarScreen` (FullCalendar; the event form, in the tool panel on the PC and its own screen on the phone; the *only this one / following / all* question), `ArchiveScreen`, `FavoritesScreen`, `SettingsScreen`. `Placeholders.tsx` holds Home, Tools, Clients and Projects |
 | `*_test.ts` | Vitest tests next to the code they test (`pnpm test`) |
 
 Other client files:

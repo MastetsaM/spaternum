@@ -27,6 +27,7 @@ def event(title="Meeting", updated=T0, **extra):
         "series_id": extra.pop("series_id", None),
         "original_start": extra.pop("original_start", None),
         "cancelled": extra.pop("cancelled", False),
+        "show_as": extra.pop("show_as", "busy"),
         "created_at": T0,
         "updated_at": updated,
         "_deleted": False,
@@ -81,14 +82,27 @@ def cal_db(db):
 
 
 def test_all_three_kinds_round_trip(client, cal_db):
-    one_off = event("Dentist", notes="bring card", all_day=True,
+    one_off = event("Dentist", notes="bring card", all_day=True, show_as="tentative",
                     start_at="2026-10-27T00:00:00.000Z", end_at="2026-10-28T00:00:00.000Z")
     weekly = series(time_zone="America/New_York")
-    moved = exception(weekly, start_at="2026-11-02T14:00:00.000Z", end_at="2026-11-02T14:30:00.000Z")
+    moved = exception(weekly, show_as="free", start_at="2026-11-02T14:00:00.000Z", end_at="2026-11-02T14:30:00.000Z")
     cancelled = exception(weekly, original_start="2026-11-09T10:00:00.000Z", cancelled=True)
     push(client, one_off, weekly, moved, cancelled)
     pulled = {d["id"]: d for d in pull(client)["documents"]}
     assert pulled == {d["id"]: d for d in (one_off, weekly, moved, cancelled)}
+
+
+def test_an_older_app_without_show_as_gets_busy(client, cal_db):
+    e = event()
+    del e["show_as"]
+    push(client, e)
+    assert [d["show_as"] for d in pull(client)["documents"]] == ["busy"]
+
+
+def test_an_unknown_show_as_is_refused(client, cal_db):
+    response = client.post("/api/calendar/calendar_events/push", json=[event(show_as="away")])
+    assert response.status_code == 422
+    assert pull(client)["documents"] == []
 
 
 def test_later_push_wins(client, cal_db):

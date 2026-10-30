@@ -12,6 +12,7 @@ import {
   ToolsScreen,
 } from "./screens/Placeholders";
 import { NotesScreen } from "./screens/NotesScreen";
+import { CalendarScreen } from "./screens/CalendarScreen";
 import { ArchiveScreen } from "./screens/ArchiveScreen";
 import { FavoritesScreen } from "./screens/FavoritesScreen";
 import { SettingsScreen } from "./screens/SettingsScreen";
@@ -34,6 +35,7 @@ const router = createHashRouter([
   { path: "/tools/favorites", element: connected(<FavoritesScreen />) },
   { path: "/tools/notes/:noteId?", element: connected(<NotesScreen />) },
   { path: "/tools/voice-notes", element: connected(<VoiceNotesScreen />) },
+  { path: "/tools/calendar/:occurrence?", element: connected(<CalendarScreen />) },
   { path: "/tools/archive", element: connected(<ArchiveScreen />) },
   { path: "/clients", element: connected(<ClientsScreen />) },
   { path: "/projects", element: connected(<ProjectsScreen />) },

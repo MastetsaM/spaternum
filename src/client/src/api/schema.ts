@@ -161,6 +161,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/calendar/calendar_events/pull": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Pull Route */
+        get: operations["pull_route_api_calendar_calendar_events_pull_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/calendar/calendar_events/push": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Push Route */
+        post: operations["push_route_api_calendar_calendar_events_push_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/archive": {
         parameters: {
             query?: never;
@@ -170,7 +204,7 @@ export interface paths {
         };
         /**
          * List Archived
-         * @description Everything archived, newest first. type: folder, note or voice_note.
+         * @description Everything archived, newest first. type: folder, note, voice_note, event or series.
          */
         get: operations["list_archived_api_archive_get"];
         put?: never;
@@ -229,6 +263,76 @@ export interface components {
         Checkpoint: {
             /** Seq */
             seq: number;
+        };
+        /** Event */
+        Event: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /**
+             * Deleted
+             * @default false
+             */
+            _deleted: boolean;
+            /** Title */
+            title: string;
+            /**
+             * Notes
+             * @default
+             */
+            notes: string;
+            /**
+             * All Day
+             * @default false
+             */
+            all_day: boolean;
+            /**
+             * Start At
+             * Format: date-time
+             */
+            start_at: string;
+            /**
+             * End At
+             * Format: date-time
+             */
+            end_at: string;
+            /** Time Zone */
+            time_zone: string;
+            /** Rrule */
+            rrule?: string | null;
+            /** Series Id */
+            series_id?: string | null;
+            /** Original Start */
+            original_start?: string | null;
+            /**
+             * Cancelled
+             * @default false
+             */
+            cancelled: boolean;
+            /**
+             * Show As
+             * @default busy
+             * @enum {string}
+             */
+            show_as: "busy" | "tentative" | "free";
+        };
+        /** EventPull */
+        EventPull: {
+            /** Documents */
+            documents: components["schemas"]["Event"][];
+            checkpoint: components["schemas"]["Checkpoint"];
         };
         /** Folder */
         Folder: {
@@ -725,6 +829,75 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Uploaded"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    pull_route_api_calendar_calendar_events_pull_get: {
+        parameters: {
+            query?: {
+                seq?: number;
+                limit?: number;
+            };
+            header?: {
+                authorization?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventPull"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    push_route_api_calendar_calendar_events_push_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Event"][];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Event"][];
                 };
             };
             /** @description Validation Error */

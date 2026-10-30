@@ -92,8 +92,8 @@ The template may pin slightly different versions; whatever it installs is what g
 | openapi-typescript | 7.13.0 | Generate client types |
 | monaco-editor / @monaco-editor/react | 0.57.0 / 4.7.0 | Code editor module (later phase) |
 | faster-whisper | 1.2.1 | Transcription (phase 2) |
-| @fullcalendar/react | 7.1.3 | Calendar views: year, month, week, day ([[2026-10-29-calendar-fullcalendar]]). Brings `@fullcalendar/core` and `@full-ui/headless-calendar`; needs `temporal-polyfill` ^1.0.1 |
-| rrule-temporal | 2.2.8 | Expands repeating calendar events (RFC 5545 `RRULE`) on the device |
+| @fullcalendar/react | 7.1.3 (installed) | Calendar views: year, month, week, day ([[2026-10-29-calendar-fullcalendar]]). Brings `@fullcalendar/core` and `@full-ui/headless-calendar`; needs `temporal-polyfill` (1.0.6 installed, also used by rrule-temporal code) |
+| rrule-temporal | 2.2.8 (installed) | Expands repeating calendar events (RFC 5545 `RRULE`) on the device |
 | rxdb (+ Dexie storage), rxjs | 17.6.0, 7.8.2 (installed in the spike) | Client local DB + replication for offline modules ([[2026-10-21-sync-rxdb]]). Apache 2.0 per its LICENSE.txt; Dexie storage and the CRDT plugin are in the free package |
 
 Database access: plain SQL with psycopg, numbered `.sql` migrations applied by our own script, no ORM — see [[2026-10-21-database-access-plain-sql]].

@@ -34,6 +34,13 @@ describe("archive display", () => {
     expect(typeLabel("task")).toBe("task"); // a future module still shows something
   });
 
+  it("labels calendar events, and counts a series' changed occurrences", () => {
+    expect(itemKind(item({ module: "calendar", type: "event" }))).toBe("Event");
+    expect(itemKind(item({ module: "calendar", type: "series" }))).toBe("Repeating event");
+    expect(itemKind(item({ module: "calendar", type: "series", items: 1 }))).toBe("Repeating event · 1 changed occurrence");
+    expect(itemKind(item({ module: "calendar", type: "series", items: 3 }))).toBe("Repeating event · 3 changed occurrences");
+  });
+
   it("offers All plus one filter per server type", () => {
     expect(FILTERS.map((f) => f.type)).toEqual(["", "note", "folder", "voice_note"]);
   });
