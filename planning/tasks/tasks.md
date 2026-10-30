@@ -157,7 +157,7 @@ Moved ahead of notes with recordings because it's more urgent (Mihail, 2026-10-2
 - [x] Device feedback (2026-10-30): show as busy / tentative / free (server column + form + look); start/end as date + 30-minute time list (the PC had no time picker); PC form in the right panel
 - [x] Device feedback 2 (2026-10-30): Save / Discard for repeating events, asked at Save instead of at the first keystroke; phone header with Today beside the arrows and a DD MMM YY title
 - [x] Device feedback 3 (2026-10-30): phone toolbar on one row; month/year show only Busy; PC day list in the panel for month/year
-- [ ] Repeat: the weekday buttons didn't show on the phone after picking "Every week" — not reproduced yet
+- [x] Repeat: the weekday buttons didn't show on the phone after picking "Every week". Cause: on an existing series the scope question popped up at that change, and *Only this one* put the repeat back and locked it. Gone with Save/Discard; Mihail checked it on the phone (2026-10-30)
 - [~] Check every calendar acceptance criterion on the phone and the PC; write results in [[calendar_spec]]
 
 ## Later (ideas and loose ends, not scheduled)
