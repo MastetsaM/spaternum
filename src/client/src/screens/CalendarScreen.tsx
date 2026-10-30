@@ -1,6 +1,6 @@
 // Calendar: FullCalendar's year / month / week / day views in the main area. The event form opens
-// in the tool panel on the PC and as its own screen on the phone; otherwise the tool panel switches
-// view. Days are split into 30-minute slots. Rules live in calendar/calendar.ts, screen helpers in
+// in the tool panel on the PC and as its own screen on the phone; otherwise the tool panel lists
+// one day's events. Days are split into 30-minute slots. Rules live in calendar/calendar.ts, screen helpers in
 // calendar/display.ts, database writes in calendar/store.ts. Spec: calendar_spec.
 
 import FullCalendar, {
@@ -123,7 +123,8 @@ function CalendarView({ openKey }: { openKey: string | undefined }) {
   const [range, setRange] = useState<Range | null>(null);
   const [pending, setPending] = useState<Pending | null>(null);
   const [phone] = useState(() => window.matchMedia(PHONE).matches);
-  const [picked, setPicked] = useState<string | null>(null); // PC, month/year: the day listed in the panel
+  // The day listed in the tool panel: today at first, then the day clicked, or the day shown in day view
+  const [picked, setPicked] = useState(() => localDay(new Date()));
 
   const shown = useMemo(() => (rows && range ? occurrences(rows, range.from, range.to) : []), [rows, range]);
   const byKey = useMemo(() => new Map(shown.map((o) => [o.key, o])), [shown]);
@@ -134,7 +135,7 @@ function CalendarView({ openKey }: { openKey: string | undefined }) {
     () => (isYear ? daysWithEvents(shown.filter(shownInMonthAndYear)) : new Set<string>()),
     [shown, isYear],
   );
-  const dayList = useMemo(() => (rows && picked && isWide && !phone ? eventsOfDay(rows, picked) : null), [rows, picked, isWide, phone]);
+  const dayList = useMemo(() => (rows ? eventsOfDay(rows, picked) : []), [rows, picked]);
   // The event open in the panel, and the rest of its series, can't be dragged: its times change in
   // the form, so a drag and the form don't overwrite each other
   const locked = useMemo(() => {
@@ -166,6 +167,7 @@ function CalendarView({ openKey }: { openKey: string | undefined }) {
     const next = { from: info.start.toISOString(), to: info.end.toISOString(), view: info.view.type };
     setRange((r) => (r && r.from === next.from && r.to === next.to && r.view === next.view ? r : next));
     updatePrefs(() => ({ view: info.view.type as ViewId }));
+    if (info.view.type === "timeGridDay") setPicked(localDay(info.view.currentStart));
   }
 
   // A tap on a slot (or a long-press on the phone) makes a 30-minute event; a drag, that length
@@ -177,11 +179,10 @@ function CalendarView({ openKey }: { openKey: string | undefined }) {
     openForm(event.id, "?new=1");
   }
 
-  // PC, month/year: a click lists that day's events in the panel. Phone, year: a tap opens that day.
+  // A click on a day lists it in the tool panel. Phone, year view: a tap opens that day instead.
   function dateClick(info: DateClickInfo) {
-    const view = info.view.type;
-    if (!phone && (view === "multiMonthYear" || view === "dayGridMonth")) setPicked(localDay(info.date));
-    else if (view === "multiMonthYear") api()?.changeView("timeGridDay", info.date);
+    setPicked(localDay(info.date));
+    if (phone && info.view.type === "multiMonthYear") api()?.changeView("timeGridDay", info.date);
   }
 
   function open(info: EventClickInfo) {
@@ -208,9 +209,9 @@ function CalendarView({ openKey }: { openKey: string | undefined }) {
   const dayCellClass = useCallback(
     (info: DayCellInfo) => {
       const day = localDay(info.date);
-      return [dots.has(day) && "cal-dot", dayList && day === picked && "cal-picked"].filter(Boolean).join(" ");
+      return [dots.has(day) && "cal-dot", isWide && day === picked && "cal-picked"].filter(Boolean).join(" ");
     },
-    [dots, dayList, picked],
+    [dots, isWide, picked],
   );
 
   return (
@@ -221,14 +222,7 @@ function CalendarView({ openKey }: { openKey: string | undefined }) {
         openKey ? (
           <EventForm key={formId} occurrenceKey={openKey} panel />
         ) : (
-          <CalendarTools
-            view={range?.view}
-            onView={(view) => api()?.changeView(view)}
-            onToday={() => api()?.today()}
-            day={dayList && picked}
-            dayEvents={dayList ?? []}
-            onOpen={openForm}
-          />
+          <DayList day={picked} events={dayList} onOpen={openForm} />
         )
       }
     >
@@ -309,50 +303,31 @@ function toInput(o: Occurrence, locked: boolean): EventInput {
   };
 }
 
-type ToolsProps = {
-  view: string | undefined;
-  onView: (view: ViewId) => void;
-  onToday: () => void;
-  day: string | null; // PC, month/year: the clicked day, listed below the views
-  dayEvents: Occurrence[];
-  onOpen: (key: string) => void;
-};
+type DayListProps = { day: string; events: Occurrence[]; onOpen: (key: string) => void };
 
 const SHOW_AS_LABEL: Record<ShowAs, string> = { busy: "", tentative: " · Tentative", free: " · Free" };
 
-function CalendarTools({ view, onView, onToday, day, dayEvents, onOpen }: ToolsProps) {
+/** The tool panel: one day's events, all statuses, each marked. Today and the views are in the calendar's toolbar. */
+function DayList({ day, events, onOpen }: DayListProps) {
   return (
     <div className="details">
-      <button onClick={onToday}>Today</button>
-      <h3>View</h3>
-      <div className="cal-choices">
-        {VIEWS.map((v) => (
-          <button key={v.id} className={v.id === view ? "on" : ""} onClick={() => onView(v.id)}>
-            {v.label}
-          </button>
-        ))}
-      </div>
-      {day && (
-        <>
-          <h3>{dayHeading(day)}</h3>
-          {dayEvents.length === 0 ? (
-            <p className="muted">No events.</p>
-          ) : (
-            <ul className="cal-day-list">
-              {dayEvents.map((o) => (
-                <li key={o.key}>
-                  <button className={`cal-day-item cal-${o.showAs}`} onClick={() => onOpen(o.key)}>
-                    <span className="cal-day-title">{o.title.trim() || "(no title)"}</span>
-                    <span className="cal-day-meta">
-                      {timeLabel(o)}
-                      {SHOW_AS_LABEL[o.showAs]}
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </>
+      <h3>{dayHeading(day)}</h3>
+      {events.length === 0 ? (
+        <p className="muted">No events.</p>
+      ) : (
+        <ul className="cal-day-list">
+          {events.map((o) => (
+            <li key={o.key}>
+              <button className={`cal-day-item cal-${o.showAs}`} onClick={() => onOpen(o.key)}>
+                <span className="cal-day-title">{o.title.trim() || "(no title)"}</span>
+                <span className="cal-day-meta">
+                  {timeLabel(o)}
+                  {SHOW_AS_LABEL[o.showAs]}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   );
