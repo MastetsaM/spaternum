@@ -95,21 +95,21 @@ let shownDate: Date | null = null;
 
 const PLUGINS = [classicThemePlugin, dayGridPlugin, timeGridPlugin, multiMonthPlugin, interactionPlugin];
 const VIEW_BUTTONS = VIEWS.map((v) => v.id).join(",");
-const PC_HEADER = { start: "prev,next today", center: "title", end: VIEW_BUTTONS };
+const PC_HEADER = { start: "prev,next,today", center: "title", end: VIEW_BUTTONS }; // ‹ › Today joined, like the phone
 const PHONE_HEADER = { start: "prev,next,today", center: "", end: "title" }; // one button group
 const PHONE_FOOTER = { center: VIEW_BUTTONS };
 const BUTTONS = { today: { text: "Today" }, ...Object.fromEntries(VIEWS.map((v) => [v.id, { text: v.label }])) };
 const TIME_FORMAT = { hour: "2-digit", minute: "2-digit", hour12: false } as const; // 24 h
 const VIEW_OPTIONS = { multiMonthYear: { selectable: false, editable: false } }; // the year view only shows dots
-// PC month view: a click shows the day's events in the panel; a drag (even inside one day) creates
-const PC_VIEW_OPTIONS = { ...VIEW_OPTIONS, dayGridMonth: { selectMinDistance: 5 } };
-// The phone's title is short (DD MMM YY), so Today fits next to the arrows
+// The title is short (DD MMM YY) on both, so Today fits next to the arrows (the PC follows the phone)
 type TitleInfo = { start: { year: number; month: number; day: number } }; // month 0-11
 const shortTitleOf = (view: ViewId) => (info: TitleInfo) =>
   shortTitle(view, { ...info.start, month: info.start.month + 1 });
-const PHONE_VIEW_OPTIONS = Object.fromEntries(
-  VIEWS.map((v) => [v.id, { ...VIEW_OPTIONS[v.id as keyof typeof VIEW_OPTIONS], titleFormat: shortTitleOf(v.id) }]),
-);
+const withTitles = (options: Record<string, object>) =>
+  Object.fromEntries(VIEWS.map((v) => [v.id, { ...options[v.id], titleFormat: shortTitleOf(v.id) }]));
+const PHONE_VIEW_OPTIONS = withTitles(VIEW_OPTIONS);
+// PC month view: a click shows the day's events in the panel; a drag (even inside one day) creates
+const PC_VIEW_OPTIONS = withTitles({ ...VIEW_OPTIONS, dayGridMonth: { selectMinDistance: 5 } });
 
 type Range = { from: string; to: string; view: string };
 type Pending = { occurrence: Occurrence; change: Change; revert: () => void }; // a dragged series occurrence
@@ -257,7 +257,7 @@ function CalendarView({ openKey }: { openKey: string | undefined }) {
             selectMirror
             forceEventDuration
             views={phone ? PHONE_VIEW_OPTIONS : PC_VIEW_OPTIONS}
-            toolbarTitleClass={phone ? "cal-title" : undefined}
+            toolbarTitleClass="cal-title"
             events={events}
             dayCellClass={dayCellClass}
             datesSet={datesSet}

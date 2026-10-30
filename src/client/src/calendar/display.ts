@@ -68,7 +68,7 @@ export function savePrefs(prefs: Prefs) {
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 /**
- * The phone's title, DD MMM YY (Mihail, 2026-10-30): day "27 Oct 26", week "26 Oct – 01 Nov 26"
+ * The calendar's title on phone and PC, DD MMM YY (Mihail, 2026-10-30): day "27 Oct 26", week "26 Oct – 01 Nov 26"
  * (one month: "19 – 25 Oct 26"), month "Oct 26", year "2026". `start`: the view's first day.
  */
 export function shortTitle(view: ViewId, start: { year: number; month: number; day: number }): string {
