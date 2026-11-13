@@ -36,6 +36,7 @@ The calendar UI comes from a library, not from scratch: **FullCalendar v7** for 
 ## Decided 2026-11-13
 - **New-event button:** a **+** in the top row, joined to the ‹ › Today group, on the phone and the PC. It makes a 30-minute event and opens the form. On the day listed in the panel (today at first): if that's today, it starts at the next half hour (:00 or :30) from now; on any other day, at 08:00. Taps on empty slots still create events too.
 - **A tap in an occupied slot opens the event** (week and day views): a tap (PC click, phone long-press) on a single slot that an event already covers, including the empty strip beside its block, opens that event instead of making an overlapping one. If several cover it, the one that starts first. A tap on a block still opens that block's event. To make an overlapping event on purpose: the + button or a drag across slots. All-day row and month view are unchanged.
+- **Phone: a shorter hold.** Creating on a slot or moving an event needs a 0.3 s hold before the drag (FullCalendar's default was 1 s). The hold stays so a swipe still scrolls.
 
 ## Data model
 Owned by the new `calendar` module. Plain SQL ([[2026-10-21-database-access-plain-sql]]). One synced table.
@@ -88,7 +89,7 @@ Using FullCalendar's free views:
 ## Creating and editing
 - **Both:** the **+** button in the top row creates a 30-minute event (see "Decided 2026-11-13"). A tap on a slot an event already covers opens that event.
 - **PC:** click an empty slot to create a **30-minute** event, or drag across slots to choose its length; drag an event to move it; drag its bottom edge to change its length.
-- **Phone:** long-press on a slot to create a 30-minute event; long-press an event, then drag, to move it (FullCalendar's touch behaviour). A tap opens the event.
+- **Phone:** long-press (0.3 s) on a slot to create a 30-minute event; long-press an event, then drag, to move it (FullCalendar's touch behaviour). A tap opens the event.
 - The **event form** has: title, all-day, start, end, show as, repeat, notes. A one-off event saves on its own, like notes; a repeating event has *Save* and *Discard*. On the PC it opens in the tool panel on the right, with the calendar still in view; on the phone it's its own screen.
 - **Start and end** are a date field plus a list of times every 30 minutes. An event at another minute (e.g. 10:15, synced from elsewhere) keeps that time as an extra entry in the list.
 - **Show as** on screen (week and day; month and year show only Busy): *Busy* = the normal block; *Tentative* = striped and in italics (italics only where an event has no block, like timed events in the month view); *Free* = faded. The same in every view except the year view (dots only).

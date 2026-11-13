@@ -271,6 +271,7 @@ function CalendarView({ openKey }: { openKey: string | undefined }) {
             slotHeaderFormat={TIME_FORMAT}
             eventTimeFormat={TIME_FORMAT}
             nowIndicator
+            longPressDelay={300} // touch: hold 0.3 s (not 1 s) to create or move; a swipe still scrolls
             editable
             selectable
             selectMirror
