@@ -33,6 +33,10 @@ The calendar UI comes from a library, not from scratch: **FullCalendar v7** for 
 - **Month and year show only Busy events** (and the year's dots only Busy days). Tentative and free events are seen in week and day; once one is set to Busy it shows in month and year too.
 - **The tool panel lists one day's events** (Mihail, 2026-10-30; it used to repeat Today and the view buttons, which are already in the calendar's toolbar). All statuses, each marked; a click on one opens it in the form. The day is today at first, then the day clicked (any view) or the day shown in day view. PC month view: a click no longer creates an event, a drag does (even within one day). Phone, year view: a tap still opens the day view.
 
+## Decided 2026-11-13
+- **New-event button:** a **+** in the top row, right after ‹ › Today, on the phone and the PC. It makes a 30-minute event and opens the form. On the day listed in the panel (today at first): if that's today, it starts at the next half hour (:00 or :30) from now; on any other day, at 08:00. Taps on empty slots still create events too.
+- **A tap in an occupied slot opens the event** (week and day views): a tap (PC click, phone long-press) on a single slot that an event already covers, including the empty strip beside its block, opens that event instead of making an overlapping one. If several cover it, the one that starts first. A tap on a block still opens that block's event. To make an overlapping event on purpose: the + button or a drag across slots. All-day row and month view are unchanged.
+
 ## Data model
 Owned by the new `calendar` module. Plain SQL ([[2026-10-21-database-access-plain-sql]]). One synced table.
 
@@ -82,6 +86,7 @@ Using FullCalendar's free views:
 - The app opens the calendar on the view used last on that device.
 
 ## Creating and editing
+- **Both:** the **+** button in the top row creates a 30-minute event (see "Decided 2026-11-13"). A tap on a slot an event already covers opens that event.
 - **PC:** click an empty slot to create a **30-minute** event, or drag across slots to choose its length; drag an event to move it; drag its bottom edge to change its length.
 - **Phone:** long-press on a slot to create a 30-minute event; long-press an event, then drag, to move it (FullCalendar's touch behaviour). A tap opens the event.
 - The **event form** has: title, all-day, start, end, show as, repeat, notes. A one-off event saves on its own, like notes; a repeating event has *Save* and *Discard*. On the PC it opens in the tool panel on the right, with the calendar still in view; on the phone it's its own screen.
