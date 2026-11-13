@@ -5,6 +5,7 @@ import { applyChange, newEvent, type CalendarEvent, type Occurrence } from "./ca
 import {
   addDays,
   applyWrites,
+  buttonStart,
   daysWithEvents,
   DEFAULT_PREFS,
   droppedTimes,
@@ -15,6 +16,7 @@ import {
   midnight,
   moveStart,
   nextOccurrence,
+  occurrenceInSlot,
   parsePrefs,
   dayHeading,
   eventsOfDay,
@@ -146,6 +148,53 @@ describe("creating from the calendar", () => {
   it("uses days for all-day", () => {
     expect(fromSelection(local(2026, 10, 29), local(2026, 10, 30), true)).toEqual({ start: "2026-10-29", end: null });
     expect(fromSelection(local(2026, 10, 29), local(2026, 11, 1), true)).toEqual({ start: "2026-10-29", end: "2026-11-01" });
+  });
+});
+
+describe("a tap in an occupied slot", () => {
+  const slot = (h: number, min = 0) => [local(2026, 10, 29, h, min), local(2026, 10, 29, h, min + 30)] as const;
+
+  it("finds the event covering the slot, the strip beside its block included", () => {
+    const a = occ({ key: "a" }); // 10:00–11:00
+    expect(occurrenceInSlot([a], ...slot(10, 30))).toBe(a);
+    expect(occurrenceInSlot([a], ...slot(10))).toBe(a);
+  });
+
+  it("is empty right before and right after an event (ends are exclusive)", () => {
+    const a = occ({ key: "a" });
+    expect(occurrenceInSlot([a], ...slot(9, 30))).toBeNull();
+    expect(occurrenceInSlot([a], ...slot(11))).toBeNull();
+  });
+
+  it("picks the one that starts first when several cover it", () => {
+    const early = occ({ key: "early", start: iso(2026, 10, 29, 9), end: iso(2026, 10, 29, 12) });
+    const late = occ({ key: "late" });
+    expect(occurrenceInSlot([early, late], ...slot(10))?.key).toBe("early");
+  });
+
+  it("ignores all-day events", () => {
+    const allDay = occ({ allDay: true, start: "2026-10-29", end: "2026-10-30" });
+    expect(occurrenceInSlot([allDay], ...slot(10))).toBeNull();
+  });
+});
+
+describe("the + button", () => {
+  it("today: starts at the next half hour", () => {
+    expect(buttonStart("2026-10-29", local(2026, 10, 29, 10, 10))).toBe(iso(2026, 10, 29, 10, 30));
+    expect(buttonStart("2026-10-29", local(2026, 10, 29, 10, 40))).toBe(iso(2026, 10, 29, 11));
+  });
+
+  it("today, on a half hour: starts now; a few seconds past: the next one", () => {
+    expect(buttonStart("2026-10-29", local(2026, 10, 29, 10, 30))).toBe(iso(2026, 10, 29, 10, 30));
+    expect(buttonStart("2026-10-29", new Date(2026, 9, 29, 10, 30, 5))).toBe(iso(2026, 10, 29, 11));
+  });
+
+  it("late today rolls into tomorrow", () => {
+    expect(buttonStart("2026-10-29", local(2026, 10, 29, 23, 45))).toBe(iso(2026, 10, 30));
+  });
+
+  it("another day: 08:00", () => {
+    expect(buttonStart("2026-11-02", local(2026, 10, 29, 10, 10))).toBe(iso(2026, 11, 2, 8));
   });
 });
 

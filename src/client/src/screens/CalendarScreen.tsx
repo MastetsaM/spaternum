@@ -40,6 +40,7 @@ import {
 } from "../calendar/calendar";
 import {
   applyWrites,
+  buttonStart,
   dayHeading,
   daysWithEvents,
   eventsOfDay,
@@ -52,6 +53,7 @@ import {
   localDay,
   moveStart,
   nextOccurrence,
+  occurrenceInSlot,
   savePrefs,
   shortTitle,
   shownInMonthAndYear,
@@ -95,10 +97,17 @@ let shownDate: Date | null = null;
 
 const PLUGINS = [classicThemePlugin, dayGridPlugin, timeGridPlugin, multiMonthPlugin, interactionPlugin];
 const VIEW_BUTTONS = VIEWS.map((v) => v.id).join(",");
-const PC_HEADER = { start: "prev,next,today", center: "title", end: VIEW_BUTTONS }; // ‹ › Today joined, like the phone
-const PHONE_HEADER = { start: "prev,next,today", center: "", end: "title" }; // one button group
+// ‹ › Today + (new event) as one joined group
+const PC_HEADER = { start: "prev,next,today,newEvent", center: "title", end: VIEW_BUTTONS }; // like the phone
+const PHONE_HEADER = { start: "prev,next,today,newEvent", center: "", end: "title" };
 const PHONE_FOOTER = { center: VIEW_BUTTONS };
-const BUTTONS = { today: { text: "Today" }, ...Object.fromEntries(VIEWS.map((v) => [v.id, { text: v.label }])) };
+// The + button calls whatever the open calendar set here (the buttons are set once, the day changes)
+let onNewButton = () => {};
+const BUTTONS = {
+  today: { text: "Today" },
+  newEvent: { text: "+", hint: "New event", click: () => onNewButton() },
+  ...Object.fromEntries(VIEWS.map((v) => [v.id, { text: v.label }])),
+};
 const TIME_FORMAT = { hour: "2-digit", minute: "2-digit", hour12: false } as const; // 24 h
 const VIEW_OPTIONS = { multiMonthYear: { selectable: false, editable: false } }; // the year view only shows dots
 // The title is short (DD MMM YY) on both, so Today fits next to the arrows (the PC follows the phone)
@@ -170,14 +179,30 @@ function CalendarView({ openKey }: { openKey: string | undefined }) {
     if (info.view.type === "timeGridDay") setPicked(localDay(info.view.currentStart));
   }
 
-  // A tap on a slot (or a long-press on the phone) makes a 30-minute event; a drag, that length
-  async function create(info: DateSelectInfo) {
+  // A tap on a slot (or a long-press on the phone) makes a 30-minute event; a drag, that length.
+  // Week and day: a tap on a slot an event already covers opens that event instead.
+  function select(info: DateSelectInfo) {
     api()?.unselect();
     const { start, end } = fromSelection(info.start, info.end, info.allDay);
-    const event = newEvent(crypto.randomUUID(), start, end, info.allDay, deviceTimeZone(), ctx().now);
+    const occupied = !info.allDay && end === null ? occurrenceInSlot(shown, info.start, info.end) : null;
+    if (occupied) {
+      if (occupied.key !== openKey) openForm(occupied.key);
+    } else create(start, end, info.allDay);
+  }
+
+  async function create(start: string, end: string | null, allDay: boolean) {
+    const event = newEvent(crypto.randomUUID(), start, end, allDay, deviceTimeZone(), ctx().now);
     await write({ put: [event], archive: [] });
     openForm(event.id, "?new=1");
   }
+
+  // The + button: a 30-minute event on the listed day (today: the next half hour; else 08:00)
+  useEffect(() => {
+    onNewButton = () => create(buttonStart(picked, new Date()), null, false).catch(console.error);
+    return () => {
+      onNewButton = () => {};
+    };
+  });
 
   // A click on a day lists it in the tool panel. Phone, year view: a tap opens that day instead.
   function dateClick(info: DateClickInfo) {
@@ -246,6 +271,7 @@ function CalendarView({ openKey }: { openKey: string | undefined }) {
             slotHeaderFormat={TIME_FORMAT}
             eventTimeFormat={TIME_FORMAT}
             nowIndicator
+            longPressDelay={300} // touch: hold 0.3 s (not 1 s) to create or move; a swipe still scrolls
             editable
             selectable
             selectMirror
@@ -255,7 +281,7 @@ function CalendarView({ openKey }: { openKey: string | undefined }) {
             events={events}
             dayCellClass={dayCellClass}
             datesSet={datesSet}
-            select={create}
+            select={select}
             dateClick={dateClick}
             eventClick={open}
             eventDrop={changed}

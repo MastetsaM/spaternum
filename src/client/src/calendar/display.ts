@@ -170,6 +170,27 @@ export function fromSelection(start: Date, end: Date, allDay: boolean): { start:
   return { start: start.toISOString(), end: end.getTime() - start.getTime() > SLOT_MINUTES * MINUTE ? end.toISOString() : null };
 }
 
+/**
+ * The timed occurrence a tap on the slot [start, end) lands in, or null if the slot is empty.
+ * Several cover it → the one that starts first (`list` is sorted by start, as occurrences() gives it).
+ */
+export function occurrenceInSlot(list: Occurrence[], start: Date, end: Date): Occurrence | null {
+  return list.find((o) => !o.allDay && Date.parse(o.start) < end.getTime() && Date.parse(o.end) > start.getTime()) ?? null;
+}
+
+/**
+ * Where the + button's event starts, as toISOString(): today → the next half hour from now
+ * (:00 or :30; now itself if it's on one); another "YYYY-MM-DD" day → 08:00 on it, device time.
+ */
+export function buttonStart(day: string, now: Date): string {
+  if (day !== localDay(now)) return new Date(`${day}T08:00`).toISOString(); // no zone = the device's time
+  const d = new Date(now);
+  d.setSeconds(0, 0);
+  if (d.getTime() < now.getTime()) d.setMinutes(d.getMinutes() + 1); // a part-minute counts as a minute
+  d.setMinutes(Math.ceil(d.getMinutes() / SLOT_MINUTES) * SLOT_MINUTES); // 60 rolls into the next hour
+  return d.toISOString();
+}
+
 /** The stored times after a move or resize. An all-day event dropped without an end lasts one day. */
 export function droppedTimes(start: Date, end: Date | null, allDay: boolean, timeZone: string): { start_at: string; end_at: string } {
   if (allDay) {
