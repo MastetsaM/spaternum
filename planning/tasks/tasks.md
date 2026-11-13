@@ -170,6 +170,7 @@ Moved ahead of notes with recordings because it's more urgent (Mihail, 2026-10-2
   - Phone: install `spaternum-main-3.apk` (sent 2026-10-30) in Second Space.
   - PC: rebuild the desktop app from `main`.
   - Use it day to day: the red sync line should never show while things work; the Archive filters Events and Repeating events should list only those.
+- [x] Calendar: + button for a new event, a tap in an occupied slot opens that event, 0.3 s hold on the phone ([[calendar_spec]], "Decided 2026-11-13"). Checked on the phone and the PC (2026-11-13). The PC desktop app still needs a rebuild from `main`.
 - Next after this check: notes with recordings ([[notes-recordings_spec]], draft).
 
 ## Later (ideas and loose ends, not scheduled)
