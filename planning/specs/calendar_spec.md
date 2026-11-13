@@ -34,7 +34,7 @@ The calendar UI comes from a library, not from scratch: **FullCalendar v7** for 
 - **The tool panel lists one day's events** (Mihail, 2026-10-30; it used to repeat Today and the view buttons, which are already in the calendar's toolbar). All statuses, each marked; a click on one opens it in the form. The day is today at first, then the day clicked (any view) or the day shown in day view. PC month view: a click no longer creates an event, a drag does (even within one day). Phone, year view: a tap still opens the day view.
 
 ## Decided 2026-11-13
-- **New-event button:** a **+** in the top row, right after ‹ › Today, on the phone and the PC. It makes a 30-minute event and opens the form. On the day listed in the panel (today at first): if that's today, it starts at the next half hour (:00 or :30) from now; on any other day, at 08:00. Taps on empty slots still create events too.
+- **New-event button:** a **+** in the top row, joined to the ‹ › Today group, on the phone and the PC. It makes a 30-minute event and opens the form. On the day listed in the panel (today at first): if that's today, it starts at the next half hour (:00 or :30) from now; on any other day, at 08:00. Taps on empty slots still create events too.
 - **A tap in an occupied slot opens the event** (week and day views): a tap (PC click, phone long-press) on a single slot that an event already covers, including the empty strip beside its block, opens that event instead of making an overlapping one. If several cover it, the one that starts first. A tap on a block still opens that block's event. To make an overlapping event on purpose: the + button or a drag across slots. All-day row and month view are unchanged.
 
 ## Data model

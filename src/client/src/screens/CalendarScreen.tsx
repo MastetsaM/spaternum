@@ -97,9 +97,9 @@ let shownDate: Date | null = null;
 
 const PLUGINS = [classicThemePlugin, dayGridPlugin, timeGridPlugin, multiMonthPlugin, interactionPlugin];
 const VIEW_BUTTONS = VIEWS.map((v) => v.id).join(",");
-// ‹ › Today joined, then + (new event) on its own
-const PC_HEADER = { start: "prev,next,today newEvent", center: "title", end: VIEW_BUTTONS }; // like the phone
-const PHONE_HEADER = { start: "prev,next,today newEvent", center: "", end: "title" };
+// ‹ › Today + (new event) as one joined group
+const PC_HEADER = { start: "prev,next,today,newEvent", center: "title", end: VIEW_BUTTONS }; // like the phone
+const PHONE_HEADER = { start: "prev,next,today,newEvent", center: "", end: "title" };
 const PHONE_FOOTER = { center: VIEW_BUTTONS };
 // The + button calls whatever the open calendar set here (the buttons are set once, the day changes)
 let onNewButton = () => {};
