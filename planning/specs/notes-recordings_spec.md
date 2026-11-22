@@ -1,37 +1,128 @@
-# Spec — Notes with recordings (draft)
+# Spec — Notes with recordings
 
-**Status:** draft, 2026-10-28. Phase 1 is checked and merged, so this is the next feature to build. The open questions below come first.
+**Status:** ready to build (2026-11-22). Open questions answered by Mihail on 2026-11-22.
 
 ## What and why
 Notes and voice notes are both notes. They become **one item, the note**, which can hold text, recordings, or both. Later phases (transcription, analysis) then work on one thing: a note's transcripts sit next to its text, under the same title, tags and folder. Asked for by Mihail on 2026-10-28, after using phase 1 on both devices.
 
-## Decisions (Mihail, 2026-10-28)
+## Decisions
+From Mihail on 2026-10-28:
 1. A note can have **several recordings** (e.g. a follow-up recorded into the same note).
 2. **Record** in the notes list makes a **new note** holding the recording. Record **inside an open note** adds a recording to that note.
-3. **Title, tags, folder and pin belong to the note.** Recordings no longer have their own title and tags. Each existing voice note becomes a note holding its recording, with the voice note's title and tags.
+3. **Title, tags, folder and pin belong to the note.** Recordings no longer have their own title and tags.
 4. **Pinned:** one **"Pinned" section at the top level** of Notes, with the pinned notes from all folders.
 5. **Folder tags:** a note in `Work › Clients › Acme` also shows the tags `Work`, `Clients`, `Acme`, and choosing one in search finds everything under that folder at any depth. They are **worked out on the fly** from where the note is now, never saved, so moving or renaming a folder updates them at once. They look different from normal tags.
 6. The separate **Voice notes tool goes away**.
-7. **Tool panel (right):** a full tree of everything, with folders and the notes inside them, so the whole layout can be seen and navigated from one place. At its top sits a place for **notes settings** (added 2026-10-28).
+7. **Tool panel (right):** a full tree of everything, with folders and the notes inside them, so the whole layout can be seen and navigated from one place. At its top sits a place for **notes settings**.
+
+From Mihail on 2026-11-22:
+
+8. **The notes module owns recordings.** The voice notes module goes away on the server and the client.
+9. In an open note, **recordings show above the text**.
+10. In the notes list, a note with recordings has a **mic icon** next to its title.
+11. **Notes settings:** an empty placeholder for now. Settings are added when a real need comes up.
+12. Pinned notes show in **both places**: in the Pinned section and at the top of their own folder (as today).
+13. **One recording can be archived on its own** while its note stays. It is its own entry on the Archive page.
+14. A note with no title and no text shows its **first recording's date-time** as its name (same as untitled voice notes today).
+15. **Recording into an existing note counts as an edit**: the note moves to the top of its list.
+16. Existing voice notes move into a new **"Voice notes" folder** at the top level.
+17. The table is renamed **`note_recordings`**.
+18. Restoring a recording whose note is archived **restores the note too**.
+19. Folder tags work **by name**: if two folders are both called `Clients`, the tag `Clients` finds notes under both.
 
 ## What stays the same
-Everything about recording and audio in [[voice-notes_spec]]: the recorder settings, crash safety and recovery, the 1-hour split, upload, playback, the player, the file names, and that recording is Android only. Sync, archive and empty-note rules from [[notes_spec]].
+Everything about recording and audio in [[voice-notes_spec]]: the recorder settings, crash safety and recovery, the upload rules, playback, the player, the file names, and that recording is Android only. Sync, archive and empty-note rules from [[notes_spec]], except where this spec changes them.
 
-## Proposed shape (to confirm before building)
-- The `voice_notes` table becomes the note's **recordings**: one row per audio file, with a new `note_id`. Its `title` and `tags` move to the note in the migration.
-- An "empty" note is now: no title, no text **and no recordings**. A note with only a recording is fine.
-- A recording's row can reach a device before its note (they sync separately). It's then held back until the note arrives, the same way a note waits for its folder.
-- Archiving a note archives its recordings with it, and restoring brings them back (like a folder and its contents).
+## Data model
+Owned by the notes module. `notes` and `note_folders` don't change.
 
-## Open questions
-- Which module owns recordings: notes, or voice notes as a part notes uses? This affects [[2026-10-20-architecture-modular-monolith]].
-- Where recordings show in the note: above or below the text?
-- Notes settings: what goes in them?
-- Notes list row: does a note with recordings show a mark (e.g. a mic icon) next to its title?
+```sql
+-- voice_notes renamed; title and tags dropped (moved to the note)
+CREATE TABLE note_recordings (
+    id          uuid PRIMARY KEY,              -- generated by the client; also the audio file name
+    note_id     uuid NOT NULL,                 -- the note it belongs to; no foreign key (sync order)
+    recorded_at timestamptz NOT NULL,
+    duration_ms integer NOT NULL,
+    size_bytes  bigint NOT NULL,
+    mime_type   text NOT NULL,
+    uploaded_at timestamptz,                   -- server-owned, as before
+    created_at  timestamptz NOT NULL,
+    updated_at  timestamptz NOT NULL,
+    archived_at timestamptz,
+    seq         bigint NOT NULL
+);
+```
+
+**Migration** (one server migration, one RxDB schema step on the devices):
+- Create the folder **"Voice notes"** at the top level, with a fresh id. It's created only if there is at least one voice note (active or archived).
+- For each voice note: create a note in that folder with the voice note's `title`, `tags`, `created_at`, `updated_at` and `archived_at`, and an empty body. The recording gets that note's id.
+- Rename the table, add `note_id`, drop `title` and `tags`.
+- An archived voice note becomes an archived note **and** an archived recording with the same `archived_at`, so restoring the note brings both back.
+- Audio files on the server and on the phone keep their names (`<id>.webm`): the recording keeps the voice note's id.
+- Devices drop their local `voice_notes` collection and pull `notes` and `note_recordings` again. Before that, the app must have **pushed any pending voice note changes** and must not drop local audio files. An unpushed voice note row is the risk here (see Edge cases).
+
+## Rules
+- **Empty note:** no title, no text **and no active recordings**. A note with only a recording is kept.
+- **Record in the list:** at Stop, the app creates the note (in the current folder, title and body empty) and the recording in one go. Nothing exists before Stop, as today.
+- **Record inside an open note:** at Stop, the recording is added to that note and the note's `updated_at` is set (decision 15). If the note is new and has no row yet, the row is created then.
+- **1-hour split:** the parts become separate recordings **in the same note**.
+- **Sync order:** a recording can reach a device before its note. It is held back (not shown) until the note arrives, the same way a note waits for its folder.
+- **Archiving a note** archives its active recordings with the same `archived_at`. Restoring the note brings back those recordings, not ones archived on their own earlier (same rule as a folder).
+- **Archiving a recording** archives only it. The note stays, even if it is now empty (it was not cleared by typing). Restoring the recording also restores its note if that is archived (decision 18).
+- **Clearing the text** of a note that has recordings is fine: the note isn't empty.
+- **Title shown:** the title, else the first line of the text, else the first recording's `recorded_at` in local time.
+- **Folder tags:** for each folder from the note's folder up to the top level, its name. Shown after the normal tags, in a different style, and they can't be removed by hand. In search, choosing a folder tag finds notes in **any folder with that name, at any depth below it**. Several chosen tags (normal or folder) = notes with all of them.
+- **Search** keeps working on title and text only. Recordings have no text until phase 2.
+
+## UI
+- **Notes list:** a **Record** button next to New note and New folder (Android only). Rows: title, mic icon if the note has recordings, pin mark if pinned.
+- **Top level:** a **Pinned** section above the folders, listing pinned notes from every folder. It's hidden when nothing is pinned. Pinned notes also stay at the top of their own folder.
+- **Editor:** the note's recordings above the title and text, oldest first, each with the player from [[voice-notes_spec]], its date-time, duration, upload state and an Archive button. A **Record** button above them (Android only). The PC plays recordings but can't record.
+- **Tool panel (right):**
+  - At the top: **Notes settings**, an empty placeholder for now.
+  - Then a **full tree**: folders and the notes inside them, opened and closed per folder. A tap on a folder or note opens it.
+  - Then the details of the current folder or note, as today. A note's details show its tags followed by the folder tags.
+- **Side panel:** the Voice notes tool is removed. Routes `/tools/voice-notes…` go to Notes.
+- **Archive page:** the type `voice_note` becomes `recording`, shown as "Recording in <note title>". The filter "Voice notes" becomes "Recordings".
+- **Upload states** and the upload queue work as in [[voice-notes_spec]], shown per recording in the editor.
+
+## Inputs and outputs
+- **Input:** everything in [[notes_spec]]; Record / Stop in the list and in a note; Play and Archive on a recording; choosing folder tags in search.
+- **Output:** one note list with recordings inside notes, the Pinned section, folder tags, the full tree; `note_recordings` rows synced to every device; audio files as before.
+
+## Acceptance criteria (done when…)
+1. Every existing voice note shows as a note in the **Voice notes** folder, with its title, tags and recording; it plays on the phone and the PC. Nothing is lost: same number of recordings before and after, archived ones still on the Archive page.
+2. Record in the list (phone) makes a new note in the current folder, holding the recording; it shows with a mic icon and the recording's date-time as its name.
+3. Record inside a note adds a recording to it; the note moves to the top of its list. Several recordings show above the text, oldest first.
+4. A 1-hour+ recording ends up as several recordings in the same note.
+5. Offline recording, recovery after a crash, upload, repeat upload and playback still pass the voice notes criteria 1–9 ([[voice-notes_spec]]), now inside notes.
+6. Archiving a note archives its recordings; restoring it brings them back. Archiving one recording leaves the note. Restoring that recording brings back its note too if archived.
+7. A note with only a recording is never discarded as empty; a new note with nothing in it still isn't created.
+8. The Pinned section at the top level lists pinned notes from all folders; pinned notes also stay at the top of their own folder.
+9. A note in `Work › Clients › Acme` shows the folder tags `Work`, `Clients`, `Acme`; choosing `Work` in search finds it; after moving or renaming a folder the tags follow at once.
+10. The tool panel shows the settings placeholder and a full tree that opens any folder or note.
+11. The Voice notes tool is gone from the side panel; the PC has no Record button.
+12. Tests pass: server migration (voice notes → notes + recordings, archived ones included), sync of `note_recordings`, recording before its note, archive and restore cascades, upload endpoint; client rules (empty note, title shown, folder tags, Pinned list, held-back recordings).
+
+## Edge cases and failure modes
+- **Voice note changes not pushed when the app updates** (e.g. a tag edited offline): the RxDB step pushes them before dropping the old collection. If the server can't be reached, the app keeps the old collection and tries again on the next start. The audio upload queue keeps working on the files either way.
+- **Recording not uploaded yet when the app updates:** its file stays under the same name, so it uploads as before.
+- **Recording whose note never arrives** (note archived on another device meanwhile): stays hidden. Restoring the note brings it back.
+- **Folder renamed on another device while searching by its tag:** the tag disappears from the list, the search shows what still matches.
+- **A note moved out of the folder of a chosen folder tag:** it drops out of the results.
+- **Old app talking to the new server** (PC not rebuilt yet): the old `voice-notes` endpoints are gone, so its Voice notes tool fails to sync and shows the red sync line. Rebuild the PC app with the server update.
+- **Install-specific audio** (main space vs Second Space): same known limitation as in [[voice-notes_spec]].
 
 ## Out of scope
 - Transcription and analysis (phases 2–3), beyond keeping room for them.
 - Recording on the PC.
+- Moving a recording from one note to another.
+- Any actual notes settings (placeholder only).
+- Searching inside recordings.
+- The separate edited time from [[notes_spec]] (notes order loose end).
+
+## Open questions
+None — ready to build.
 
 ## Related
-[[notes_spec]] · [[voice-notes_spec]] · [[archive_spec]] · [[ui-design_spec]] · [[PRD]] · [[tasks]] · [[2026-10-20-architecture-modular-monolith]]
+[[notes_spec]] · [[voice-notes_spec]] · [[archive_spec]] · [[ui-design_spec]] · [[client-foundation_spec]] · [[PRD]] · [[tasks]] · [[2026-10-20-architecture-modular-monolith]] · [[2026-10-21-sync-rxdb]]
