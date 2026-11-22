@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { serverNow } from "../sync/clock";
 import type { RxCollection } from "rxdb";
-import { getDb, type Db, type Folder, type Note } from "../sync/db";
+import { getDb, type Db, type Folder, type Note, type Recording } from "../sync/db";
 import { hideArchivedContents, type Content } from "./notes";
 
 /** Every active row of a collection, kept up to date; null while loading. */
@@ -34,6 +34,11 @@ export function useNotesAndFolders(): { notes: Note[]; folders: Folder[] } | nul
   const folders = useRows((db) => db.note_folders);
   if (!notes || !folders) return null;
   return hideArchivedContents(folders, notes, archivedHere());
+}
+
+/** Active recordings on the device, kept up to date; null while loading. */
+export function useRecordings(): Recording[] | null {
+  return useRows((db) => db.note_recordings);
 }
 
 // Folders archived on this device: id → archive time. Kept on the device, so a restart while
