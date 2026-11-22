@@ -78,7 +78,7 @@ Latest versions as of 2026-10-20. **Pinned for real when installed** — the exa
 
 The template may pin slightly different versions; whatever it installs is what gets recorded. Exact versions live in the prototype's `pnpm-lock.yaml`.
 
-### Phase 1 — server and real clients (installed ones marked; the rest proposed)
+### Phase 1 — server and real clients (installed ones marked; the rest proposed)\
 | Package | Version | Purpose |
 |---|---|---|
 | uv | 0.13.4 (installed) | Python package/venv manager |
@@ -146,15 +146,7 @@ pnpm tauri add fs                      # JS package + Rust crate + capability
 
 ### Build an APK and send it to the phone
 Used when Mihail tests from his phone over Remote Control (no USB). A debug APK is ~134 MB, too big to send (30 MiB limit); a release APK is ~6.5 MB. Sign it with the Android debug key — fine for personal testing, not for publishing.
-```bash
-BT=$ANDROID_HOME/build-tools/37.0.0
-OUT=src-tauri/gen/android/app/build/outputs/apk/universal/release
-pnpm tauri android build --apk --target aarch64
-$BT/zipalign -f -p 4 $OUT/app-universal-release-unsigned.apk aligned.apk
-$BT/apksigner sign --ks ~/.android/debug.keystore --ks-pass pass:android \
-  --ks-key-alias androiddebugkey --key-pass pass:android --out app.apk aligned.apk
-$BT/apksigner verify app.apk
-```
+Run `ops/build-apk.sh`: it builds for `aarch64`, aligns and signs the APK, checks the signature, and prints the path of `spaternum-<branch>-<commit>.apk` (`-dirty` if there are uncommitted changes). Claude sends it with the local `send-apk` skill (`.claude/skills/`, not in git).
 Same key every time, so a new APK installs over the old one.
 
 ## What not to use, and why

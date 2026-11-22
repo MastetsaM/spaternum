@@ -9,6 +9,7 @@ Deployment and operations for the Spaternum server. Spec: [[deploy_spec]].
 | `.env` (not committed) | Postgres password, API token, `DATA_ROOT`, `LOG_LEVEL` — see `.env.example`; `install.sh` creates it |
 | `install.sh` | Once per machine: checks → creates `.env` and data folders → builds → starts `db` → migrates → starts `api` → prints the token |
 | `update.sh` | On the Pi, after a change is tested on the PC: pull `main` → build → migrate → restart `api` |
+| `build-apk.sh` | On the PC: release APK of the current checkout, signed with the debug key, for testing on the phone — see [[TECH]] |
 | `backup.sh` | By hand: `pg_dump` + copy of `files/` into `DATA_ROOT/backups/<date-time>/`, keeps the last 7 |
 
 Details and reasoning: [[TECH]] (Deployment), [[2026-10-20-deployment-docker-compose]].
