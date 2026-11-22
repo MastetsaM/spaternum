@@ -171,10 +171,32 @@ Moved ahead of notes with recordings because it's more urgent (Mihail, 2026-10-2
   - [ ] PC: rebuild the desktop app from `main`.
   - Use it day to day: the red sync line should never show while things work; the Archive filters Events and Repeating events should list only those.
 - [x] Calendar: + button for a new event, a tap in an occupied slot opens that event, 0.3 s hold on the phone ([[calendar_spec]], "Decided 2026-11-13"). Checked on the phone and the PC (2026-11-13). The PC desktop app still needs a rebuild from `main`.
-- Next after this check: notes with recordings ([[notes-recordings_spec]], ready to build 2026-11-22).
+
+## Next: notes with recordings — spec: [[notes-recordings_spec]]
+Server and client change together: the Pi, the phone and the PC are updated at the same time, or the old app loses its voice notes sync. So both are built on one branch, `feature/notes-recordings`, which reaches `main` only after N3's device check.
+
+### N1. Server
+- [ ] Migration: "Voice notes" folder (only if voice notes exist), one note per voice note (title, tags, times, `archived_at`), rename `voice_notes` → `note_recordings`, add `note_id`, drop `title` and `tags`
+- [ ] Move recordings into the notes module: sync pull/push for `note_recordings`, upload and stream endpoints under notes; remove the `voice_notes` module
+- [ ] Archive: a note's archive cascades to its recordings, restore brings back the same ones; a recording archives on its own; restoring a recording restores its archived note; Archive type `recording` with the note's title
+- [ ] Tests (criteria 1, 6, 12 server side), including archived voice notes in the migration and a recording arriving before its note
+
+### N2. Client
+- [ ] RxDB: new `note_recordings` collection; push pending `voice_notes` changes, then drop that collection (keep it and retry if the server can't be reached); audio files untouched
+- [ ] Move recorder, upload queue, recovery and player from `voice-notes/` into `notes/`, working on recordings with a `note_id`
+- [ ] Rules + Vitest: empty note counts recordings, title shown (title → first line → first recording's date-time), held-back recordings, folder tags by name, Pinned list, recording counts as an edit
+- [ ] Notes list: Record button (Android), mic icon, Pinned section at the top level
+- [ ] Editor: recordings above the text (oldest first) with player, upload state and Archive; Record inside the note; 1-hour split stays in the note
+- [ ] Tool panel: settings placeholder, full tree with notes, note details with folder tags
+- [ ] Search: folder tags in the tag list, in a different style
+- [ ] Remove the Voice notes tool; `/tools/voice-notes…` goes to Notes; Archive page type and filter "Recordings"
+- [ ] Update [[voice-notes_spec]], [[notes_spec]], [[archive_spec]], [[PRD]] where they still describe a separate voice notes tool
+
+### N3. Check and release
+- [ ] Check every acceptance criterion on the phone and the PC against a local server; write results in [[notes-recordings_spec]]
+- [ ] Back up the Pi (`ops/backup.sh`), then merge into `main`, push, update the Pi, install the new APK, rebuild the PC app
 
 ## Later (ideas and loose ends, not scheduled)
-- **Notes with recordings:** merge notes and voice notes into one note with text and/or recordings, plus a Pinned section, folder tags, a full tree and notes settings in the tool panel. Spec ready to build: [[notes-recordings_spec]] (2026-11-22). Next after the calendar.
 - **Claude talking to the server directly (MCP-like):** let Claude read and create notes (and later other items) on Mihail's server, e.g. "make a note about this". Asked for on 2026-10-28; needs a spec first, covering what it may do, the token, and Tailscale-only access ([[2026-10-20-auth-tailscale-api-token]]).
 - **Tool groups on the Tools page:** Android-style folders to sort tools by use, **synced across devices**. Dropped for now as too much work (Mihail, 2026-10-28).
 - **Updates for other users:** only when someone else wants to use the app. Publish builds to GitHub Releases, use the Tauri updater on the PC and Obtainium on Android, sign with one fixed release key (not the debug key), and have the app warn when the server is older than the app (Mihail, 2026-10-29).
