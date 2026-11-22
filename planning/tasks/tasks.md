@@ -166,9 +166,9 @@ Moved ahead of notes with recordings because it's more urgent (Mihail, 2026-10-2
 - [x] Sync warning: a red line under the header when the server answers but a module's sync fails ([[client-foundation_spec]])
 - [x] Archive filters: Events and Repeating events ([[archive_spec]])
 - [ ] Check both on a device. Steps still open for Mihail:
-  - Pi: run `ops/update.sh`. No migration; it should end at `c48683c` (already pushed).
-  - Phone: install `spaternum-main-3.apk` (sent 2026-10-30) in Second Space.
-  - PC: rebuild the desktop app from `main`.
+  - [x] Pi: updated to `f218a3d` (Mihail, 2026-11-22).
+  - [x] Phone: `spaternum-main-58c80f6.apk` installed (Mihail, 2026-11-22).
+  - [ ] PC: rebuild the desktop app from `main`.
   - Use it day to day: the red sync line should never show while things work; the Archive filters Events and Repeating events should list only those.
 - [x] Calendar: + button for a new event, a tap in an occupied slot opens that event, 0.3 s hold on the phone ([[calendar_spec]], "Decided 2026-11-13"). Checked on the phone and the PC (2026-11-13). The PC desktop app still needs a rebuild from `main`.
 - Next after this check: notes with recordings ([[notes-recordings_spec]], draft).
