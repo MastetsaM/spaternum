@@ -1,5 +1,6 @@
-// Voice notes rules with no I/O, so they can be tested: file names, recovery, the 1-hour split,
-// upload state, playback source, labels, tags. See the voice-notes spec, "Client details".
+// Recording rules with no I/O, so they can be tested: file names, recovery, the 1-hour split,
+// upload state, playback source, labels. See the voice-notes spec, "Client details", and
+// notes-recordings_spec.md (recordings belong to a note).
 
 /** Settings proven in phase 0. */
 export const MIME = "audio/webm;codecs=opus";
@@ -9,25 +10,35 @@ export const MAX_PART_MS = 60 * 60 * 1000;
 export const RETRY_NOT_FOUND_MS = 30_000;
 export const PUSH_WAIT_MS = 10_000; // longest wait for a new row to reach the server before uploading
 
-// ---- File names: <id>.<recorded_at ms>.part while recording, <id>.webm once stopped,
-// <id>.uploaded.webm once the server has it
+// ---- File names: <id>.<recorded_at ms>.<note id>.part while recording, <id>.webm once stopped,
+// <id>.uploaded.webm once the server has it. The note id lets recovery put an interrupted
+// recording in its note; a .part file from before notes had recordings has none.
 
-export type LocalFile = { name: string; id: string; done: boolean; uploaded: boolean; recordedAtMs: number | null };
+export type LocalFile = {
+  name: string;
+  id: string;
+  done: boolean;
+  uploaded: boolean;
+  recordedAtMs: number | null;
+  noteId: string | null; // .part files only
+};
 
 export const doneName = (id: string) => `${id}.webm`;
 export const uploadedName = (id: string) => `${id}.uploaded.webm`;
-export const partName = (id: string, recordedAtMs: number) => `${id}.${recordedAtMs}.part`;
+export const partName = (id: string, recordedAtMs: number, noteId: string) => `${id}.${recordedAtMs}.${noteId}.part`;
 
 const UUID = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 const DONE = new RegExp(`^(${UUID})(\\.uploaded)?\\.webm$`);
-const PART = new RegExp(`^(${UUID})\\.(\\d+)\\.part$`);
+const PART = new RegExp(`^(${UUID})\\.(\\d+)(?:\\.(${UUID}))?\\.part$`);
 
-/** Anything that isn't one of our three names is ignored. */
+/** Anything that isn't one of our names is ignored. */
 export function parseName(name: string): LocalFile | null {
   const done = DONE.exec(name);
-  if (done) return { name, id: done[1], done: true, uploaded: Boolean(done[2]), recordedAtMs: null };
+  if (done) return { name, id: done[1], done: true, uploaded: Boolean(done[2]), recordedAtMs: null, noteId: null };
   const part = PART.exec(name);
-  if (part) return { name, id: part[1], done: false, uploaded: false, recordedAtMs: Number(part[2]) };
+  if (part) {
+    return { name, id: part[1], done: false, uploaded: false, recordedAtMs: Number(part[2]), noteId: part[3] ?? null };
+  }
   return null;
 }
 
@@ -133,26 +144,7 @@ export function sizeLabel(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-/** The title, or the recording's date-time in local time when there's none. */
-export function titleOf(row: { title: string; recorded_at: string }): string {
-  return row.title.trim() || new Date(row.recorded_at).toLocaleString();
-}
-
-// ---- Tags and list order
-
-/** "idea, work ,, idea" → ["idea", "work"] */
-export function parseTags(input: string): string[] {
-  return [...new Set(input.split(",").map((tag) => tag.trim()).filter(Boolean))];
-}
-
-/** Every tag in use, sorted, for the filter. */
-export function allTags(rows: { tags: string[] }[]): string[] {
-  return [...new Set(rows.flatMap((row) => row.tags))].sort((a, b) => a.localeCompare(b));
-}
-
-/** Newest first, only those with the tag (all when tag is null). */
-export function visibleRows<T extends { tags: string[]; recorded_at: string }>(rows: T[], tag: string | null): T[] {
-  return rows
-    .filter((row) => tag === null || row.tags.includes(tag))
-    .sort((a, b) => b.recorded_at.localeCompare(a.recorded_at));
+/** A note's recordings in the order they show: oldest first. */
+export function sortRecordings<T extends { recorded_at: string }>(rows: T[]): T[] {
+  return [...rows].sort((a, b) => a.recorded_at.localeCompare(b.recorded_at));
 }

@@ -106,7 +106,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/voice-notes/voice_notes/pull": {
+    "/api/notes/note_recordings/pull": {
         parameters: {
             query?: never;
             header?: never;
@@ -114,7 +114,7 @@ export interface paths {
             cookie?: never;
         };
         /** Pull Route */
-        get: operations["pull_route_api_voice_notes_voice_notes_pull_get"];
+        get: operations["pull_route_api_notes_note_recordings_pull_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -123,7 +123,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/voice-notes/voice_notes/push": {
+    "/api/notes/note_recordings/push": {
         parameters: {
             query?: never;
             header?: never;
@@ -133,14 +133,14 @@ export interface paths {
         get?: never;
         put?: never;
         /** Push Route */
-        post: operations["push_route_api_voice_notes_voice_notes_push_post"];
+        post: operations["push_route_api_notes_note_recordings_push_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/voice-notes/{id}/audio": {
+    "/api/notes/recordings/{id}/audio": {
         parameters: {
             query?: never;
             header?: never;
@@ -151,9 +151,9 @@ export interface paths {
          * Stream
          * @description The whole file, or a part of it (Range requests), so players can seek.
          */
-        get: operations["stream_api_voice_notes__id__audio_get"];
+        get: operations["stream_api_notes_recordings__id__audio_get"];
         /** Upload */
-        put: operations["upload_api_voice_notes__id__audio_put"];
+        put: operations["upload_api_notes_recordings__id__audio_put"];
         post?: never;
         delete?: never;
         options?: never;
@@ -204,7 +204,7 @@ export interface paths {
         };
         /**
          * List Archived
-         * @description Everything archived, newest first. type: folder, note, voice_note, event or series.
+         * @description Everything archived, newest first. type: folder, note, recording, event or series.
          */
         get: operations["list_archived_api_archive_get"];
         put?: never;
@@ -430,6 +430,53 @@ export interface components {
             documents: components["schemas"]["Note"][];
             checkpoint: components["schemas"]["Checkpoint"];
         };
+        /** Recording */
+        Recording: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /**
+             * Deleted
+             * @default false
+             */
+            _deleted: boolean;
+            /**
+             * Note Id
+             * Format: uuid
+             */
+            note_id: string;
+            /**
+             * Recorded At
+             * Format: date-time
+             */
+            recorded_at: string;
+            /** Duration Ms */
+            duration_ms: number;
+            /** Size Bytes */
+            size_bytes: number;
+            /** Mime Type */
+            mime_type: string;
+            /** Uploaded At */
+            uploaded_at?: string | null;
+        };
+        /** RecordingPull */
+        RecordingPull: {
+            /** Documents */
+            documents: components["schemas"]["Recording"][];
+            checkpoint: components["schemas"]["Checkpoint"];
+        };
         /** Restored */
         Restored: {
             /** Status */
@@ -452,58 +499,6 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
-        };
-        /** VoiceNote */
-        VoiceNote: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /**
-             * Updated At
-             * Format: date-time
-             */
-            updated_at: string;
-            /**
-             * Deleted
-             * @default false
-             */
-            _deleted: boolean;
-            /**
-             * Title
-             * @default
-             */
-            title: string;
-            /**
-             * Tags
-             * @default []
-             */
-            tags: string[];
-            /**
-             * Recorded At
-             * Format: date-time
-             */
-            recorded_at: string;
-            /** Duration Ms */
-            duration_ms: number;
-            /** Size Bytes */
-            size_bytes: number;
-            /** Mime Type */
-            mime_type: string;
-            /** Uploaded At */
-            uploaded_at?: string | null;
-        };
-        /** VoiceNotePull */
-        VoiceNotePull: {
-            /** Documents */
-            documents: components["schemas"]["VoiceNote"][];
-            checkpoint: components["schemas"]["Checkpoint"];
         };
     };
     responses: never;
@@ -703,7 +698,7 @@ export interface operations {
             };
         };
     };
-    pull_route_api_voice_notes_voice_notes_pull_get: {
+    pull_route_api_notes_note_recordings_pull_get: {
         parameters: {
             query?: {
                 seq?: number;
@@ -723,7 +718,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["VoiceNotePull"];
+                    "application/json": components["schemas"]["RecordingPull"];
                 };
             };
             /** @description Validation Error */
@@ -737,7 +732,7 @@ export interface operations {
             };
         };
     };
-    push_route_api_voice_notes_voice_notes_push_post: {
+    push_route_api_notes_note_recordings_push_post: {
         parameters: {
             query?: never;
             header?: {
@@ -748,7 +743,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["VoiceNote"][];
+                "application/json": components["schemas"]["Recording"][];
             };
         };
         responses: {
@@ -758,7 +753,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["VoiceNote"][];
+                    "application/json": components["schemas"]["Recording"][];
                 };
             };
             /** @description Validation Error */
@@ -772,7 +767,7 @@ export interface operations {
             };
         };
     };
-    stream_api_voice_notes__id__audio_get: {
+    stream_api_notes_recordings__id__audio_get: {
         parameters: {
             query?: never;
             header?: {
@@ -805,7 +800,7 @@ export interface operations {
             };
         };
     };
-    upload_api_voice_notes__id__audio_put: {
+    upload_api_notes_recordings__id__audio_put: {
         parameters: {
             query?: never;
             header?: {

@@ -11,7 +11,6 @@ import {
   FolderKanban,
   House,
   Menu,
-  Mic,
   PanelRight,
   Star,
   Wrench,
@@ -35,7 +34,6 @@ const SECTIONS = [
 // key = the name saved in the favorites list (favorites_spec.md)
 export const TOOLS = [
   { key: "notes", to: "/tools/notes", label: "Notes", icon: FileText },
-  { key: "voice-notes", to: "/tools/voice-notes", label: "Voice notes", icon: Mic },
   { key: "calendar", to: "/tools/calendar", label: "Calendar", icon: CalendarDays },
   { key: "archive", to: "/tools/archive", label: "Archive", icon: Archive },
 ];

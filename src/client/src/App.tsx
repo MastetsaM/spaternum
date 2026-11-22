@@ -16,7 +16,6 @@ import { CalendarScreen } from "./screens/CalendarScreen";
 import { ArchiveScreen } from "./screens/ArchiveScreen";
 import { FavoritesScreen } from "./screens/FavoritesScreen";
 import { SettingsScreen } from "./screens/SettingsScreen";
-import { VoiceNotesScreen } from "./screens/VoiceNotesScreen";
 import "./App.css";
 
 /** Until the settings are saved, or when the server rejects the token: the settings screen. */
@@ -34,7 +33,8 @@ const router = createHashRouter([
   { path: "/tools", element: connected(<ToolsScreen />) },
   { path: "/tools/favorites", element: connected(<FavoritesScreen />) },
   { path: "/tools/notes/:noteId?", element: connected(<NotesScreen />) },
-  { path: "/tools/voice-notes", element: connected(<VoiceNotesScreen />) },
+  // The Voice notes tool became recordings inside notes (2026-11-22); old links land in Notes
+  { path: "/tools/voice-notes", element: <Navigate to="/tools/notes" replace /> },
   { path: "/tools/calendar/:occurrence?", element: connected(<CalendarScreen />) },
   { path: "/tools/archive", element: connected(<ArchiveScreen />) },
   { path: "/clients", element: connected(<ClientsScreen />) },

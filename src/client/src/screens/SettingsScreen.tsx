@@ -83,7 +83,7 @@ function LocalData() {
   useEffect(() => {
     let subscriptions: { unsubscribe(): void }[] = [];
     getDb().then((db) => {
-      subscriptions = (["note_folders", "notes", "voice_notes"] as const).map((name) =>
+      subscriptions = (["note_folders", "notes", "note_recordings"] as const).map((name) =>
         db[name].count().$.subscribe((n) => setCounts((c) => ({ ...c, [name]: n }))),
       );
     });
@@ -92,7 +92,7 @@ function LocalData() {
   return (
     <p className="muted">
       On this device: {counts.note_folders ?? "…"} folders, {counts.notes ?? "…"} notes,{" "}
-      {counts.voice_notes ?? "…"} voice notes
+      {counts.note_recordings ?? "…"} recordings
     </p>
   );
 }

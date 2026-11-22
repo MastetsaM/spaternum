@@ -29,10 +29,10 @@ describe("clock offset", () => {
 
 describe("live stream", () => {
   it("reads table names from complete events and keeps the rest", () => {
-    const { tables, rest } = parseEvents(": connected\n\ndata: notes\n\n: keepalive\n\ndata: voice_no");
+    const { tables, rest } = parseEvents(": connected\n\ndata: notes\n\n: keepalive\n\ndata: note_rec");
     expect(tables).toEqual(["notes"]);
-    expect(rest).toBe("data: voice_no");
-    expect(parseEvents(rest + "tes\n\n").tables).toEqual(["voice_notes"]);
+    expect(rest).toBe("data: note_rec");
+    expect(parseEvents(rest + "ordings\n\n").tables).toEqual(["note_recordings"]);
   });
 
   it("waits longer after each failed reconnect, up to 30 s", () => {
@@ -51,9 +51,9 @@ describe("sync warning", () => {
   });
 
   it("clears a module after a success", () => {
-    markSyncFailed("voice_notes pull", 502);
-    expect(syncWarnings(currentStatus().failing)).toEqual(["Voice notes isn't syncing (server: 502)"]);
-    markSynced("voice_notes pull");
+    markSyncFailed("note_recordings pull", 502);
+    expect(syncWarnings(currentStatus().failing)).toEqual(["Notes isn't syncing (server: 502)"]);
+    markSynced("note_recordings pull");
     expect(currentStatus().failing).toEqual({});
   });
 });

@@ -12,7 +12,7 @@ export const FILTERS = [
   { type: "", label: "All" },
   { type: "note", label: "Notes" },
   { type: "folder", label: "Folders" },
-  { type: "voice_note", label: "Voice notes" },
+  { type: "recording", label: "Recordings" },
   { type: "event", label: "Events" },
   { type: "series", label: "Repeating events" },
 ] as const;
@@ -20,7 +20,7 @@ export const FILTERS = [
 const TYPE_LABELS: Record<string, string> = {
   note: "Note",
   folder: "Folder",
-  voice_note: "Voice note",
+  recording: "Recording",
   event: "Event",
   series: "Repeating event",
 };
@@ -37,11 +37,13 @@ export function formatDateTime(iso: string): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-/** The title, or for an untitled voice note the time it was recorded. */
+/**
+ * The title, or for an untitled note with recordings the time of its first recording.
+ * A recording archived on its own: "Recording in <its note's title>".
+ */
 export function itemTitle(item: ArchivedItem): string {
-  if (item.title.trim()) return item.title;
-  if (item.recorded_at) return formatDateTime(item.recorded_at);
-  return "(untitled)";
+  const name = item.title.trim() ? item.title : item.recorded_at ? formatDateTime(item.recorded_at) : "(untitled)";
+  return item.type === "recording" ? `Recording in ${name}` : name;
 }
 
 /** "Folder · 3 items" / "Repeating event · 2 changed occurrences" / "Note" */

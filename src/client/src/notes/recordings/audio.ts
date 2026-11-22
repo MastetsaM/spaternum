@@ -1,7 +1,7 @@
 // Audio in the webview: reading a file's duration, fetching from the server, and the player.
 
 import { useSyncExternalStore } from "react";
-import type { Settings } from "../api/settings";
+import type { Settings } from "../../api/settings";
 import { MIME } from "./logic";
 
 /**
@@ -36,7 +36,7 @@ export function durationOf(bytes: Uint8Array<ArrayBuffer>): Promise<number> {
 export async function fetchAudio(settings: Settings, id: string): Promise<Blob> {
   let response: Response;
   try {
-    response = await fetch(`${settings.server}/api/voice-notes/${id}/audio`, {
+    response = await fetch(`${settings.server}/api/notes/recordings/${id}/audio`, {
       headers: { Authorization: `Bearer ${settings.token}` },
     });
   } catch {
