@@ -1,14 +1,18 @@
 import { describe, expect, it } from "vitest";
-import type { Folder, Note } from "../sync/db";
+import type { Folder, Note, Recording } from "../sync/db";
 import {
   addTags,
+  allFolderTags,
   allTags,
   childFolders,
+  folderTags,
   folderTree,
   hideArchivedContents,
   isEmpty,
   noteTitle,
   moveTargets,
+  pinnedNotes,
+  recordingsByNote,
   searchNotes,
   shownFolder,
   sortNotes,
@@ -218,5 +222,83 @@ describe("noteTitle and the title field", () => {
   it("searches the title too", () => {
     const notes = [note("1", { title: "Dentist", body: "call" }), note("2", { body: "other" })];
     expect(searchNotes(notes, "dentist", []).map((n) => n.id)).toEqual(["1"]);
+  });
+});
+
+// ---- Notes with recordings (notes-recordings_spec.md)
+
+function recording(id: string, note_id: string, recorded_at = T): Recording {
+  return {
+    id, note_id, recorded_at, duration_ms: 1000, size_bytes: 100, mime_type: "audio/webm;codecs=opus",
+    uploaded_at: null, created_at: T, updated_at: T,
+  };
+}
+
+describe("notes with recordings", () => {
+  it("names an untitled note with no text by its first recording", () => {
+    const at = "2026-10-28T09:00:00.000Z";
+    expect(noteTitle({ title: "", body: "" }, at)).toBe(new Date(at).toLocaleString());
+    expect(noteTitle({ title: "", body: "Text" }, at)).toBe("Text");
+    expect(noteTitle({ title: "", body: "" }, null)).toBe("(empty)");
+  });
+
+  it("keeps a note with recordings when its text is cleared", () => {
+    expect(toSave(c(""), c("Old"), c("Old"), true, true)).toEqual({ kind: "write", content: c("") });
+    expect(toSave(c(""), c(""), c(""), true, true)).toEqual({ kind: "none" });
+  });
+
+  it("lists recordings per note, oldest first, holding back those without their note", () => {
+    const notes = [note("n")];
+    const byNote = recordingsByNote(
+      [recording("b", "n", "2026-10-28T11:00:00.000Z"), recording("a", "n", "2026-10-28T10:00:00.000Z"), recording("x", "missing")],
+      notes,
+    );
+    expect(byNote.get("n")!.map((r) => r.id)).toEqual(["a", "b"]);
+    expect(byNote.has("missing")).toBe(false);
+  });
+});
+
+describe("pinned section", () => {
+  it("gathers pinned notes from every folder, last edited first", () => {
+    const notes = [
+      note("a", { pinned: true, folder_id: "f", updated_at: "2026-10-28T09:00:00.000Z" }),
+      note("b"),
+      note("c", { pinned: true, updated_at: "2026-10-28T11:00:00.000Z" }),
+    ];
+    expect(pinnedNotes(notes).map((n) => n.id)).toEqual(["c", "a"]);
+  });
+});
+
+describe("folder tags", () => {
+  const folders = [folder("w", null, "Work"), folder("c", "w", "Clients"), folder("a", "c", "Acme"), folder("p", null, "Personal"), folder("c2", "p", "Clients")];
+
+  it("are the folder names from the top level down", () => {
+    expect(folderTags("a", folders)).toEqual(["Work", "Clients", "Acme"]);
+    expect(folderTags(null, folders)).toEqual([]);
+    expect(folderTags("gone", folders)).toEqual([]);
+  });
+
+  it("follow a move or a rename at once", () => {
+    const renamed = folders.map((f) => (f.id === "w" ? { ...f, name: "Job" } : f));
+    expect(folderTags("a", renamed)).toEqual(["Job", "Clients", "Acme"]);
+    const moved = folders.map((f) => (f.id === "c" ? { ...f, parent_id: "p" } : f));
+    expect(folderTags("a", moved)).toEqual(["Personal", "Clients", "Acme"]);
+  });
+
+  it("find everything below a folder at any depth, by name", () => {
+    const notes = [note("deep", { folder_id: "a" }), note("work", { folder_id: "w" }), note("home", { folder_id: "c2" }), note("top")];
+    expect(searchNotes(notes, "", [], ["Work"], folders).map((n) => n.id)).toEqual(["deep", "work"]);
+    // Two folders called Clients: one tag that finds both
+    expect(searchNotes(notes, "", [], ["Clients"], folders).map((n) => n.id)).toEqual(["deep", "home"]);
+    expect(searchNotes(notes, "", [], ["Work", "Acme"], folders).map((n) => n.id)).toEqual(["deep"]);
+  });
+
+  it("are listed once per name", () => {
+    expect(allFolderTags(folders)).toEqual(["Acme", "Clients", "Personal", "Work"]);
+  });
+
+  it("stop at a loop instead of running forever", () => {
+    const loop = [folder("x", "y", "X"), folder("y", "x", "Y")];
+    expect(folderTags("x", loop)).toEqual(["Y", "X"]);
   });
 });

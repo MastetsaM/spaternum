@@ -1,16 +1,21 @@
-// Notes rules that don't need the database or the screen: titles, order, search,
-// the folder tree, where a folder may move, and what the editor saves.
+// Notes rules that don't need the database or the screen: titles, order, search, folder tags,
+// the folder tree, where a folder may move, recordings per note, and what the editor saves.
 
-import type { Folder, Note } from "../sync/db";
+import type { Folder, Note, Recording } from "../sync/db";
 
 /** First line of the body, without Markdown heading marks — same rule as the server. */
 export function title(body: string): string {
   return body.split("\n", 1)[0].replace(/^[# ]+/, "").trim() || "(empty)";
 }
 
-/** The title shown for a note: its own title, or the body's first line when that's empty. */
-export function noteTitle(note: Pick<Note, "title" | "body">): string {
-  return note.title.trim() || title(note.body);
+/**
+ * The title shown for a note: its own title, else the body's first line, else the date-time of
+ * its first recording (local time), else "(empty)".
+ */
+export function noteTitle(note: Pick<Note, "title" | "body">, firstRecordedAt?: string | null): string {
+  const shown = note.title.trim() || title(note.body);
+  if (shown !== "(empty)" || !firstRecordedAt) return shown;
+  return new Date(firstRecordedAt).toLocaleString();
 }
 
 /** What the editor edits and saves together. */
@@ -37,14 +42,68 @@ export function shownFolder(folderId: string | null | undefined, folderIds: Set<
   return folderId && folderIds.has(folderId) ? folderId : null;
 }
 
-/** Notes whose title or body contains the text (any case) and that have every chosen tag. */
-export function searchNotes(notes: Note[], text: string, tags: string[]): Note[] {
+/**
+ * Notes whose title or body contains the text (any case), that have every chosen tag, and that
+ * sit somewhere below a folder of every chosen folder tag (see folderTags).
+ */
+export function searchNotes(
+  notes: Note[],
+  text: string,
+  tags: string[],
+  folderTagNames: string[] = [],
+  folders: Folder[] = [],
+): Note[] {
   const needle = text.trim().toLowerCase();
-  return notes.filter(
-    (note) =>
-      (!needle || `${note.title}\n${note.body}`.toLowerCase().includes(needle)) &&
-      tags.every((tag) => note.tags.includes(tag)),
-  );
+  return notes.filter((note) => {
+    if (needle && !`${note.title}\n${note.body}`.toLowerCase().includes(needle)) return false;
+    if (!tags.every((tag) => note.tags.includes(tag))) return false;
+    if (folderTagNames.length === 0) return true;
+    const inside = folderTags(note.folder_id, folders);
+    return folderTagNames.every((name) => inside.includes(name));
+  });
+}
+
+/**
+ * Folder tags: the names of the folders a note sits in, from the top level down
+ * (`Work › Clients › Acme` → Work, Clients, Acme). Worked out from where the note is now,
+ * never saved. A folder that isn't on the device ends the chain (the note shows at the top level).
+ */
+export function folderTags(folderId: string | null | undefined, folders: Folder[]): string[] {
+  const byId = new Map(folders.map((f) => [f.id, f]));
+  const names: string[] = [];
+  const seen = new Set<string>(); // a loop (two offline moves) must not run forever
+  let folder = folderId ? byId.get(folderId) : undefined;
+  while (folder && !seen.has(folder.id)) {
+    seen.add(folder.id);
+    names.unshift(folder.name);
+    folder = folder.parent_id ? byId.get(folder.parent_id) : undefined;
+  }
+  return names;
+}
+
+/** Every folder name, sorted and once each: folders with the same name are one folder tag. */
+export function allFolderTags(folders: Folder[]): string[] {
+  return [...new Set(folders.map((f) => f.name))].sort((a, b) => a.localeCompare(b));
+}
+
+/** The Pinned section at the top level: pinned notes from every folder, last edited first. */
+export function pinnedNotes(notes: Note[]): Note[] {
+  return sortNotes(notes.filter((note) => note.pinned));
+}
+
+/**
+ * Each note's recordings, oldest first. A recording whose note isn't on the device (not synced
+ * yet, or archived) is held back until the note arrives.
+ */
+export function recordingsByNote(recordings: Recording[], notes: Note[]): Map<string, Recording[]> {
+  const ids = new Set(notes.map((n) => n.id));
+  const out = new Map<string, Recording[]>();
+  for (const rec of recordings) {
+    if (!ids.has(rec.note_id)) continue;
+    out.set(rec.note_id, [...(out.get(rec.note_id) ?? []), rec]);
+  }
+  for (const list of out.values()) list.sort((a, b) => a.recorded_at.localeCompare(b.recorded_at));
+  return out;
 }
 
 /** Every tag in use, sorted. */
@@ -143,9 +202,16 @@ export type SaveAction = { kind: "none" } | { kind: "write"; content: Content } 
  * - saved: what's stored on the device, or null if the note has no row yet
  * - opened: what was there when the editor opened, or null for a new note
  * - leaving: true when the editor closes, false for a save while typing
+ * - hasRecordings: the note holds recordings, so it isn't empty without text
  */
-export function toSave(now: Content, saved: Content | null, opened: Content | null, leaving: boolean): SaveAction {
-  if (!isEmpty(now)) return sameContent(now, saved) ? { kind: "none" } : { kind: "write", content: now };
+export function toSave(
+  now: Content,
+  saved: Content | null,
+  opened: Content | null,
+  leaving: boolean,
+  hasRecordings = false,
+): SaveAction {
+  if (!isEmpty(now) || hasRecordings) return sameContent(now, saved) ? { kind: "none" } : { kind: "write", content: now };
   // Empty: never saved. On leaving, put back what was there before this editor changed it.
   if (!leaving || saved === null || sameContent(saved, opened)) return { kind: "none" };
   // A new note written while typing and then cleared: it shouldn't exist, so it's archived
