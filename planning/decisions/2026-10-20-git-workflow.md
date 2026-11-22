@@ -29,5 +29,8 @@ Repo: public on GitHub, license AGPL-3.0 — see [[2026-10-20-license-agpl]].
 - Changes to shared files (routes, layout, CSS, the sync code) stay small, and conflicts are resolved at merge.
 - For device testing, the finished branches are merged into one combined branch (`feature/phase1-client`), and one APK is built from it. The combined branch goes to `main` once the device checks pass.
 
+## Addition 2026-11-22: tooling straight to main
+- Tooling that doesn't change the app or the server (build scripts, Claude skills) can go straight to `main` in small commits. The branch rule protects what the Pi runs, and this tooling never touches it (Mihail, 2026-11-22).
+
 ## Related
 [[PRD]] · [[TECH]] · [[tasks]]
