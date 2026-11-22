@@ -8,7 +8,7 @@ from psycopg.rows import dict_row
 
 from conftest import TEST_URL
 from notes_test import folder, note
-from voice_notes_test import voice_note
+from note_recordings_test import recording
 
 
 def push(client, path, *docs):
@@ -22,25 +22,26 @@ def archive(client, path, doc, updated):
 
 @pytest.fixture
 def archived(client, db):
-    """A note archived at 11:00, a folder with a note at 12:00, a voice note at 13:00."""
+    """A note archived at 11:00, a folder with a note at 12:00, a recording at 13:00."""
     with psycopg.connect(TEST_URL, autocommit=True, row_factory=dict_row) as conn:
-        conn.execute("TRUNCATE note_folders, notes, voice_notes")
-    f, n_in, n_alone, vn = folder("Folder"), None, note("Alone"), voice_note()
+        conn.execute("TRUNCATE note_folders, notes, note_recordings")
+    f, n_alone, n_kept = folder("Folder"), note("Alone"), note("Kept")
     n_in = note("Inside", f["id"])
+    rec = recording(n_kept["id"])
     push(client, "notes/note_folders", f)
-    push(client, "notes/notes", n_in, n_alone)
-    push(client, "voice-notes/voice_notes", vn)
+    push(client, "notes/notes", n_in, n_alone, n_kept)
+    push(client, "notes/note_recordings", rec)
     # archived_at is the server's time, so archive one after another
     archive(client, "notes/notes", n_alone, "2026-10-25T11:00:00.000Z")
     archive(client, "notes/note_folders", f, "2026-10-25T12:00:00.000Z")
-    archive(client, "voice-notes/voice_notes", vn, "2026-10-25T13:00:00.000Z")
-    return {"folder": f, "inside": n_in, "alone": n_alone, "voice": vn}
+    archive(client, "notes/note_recordings", rec, "2026-10-25T13:00:00.000Z")
+    return {"folder": f, "inside": n_in, "alone": n_alone, "recording": rec}
 
 
 def test_list_has_every_module_newest_first(client, archived):
     items = client.get("/api/archive").json()
     assert [(i["module"], i["type"], i["title"], i["items"]) for i in items] == [
-        ("voice_notes", "voice_note", "", 0),
+        ("notes", "recording", "Kept", 0),
         ("notes", "folder", "Folder", 1),
         ("notes", "note", "Alone", 0),
     ]
@@ -58,7 +59,7 @@ def test_list_filters_by_type(client, archived):
 
 
 def test_restore_through_each_module(client, archived):
-    for module, key in [("notes", "folder"), ("notes", "alone"), ("voice_notes", "voice")]:
+    for module, key in [("notes", "folder"), ("notes", "alone"), ("notes", "recording")]:
         id = archived[key]["id"]
         response = client.post(f"/api/archive/{module}/{id}/restore")
         assert response.status_code == 200, response.text

@@ -10,29 +10,29 @@ from fastapi import APIRouter, Depends, HTTPException
 from psycopg import Connection
 from pydantic import BaseModel
 
-from spaternum import calendar, notes, voice_notes
+from spaternum import calendar, notes
 from spaternum.db import get_conn
 
 log = logging.getLogger("spaternum.archive")
 
-MODULES = {"notes": notes, "voice_notes": voice_notes, "calendar": calendar}
+MODULES = {"notes": notes, "calendar": calendar}
 
 router = APIRouter(prefix="/archive")
 
 
 class ArchivedItem(BaseModel):
     module: str
-    type: str  # folder, note, voice_note, event, series
+    type: str  # folder, note, recording, event, series
     id: UUID
     title: str
     archived_at: datetime
     items: int  # for a folder or series: what was archived with it
-    recorded_at: datetime | None = None  # voice notes; shown when title is empty
+    recorded_at: datetime | None = None  # notes and recordings; shown when the title is empty
 
 
 @router.get("", response_model=list[ArchivedItem])
 def list_archived(type: str | None = None, conn: Connection = Depends(get_conn)):
-    """Everything archived, newest first. type: folder, note, voice_note, event or series."""
+    """Everything archived, newest first. type: folder, note, recording, event or series."""
     items = [
         {"module": name, **item}
         for name, module in MODULES.items()

@@ -1,4 +1,4 @@
-"""Audio files: upload from the phone, stream to any device. Files live at DATA_DIR/audio/<id>.webm."""
+"""Recording audio files: upload from the phone, stream to any device. Files live at DATA_DIR/audio/<id>.webm."""
 
 import errno
 import logging
@@ -13,7 +13,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from starlette.concurrency import run_in_threadpool
 
-log = logging.getLogger("spaternum.voice_notes")
+log = logging.getLogger("spaternum.notes")
 
 router = APIRouter()
 
@@ -58,7 +58,7 @@ async def save_upload(chunks: AsyncIterator[bytes], target: Path, expected_size:
 def find_row(pool, id: UUID) -> dict | None:
     with pool.connection() as conn:
         return conn.execute(
-            "SELECT size_bytes, uploaded_at FROM voice_notes WHERE id = %s", (id,)
+            "SELECT size_bytes, uploaded_at FROM note_recordings WHERE id = %s", (id,)
         ).fetchone()
 
 
@@ -66,7 +66,7 @@ def mark_uploaded(pool, id: UUID) -> None:
     # New seq so every device pulls the change; updated_at stays the device's
     with pool.connection() as conn:
         conn.execute(
-            "UPDATE voice_notes SET uploaded_at = now(), seq = nextval('voice_notes_seq')"
+            "UPDATE note_recordings SET uploaded_at = now(), seq = nextval('note_recordings_seq')"
             " WHERE id = %s",
             (id,),
         )
@@ -91,7 +91,7 @@ async def upload(id: UUID, request: Request):
     row = await run_in_threadpool(find_row, pool, id)
     if row is None:
         # The metadata push hasn't reached the server yet; the client retries later
-        raise HTTPException(404, "no voice note with this id yet")
+        raise HTTPException(404, "no recording with this id yet")
 
     target = audio_path(audio_dir(request), id)
     if row["uploaded_at"] is not None and target.exists() and target.stat().st_size == row["size_bytes"]:

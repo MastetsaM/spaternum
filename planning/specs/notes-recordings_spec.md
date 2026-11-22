@@ -124,5 +124,12 @@ CREATE TABLE note_recordings (
 ## Open questions
 None — ready to build.
 
+## Results — server (2026-11-22)
+Built in `src/server/spaternum/notes/` (migration `003_note_recordings.sql`, `tables.py`, `archive.py`, `audio.py`); the `voice_notes` module is removed. 67 server tests pass, 18 of them in `tests/note_recordings_test.py`:
+- Migration on a copy of the old schema: voice notes become notes in a "Voice notes" folder with their title and tags, nothing lost, archived ones archived together and restorable; no folder when there are no voice notes; a fresh database gets only the new table.
+- Sync of `note_recordings`, a recording arriving before its note, and the upload/stream rules from [[voice-notes_spec]] (now at `/api/notes/recordings/{id}/audio`).
+- Archive: note → its recordings, folder → recordings inside; a recording archived on its own stays archived when its note is restored; archiving one recording leaves the note; restoring a recording restores its note; an untitled note is named by its first recording.
+- Archive page: type `recording`, titled with its note.
+
 ## Related
 [[notes_spec]] · [[voice-notes_spec]] · [[archive_spec]] · [[ui-design_spec]] · [[client-foundation_spec]] · [[PRD]] · [[tasks]] · [[2026-10-20-architecture-modular-monolith]] · [[2026-10-21-sync-rxdb]]
