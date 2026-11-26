@@ -140,7 +140,7 @@ Built in `src/server/spaternum/notes/` (migration `003_note_recordings.sql`, `ta
 
 ## Results — client (2026-11-26)
 Built in `src/client/src/notes/` (rules in `notes.ts`, recordings in `notes/recordings/`, moved from `voice-notes/`), `screens/NotesScreen.tsx`, `screens/NoteRecordings.tsx` (Record and the recordings list) and `screens/NotesTree.tsx` (settings placeholder and full tree). The Voice notes screen is removed and `/tools/voice-notes` goes to Notes. `pnpm build` and 174 Vitest tests pass; new ones cover the untitled name, a note with recordings kept when its text is cleared, recordings per note (oldest first, held back without their note), the Pinned list, folder tags (top-down, move and rename, by name, at any depth, loops), the new file name with the note id, and the Archive labels.
-- Not run in a browser or on a device yet: everything on screen waits for the N3 device check ([[tasks]]).
+- **Device check, partial (2026-11-26):** on the phone against the Pi, Mihail found it "looks and feels good". Sync reached the PC: its local database held the phone's note "Test drive" with the text "Heheh" and its 3 recordings, all uploaded (read from the PC app's data files, not on screen). The check on the PC screen is still open ([[tasks]]).
 
 ## Related
 [[notes_spec]] · [[voice-notes_spec]] · [[archive_spec]] · [[ui-design_spec]] · [[client-foundation_spec]] · [[PRD]] · [[tasks]] · [[2026-10-20-architecture-modular-monolith]] · [[2026-10-21-sync-rxdb]]
