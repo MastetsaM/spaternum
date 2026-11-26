@@ -33,6 +33,7 @@ def note(body, folder_id=None, updated=T0, **extra):
         "pinned": extra.pop("pinned", False),
         "created_at": T0,
         "updated_at": updated,
+        "edited_at": extra.pop("edited_at", updated),
         "_deleted": False,
         **extra,
     }
@@ -185,3 +186,30 @@ def test_title_round_trips_and_defaults_to_empty(client, notes_db):
     push(client, "notes", with_title, without)
     titles = {d["id"]: d["title"] for d in pull(client, "notes")["documents"]}
     assert titles == {with_title["id"]: "My title", without["id"]: ""}
+
+
+# --- Notes order: planning/specs/notes-order_spec.md ---
+
+
+def test_edited_at_round_trips_apart_from_updated_at(client, notes_db):
+    n = note("Text", edited_at="2026-10-25T09:00:00.000Z")
+    push(client, "notes", n)
+    push(client, "notes", {**n, "pinned": True, "updated_at": "2026-10-25T11:00:00.000Z"})
+    doc = pull(client, "notes")["documents"][0]
+    assert (doc["pinned"], doc["edited_at"]) == (True, "2026-10-25T09:00:00.000Z")
+
+
+def test_push_without_edited_at_is_refused(client, notes_db):
+    n = note("Old app")
+    del n["edited_at"]
+    assert client.post("/api/notes/notes/push", json=[n]).status_code == 422
+
+
+def test_restore_leaves_edited_at_alone(client, notes_db):
+    n = note("Text", edited_at="2026-10-25T09:00:00.000Z")
+    push(client, "notes", n)
+    archive(client, "notes", n)
+    assert notes.restore(notes_db, uuid.UUID(n["id"])) is True
+    row = notes_db.execute("SELECT edited_at, updated_at FROM notes WHERE id = %s", (n["id"],)).fetchone()
+    assert row["edited_at"].isoformat() == "2026-10-25T09:00:00+00:00"
+    assert row["updated_at"] > row["edited_at"]

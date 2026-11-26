@@ -19,6 +19,7 @@ class Note(sync.SyncDoc):
     body: str = ""
     tags: list[str] = []
     pinned: bool = False
+    edited_at: datetime  # sort key "last edited"; required, so an old app can't wipe it
 
 
 class Recording(sync.SyncDoc):

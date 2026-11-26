@@ -323,3 +323,11 @@ def test_migration_on_a_fresh_database(old_db):
     old_db.execute("DROP TABLE voice_notes; DROP SEQUENCE voice_notes_seq")
     run_003(old_db)
     assert old_db.execute("SELECT to_regclass('note_recordings') AS t").fetchone()["t"] is not None
+
+
+def test_migration_004_gives_existing_notes_edited_at_from_updated_at(old_db):
+    add_voice_note(old_db)
+    run_003(old_db)
+    old_db.execute((MIGRATIONS / "notes" / "migrations" / "004_note_edited_at.sql").read_text())
+    row = old_db.execute("SELECT edited_at, updated_at FROM notes").fetchone()
+    assert row["edited_at"] == row["updated_at"]
