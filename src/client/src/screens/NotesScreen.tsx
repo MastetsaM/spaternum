@@ -76,12 +76,17 @@ function ListView() {
   const folderIds = new Set(folders.map((f) => f.id));
   const current = folders.find((f) => f.id === params.get("folder")) ?? null;
   const searching = text.trim() !== "" || tags.length > 0 || folderTagNames.length > 0;
+  const pinned = !current && !searching ? pinnedNotes(notes) : [];
   const shown = sortNotes(
     searching
       ? searchNotes(notes, text, tags, folderTagNames, folders)
-      : notes.filter((n) => shownFolder(n.folder_id, folderIds) === (current?.id ?? null)),
+      : notes.filter(
+          (n) =>
+            shownFolder(n.folder_id, folderIds) === (current?.id ?? null) &&
+            // At the top level a pinned note shows once, in Pinned (Mihail, 2026-11-26)
+            !(pinned.length > 0 && n.pinned),
+        ),
   );
-  const pinned = !current && !searching ? pinnedNotes(notes) : [];
 
   // Search lives in the URL, so the back gesture from a note returns to the same results
   const setSearch = (nextText: string, nextTags: string[], nextFolderTags = folderTagNames) => {
