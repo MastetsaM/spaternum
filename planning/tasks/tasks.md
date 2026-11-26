@@ -193,8 +193,9 @@ Server and client change together: the Pi, the phone and the PC are updated at t
 - [x] Update [[voice-notes_spec]], [[notes_spec]], [[archive_spec]], [[PRD]] where they still describe a separate voice notes tool
 
 ### N3. Check and release
-- [ ] Check every acceptance criterion on the phone and the PC against a local server; write results in [[notes-recordings_spec]]
-- [ ] Back up the Pi (`ops/backup.sh`), then merge into `main`, push, update the Pi, install the new APK, rebuild the PC app
+- [x] Merged into `main` **before** the device check, so it can be tested on the Pi (Mihail, 2026-11-26: the phone and the Pi hold only test data). An exception to [[2026-10-20-git-workflow]]: any fix found in the check goes on a `fix/…` branch
+- [ ] Back up the Pi (`ops/backup.sh`), then update it (`ops/update.sh`), install the new APK, rebuild the PC app
+- [ ] Check every acceptance criterion on the phone and the PC; write results in [[notes-recordings_spec]]
 
 ## Later (ideas and loose ends, not scheduled)
 - **Claude talking to the server directly (MCP-like):** let Claude read and create notes (and later other items) on Mihail's server, e.g. "make a note about this". Asked for on 2026-10-28; needs a spec first, covering what it may do, the token, and Tailscale-only access ([[2026-10-20-auth-tailscale-api-token]]).
