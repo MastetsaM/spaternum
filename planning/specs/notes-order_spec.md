@@ -59,7 +59,8 @@ Sort order everywhere notes are listed (a folder, the Pinned section, the tree i
 - Edited time for folders (they're sorted by name).
 
 ## Open questions
-None — the rules above are as discussed with Mihail on 2026-11-26.
+- A restored note keeps its old place (criterion 4), it doesn't come back at the top. Proposed, to confirm with Mihail.
+- Archiving one of a note's recordings doesn't move the note. Proposed, to confirm with Mihail.
 
 ## Related
 [[notes_spec]] · [[notes-recordings_spec]] · [[tasks]] · [[2026-10-20-offline-latest-write-wins]] · [[2026-10-21-sync-rxdb]]
