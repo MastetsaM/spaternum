@@ -1,5 +1,7 @@
 # Spec — Voice notes (phase 1)
 
+> **Since 2026-11-22, recordings belong to notes** ([[notes-recordings_spec]]): the Voice notes tool and the `voice_notes` module are gone, a recording's title and tags are its note's, and the table is `note_recordings` in the notes module. The recording, audio, upload and playback rules below still hold. The paths are now `/api/notes/recordings/{id}/audio` (server) and `src/notes/recordings/` (client).
+
 ## What and why
 Record speech from the microphone on **Android**, keep it safe on the server, play it back. The **PC views and listens only** — no recording on the PC (decided 2026-10-21; test results under Out of scope). Works **offline**: a recording made with no connection uploads when the server is reachable. Phase 1 is recording only; transcription comes in phase 2 and analysis/RAG in phase 3 ([[PRD]]). Voice notes are the main raw material for those later phases, so the job of phase 1 is to make sure every recording reaches the server intact.
 
@@ -160,4 +162,4 @@ How the client carries out the rules above. Nothing here adds behaviour; it fill
 Title optional, editable by Mihail, used as advice by phase 2 processing · tags only, no folders · max length 1 hour, then a new recording starts automatically · no server path column · archiving doesn't touch the local file, nothing deleted in phase 1 · crash safety: write audio to disk every ~5 s, recover interrupted recordings on start · recording on Android only; the PC views and listens (PC test results under Out of scope).
 
 ## Related
-[[PRD]] · [[TECH]] · [[tasks]] · [[notes_spec]] · [[voice-recorder-prototype_spec]] · [[sync-spike_spec]] · [[2026-10-21-sync-rxdb]] · [[2026-10-21-local-files-location]] · [[2026-10-20-audio-opus-files-on-disk]] · [[2026-10-20-local-files-behind-interface]] · [[2026-10-20-architecture-modular-monolith]] · [[2026-10-21-database-access-plain-sql]] · [[2026-10-20-offline-latest-write-wins]]
+[[PRD]] · [[TECH]] · [[tasks]] · [[notes_spec]] · [[voice-recorder-prototype_spec]] · [[sync-spike_spec]] · [[2026-10-21-sync-rxdb]] · [[2026-10-21-local-files-location]] · [[2026-10-20-audio-opus-files-on-disk]] · [[2026-10-20-local-files-behind-interface]] · [[2026-10-20-architecture-modular-monolith]] · [[2026-10-21-database-access-plain-sql]] · [[2026-10-20-offline-latest-write-wins]] · [[notes-recordings_spec]]

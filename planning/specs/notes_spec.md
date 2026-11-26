@@ -1,5 +1,7 @@
 # Spec — Notes (phase 1)
 
+> **Since 2026-11-22, notes can hold recordings**, there's a Pinned section at the top level, folder tags, and a full tree in the tool panel ([[notes-recordings_spec]]). The rules below still hold, except where that spec changes them (empty notes, the shown title, the tool panel).
+
 ## What and why
 Markdown notes, organised in folders and tags, available on PC and Android and **usable offline**. The first module of phase 1 together with voice notes ([[PRD]]). Notes are also the main text the later RAG system searches.
 

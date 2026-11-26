@@ -33,7 +33,7 @@ Colours come only from these tokens. A new colour needs a new token, and that ge
 - System font (`system-ui`), base **15px**.
 - Sizes: screen title 17px bold; body 15px; meta lines (dates, sizes, counts) 13px in `--muted`; panel section labels 12px uppercase in `--muted`; rail labels 10px.
 - Use `px` everywhere, the same as the rest of the file.
-- **Header:** the same 48px height on every screen. It always shows the **tool or section name** (Notes, Voice notes, Archive, Home, Settings), never a folder or note title (Mihail, 2026-10-28). It stays on one line and is cut with an ellipsis if needed.
+- **Header:** the same 48px height on every screen. It always shows the **tool or section name** (Notes, Calendar, Archive, Home, Settings), never a folder or note title (Mihail, 2026-10-28). It stays on one line and is cut with an ellipsis if needed.
 - Titles cut off with an ellipsis instead of wrapping in lists. Note text in the editor wraps normally, with line height 1.5.
 
 ## Spacing and shapes

@@ -182,15 +182,15 @@ Server and client change together: the Pi, the phone and the PC are updated at t
 - [x] Tests (criteria 1, 6, 12 server side), including archived voice notes in the migration and a recording arriving before its note
 
 ### N2. Client
-- [ ] RxDB: new `note_recordings` collection; push pending `voice_notes` changes, then drop that collection (keep it and retry if the server can't be reached); audio files untouched
-- [ ] Move recorder, upload queue, recovery and player from `voice-notes/` into `notes/`, working on recordings with a `note_id`
-- [ ] Rules + Vitest: empty note counts recordings, title shown (title → first line → first recording's date-time), held-back recordings, folder tags by name, Pinned list, recording counts as an edit
-- [ ] Notes list: Record button (Android), mic icon, Pinned section at the top level
-- [ ] Editor: recordings above the text (oldest first) with player, upload state and Archive; Record inside the note; 1-hour split stays in the note
-- [ ] Tool panel: settings placeholder, full tree with notes, note details with folder tags
-- [ ] Search: folder tags in the tag list, in a different style
-- [ ] Remove the Voice notes tool; `/tools/voice-notes…` goes to Notes; Archive page type and filter "Recordings"
-- [ ] Update [[voice-notes_spec]], [[notes_spec]], [[archive_spec]], [[PRD]] where they still describe a separate voice notes tool
+- [x] RxDB: new `note_recordings` collection; the old `voice_notes` collection is no longer opened (its unsent changes are not carried over, Mihail 2026-11-26); audio files untouched
+- [x] Move recorder, upload queue, recovery and player from `voice-notes/` into `notes/`, working on recordings with a `note_id`
+- [x] Rules + Vitest: empty note counts recordings, title shown (title → first line → first recording's date-time), held-back recordings, folder tags by name, Pinned list, recording counts as an edit
+- [x] Notes list: Record button (Android), mic icon, Pinned section at the top level
+- [x] Editor: recordings above the text (oldest first) with player, upload state and Archive; Record inside the note; 1-hour split stays in the note
+- [x] Tool panel: settings placeholder, full tree with notes, note details with folder tags
+- [x] Search: folder tags in the tag list, in a different style
+- [x] Remove the Voice notes tool; `/tools/voice-notes…` goes to Notes; Archive page type and filter "Recordings"
+- [x] Update [[voice-notes_spec]], [[notes_spec]], [[archive_spec]], [[PRD]] where they still describe a separate voice notes tool
 
 ### N3. Check and release
 - [ ] Check every acceptance criterion on the phone and the PC against a local server; write results in [[notes-recordings_spec]]
