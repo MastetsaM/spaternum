@@ -19,16 +19,17 @@ describe("archive display", () => {
     expect(formatDateTime(local.toISOString())).toBe("2026-10-08 07:05");
   });
 
-  it("uses the title, or the recording time for an untitled voice note", () => {
+  it("uses the title, or the recording time for an untitled note", () => {
     expect(itemTitle(item({}))).toBe("Shopping");
     const recorded = new Date(2026, 9, 27, 18, 30).toISOString();
-    expect(itemTitle(item({ type: "voice_note", title: "", recorded_at: recorded }))).toBe("2026-10-27 18:30");
-    expect(itemTitle(item({ type: "voice_note", title: " ", recorded_at: null }))).toBe("(untitled)");
+    expect(itemTitle(item({ type: "note", title: "", recorded_at: recorded }))).toBe("2026-10-27 18:30");
+    expect(itemTitle(item({ type: "recording", title: "Call", recorded_at: recorded }))).toBe("Recording in Call");
+    expect(itemTitle(item({ type: "note", title: " ", recorded_at: null }))).toBe("(untitled)");
   });
 
   it("labels types, and counts what was archived with a folder", () => {
     expect(itemKind(item({}))).toBe("Note");
-    expect(itemKind(item({ type: "voice_note" }))).toBe("Voice note");
+    expect(itemKind(item({ type: "recording" }))).toBe("Recording");
     expect(itemKind(item({ type: "folder", items: 1 }))).toBe("Folder · 1 item");
     expect(itemKind(item({ type: "folder", items: 50 }))).toBe("Folder · 50 items");
     expect(typeLabel("task")).toBe("task"); // a future module still shows something
@@ -42,7 +43,7 @@ describe("archive display", () => {
   });
 
   it("offers All plus one filter per server type", () => {
-    expect(FILTERS.map((f) => f.type)).toEqual(["", "note", "folder", "voice_note", "event", "series"]);
+    expect(FILTERS.map((f) => f.type)).toEqual(["", "note", "folder", "recording", "event", "series"]);
   });
 
   it("explains failures", () => {

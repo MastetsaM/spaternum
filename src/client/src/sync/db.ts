@@ -20,12 +20,12 @@ type Schemas = components["schemas"];
 // RxDB manages _deleted itself (it's our "archived" flag), so it's not part of the schema
 export type Folder = Omit<Schemas["Folder"], "_deleted">;
 export type Note = Omit<Schemas["Note"], "_deleted">;
-export type VoiceNote = Omit<Schemas["VoiceNote"], "_deleted">;
+export type Recording = Omit<Schemas["Recording"], "_deleted">;
 
 type Collections = {
   note_folders: RxCollection<Folder>;
   notes: RxCollection<Note>;
-  voice_notes: RxCollection<VoiceNote>;
+  note_recordings: RxCollection<Recording>;
   calendar_events: RxCollection<CalendarEvent>;
 };
 export type Db = RxDatabase<Collections>;
@@ -54,21 +54,22 @@ const noteSchema: RxJsonSchema<Note> = {
 };
 const noteMigrations = { 1: (doc: Note) => ({ ...doc, title: "" }) };
 
-const voiceNoteSchema: RxJsonSchema<VoiceNote> = {
+// Recordings of a note (notes-recordings_spec.md). Replaced the voice_notes collection on
+// 2026-11-22; that one is no longer opened, and its data is left in the browser storage.
+const recordingSchema: RxJsonSchema<Recording> = {
   version: 0,
   primaryKey: "id",
   type: "object",
   properties: {
     ...synced,
-    title: text,
-    tags,
+    note_id: text,
     recorded_at: text,
     duration_ms: { type: "number" },
     size_bytes: { type: "number" },
     mime_type: text,
     uploaded_at: nullableText, // set by the server only
   },
-  required: ["id", "title", "tags", "recorded_at", "duration_ms", "size_bytes", "mime_type", "created_at", "updated_at"],
+  required: ["id", "note_id", "recorded_at", "duration_ms", "size_bytes", "mime_type", "created_at", "updated_at"],
 };
 
 const bool = { type: "boolean" } as const;
@@ -100,7 +101,7 @@ const calendarEventMigrations = { 1: (doc: CalendarEvent) => ({ ...doc, show_as:
 const TABLES = {
   note_folders: { schema: folderSchema, path: "/api/notes/note_folders" },
   notes: { schema: noteSchema, path: "/api/notes/notes" },
-  voice_notes: { schema: voiceNoteSchema, path: "/api/voice-notes/voice_notes" },
+  note_recordings: { schema: recordingSchema, path: "/api/notes/note_recordings" },
   calendar_events: { schema: calendarEventSchema, path: "/api/calendar/calendar_events" },
 } as const;
 type Table = keyof typeof TABLES;
@@ -147,7 +148,7 @@ async function open(settings: Settings): Promise<Db> {
   await db.addCollections({
     note_folders: { schema: folderSchema },
     notes: { schema: noteSchema, migrationStrategies: noteMigrations },
-    voice_notes: { schema: voiceNoteSchema },
+    note_recordings: { schema: recordingSchema },
     calendar_events: { schema: calendarEventSchema, migrationStrategies: calendarEventMigrations },
   });
 

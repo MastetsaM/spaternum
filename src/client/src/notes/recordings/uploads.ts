@@ -3,10 +3,10 @@
 // Also a small store of what the list needs to know: which files are here, what's uploading, errors.
 
 import { useSyncExternalStore } from "react";
-import { ApiError, call } from "../api/client";
-import type { Settings } from "../api/settings";
-import { awaitInSync, getDb, type Db } from "../sync/db";
-import { onStatusChange } from "../sync/status";
+import { ApiError, call } from "../../api/client";
+import type { Settings } from "../../api/settings";
+import { awaitInSync, getDb, type Db } from "../../sync/db";
+import { onStatusChange } from "../../sync/status";
 import { durationOf } from "./audio";
 import { fileSize, listFiles, readAudio, renameFile } from "./files";
 import {
@@ -20,7 +20,7 @@ import {
   uploadError,
   type LocalFile,
 } from "./logic";
-import { createRow } from "./rows";
+import { createRecording } from "./rows";
 
 /** Recording and local audio happen on Android only; the PC views and streams. */
 export const RECORDS_HERE = /android/i.test(navigator.userAgent);
@@ -60,23 +60,34 @@ export async function refreshFiles(): Promise<LocalFile[]> {
   return files;
 }
 
-/** .part files left by a crash or a killed app become recordings like any other. */
+/**
+ * .part files left by a crash or a killed app become recordings like any other, in the note
+ * named in the file (created at the top level if it isn't on the device). A .part file from
+ * before notes had recordings gets a new note.
+ */
 async function recover(db: Db): Promise<void> {
   for (const file of await localFiles()) {
     if (file.done) continue;
     try {
       const sizeBytes = await fileSize(file.name);
-      const row = await db.voice_notes.findOne(file.id).exec();
+      const row = await db.note_recordings.findOne(file.id).exec();
       const action = recoveryAction(sizeBytes, row !== null);
       if (action === "skip") continue;
       if (action === "create-row") {
         const durationMs = await durationOf(await readAudio(file.name));
-        await createRow(db, { id: file.id, recordedAtMs: file.recordedAtMs!, durationMs, sizeBytes });
+        await createRecording(db, {
+          id: file.id,
+          noteId: file.noteId ?? crypto.randomUUID(),
+          folderId: null,
+          recordedAtMs: file.recordedAtMs!,
+          durationMs,
+          sizeBytes,
+        });
       }
       await renameFile(file.name, doneName(file.id));
-      console.info(`voice notes: recovered ${file.name}`);
+      console.info(`recordings: recovered ${file.name}`);
     } catch (e) {
-      console.error(`voice notes: recovery of ${file.name} failed`, e);
+      console.error(`recordings: recovery of ${file.name} failed`, e);
     }
   }
 }
@@ -100,7 +111,7 @@ export async function runUploads(): Promise<void> {
       await uploadPending(settings);
     } while (again);
   } catch (e) {
-    console.error("voice notes: upload run failed", e);
+    console.error("recordings: upload run failed", e);
   } finally {
     running = false;
   }
@@ -112,7 +123,7 @@ export async function runUploads(): Promise<void> {
  */
 export async function uploadAfterRecording(): Promise<void> {
   await Promise.race([
-    awaitInSync("voice_notes").catch(() => {}),
+    awaitInSync("note_recordings").catch(() => {}),
     new Promise((resolve) => setTimeout(resolve, PUSH_WAIT_MS)),
   ]);
   await runUploads();
@@ -121,13 +132,13 @@ export async function uploadAfterRecording(): Promise<void> {
 async function uploadPending(settings: Settings): Promise<void> {
   const db = await getDb();
   for (const file of await refreshFiles()) {
-    const row = await db.voice_notes.findOne(file.id).exec();
+    const row = await db.note_recordings.findOne(file.id).exec();
     if (!needsUpload(file, row?.uploaded_at)) continue;
 
     set({ uploading: file.id });
     try {
       const body = await readAudio(file.name);
-      await call(settings, `/api/voice-notes/${file.id}/audio`, {
+      await call(settings, `/api/notes/recordings/${file.id}/audio`, {
         method: "PUT",
         body,
         headers: { "Content-Type": "audio/webm" },
@@ -158,7 +169,7 @@ async function uploadPending(settings: Settings): Promise<void> {
 let started: Promise<void> | null = null;
 
 /** Recovery, then the first upload run; later runs when sync turns online. Resolves once recovery is done. */
-export function startVoiceNotes(appSettings: Settings): Promise<void> {
+export function startRecordings(appSettings: Settings): Promise<void> {
   if (!RECORDS_HERE) return Promise.resolve();
   settings = appSettings;
   started ??= (async () => {
@@ -168,7 +179,7 @@ export function startVoiceNotes(appSettings: Settings): Promise<void> {
       online = status.online;
     });
     await refreshFiles().catch(() => {}); // so the list doesn't show "audio missing" meanwhile
-    await recover(await getDb()).catch((e) => console.error("voice notes: recovery failed", e));
+    await recover(await getDb()).catch((e) => console.error("recordings: recovery failed", e));
     uploadAfterRecording(); // recovered rows were just created too
   })();
   return started;

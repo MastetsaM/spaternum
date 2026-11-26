@@ -62,7 +62,7 @@ def archived(db, table, id):
 def notes_db(db):
     """Same rows as the server sees them (dict rows, as the server's pool hands out)."""
     with psycopg.connect(TEST_URL, autocommit=True, row_factory=dict_row) as conn:
-        conn.execute("TRUNCATE note_folders, notes")
+        conn.execute("TRUNCATE note_folders, notes, note_recordings")
         yield conn
 
 

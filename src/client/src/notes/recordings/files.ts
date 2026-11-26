@@ -1,5 +1,6 @@
 // The one place that touches audio files on the device ([[2026-10-20-local-files-behind-interface]]):
 // the voice-notes/ folder in the app's data folder (Android app storage). The PC keeps no audio.
+// The folder keeps its old name: recordings made before notes had recordings live there.
 
 import { BaseDirectory, exists, mkdir, readDir, readFile, rename, size, writeFile } from "@tauri-apps/plugin-fs";
 

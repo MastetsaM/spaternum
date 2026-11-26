@@ -2,10 +2,10 @@
 
 Application code, and the map of what lives where. Read the first comment of each file for its job; this page shows how the files fit together.
 
-**Status (2026-10-28):**
-- `server/` is done and running on the Pi. It covers the foundation, `notes/`, `voice_notes/` and `archive/` ([[server-foundation_spec]], [[notes_spec]], [[voice-notes_spec]], [[archive_spec]]).
-- `client/`: phase 1 is done and on `main`: the foundation, Notes, Voice notes, Archive, resizable PC panels and favorite tools ([[client-foundation_spec]], [[ui-design_spec]], [[favorites_spec]]). The PC app runs with `pnpm tauri dev` and needs `gst-plugins-good` for audio ([[TECH]]).
-- Next: [[calendar_spec]], then [[notes-recordings_spec]] (draft). Other ideas are in [[tasks]] under "Later".
+**Status (2026-11-26):**
+- `server/` runs on the Pi: the foundation, `notes/` (with recordings), `calendar/` and `archive/` ([[server-foundation_spec]], [[notes_spec]], [[notes-recordings_spec]], [[calendar_spec]], [[archive_spec]]).
+- `client/`: Notes (with recordings), Calendar, Archive, resizable PC panels and favorite tools ([[client-foundation_spec]], [[ui-design_spec]], [[favorites_spec]]). The PC app runs with `pnpm tauri dev` and needs `gst-plugins-good` for audio ([[TECH]]).
+- Notes with recordings ([[notes-recordings_spec]]) is on `feature/notes-recordings` until its device check. Other ideas are in [[tasks]] under "Later".
 
 ## Folders
 | Path | Contents |
@@ -16,7 +16,7 @@ Application code, and the map of what lives where. Read the first comment of eac
 
 ## How data moves
 1. **Write:**
-   - A screen writes to the local database (RxDB) through a module's store (`notes/store.ts`, `voice-notes/rows.ts`, `calendar/store.ts`).
+   - A screen writes to the local database (RxDB) through a module's store (`notes/store.ts`, `notes/recordings/rows.ts`, `calendar/store.ts`).
    - Every write sets `updated_at` from the server-corrected clock (`sync/clock.ts`).
 2. **Push:**
    - `sync/db.ts` replicates each collection to `POST /api/<module>/<table>/push`.
@@ -27,8 +27,8 @@ Application code, and the map of what lives where. Read the first comment of eac
    - `events.py` forwards it over SSE (`/api/events`).
    - `sync/events.ts` hears it and `sync/db.ts` pulls.
 4. **Pull:** `GET /api/<module>/<table>/pull?seq=` returns rows changed after the device's last `seq`. Archived rows come back as deletions, so they leave every device.
-5. **Audio (voice notes only):**
-   - The file is uploaded separately with `PUT /api/voice-notes/{id}/audio` (`voice_notes/audio.py`).
+5. **Audio (recordings only):**
+   - The file is uploaded separately with `PUT /api/notes/recordings/{id}/audio` (`notes/audio.py`).
    - The server then sets `uploaded_at`, which syncs back like any change.
    - Any device can stream the file from `GET` on the same path.
 6. **Archive page:** it calls `GET /api/archive` and `POST /api/archive/{module}/{id}/restore` directly, online only. A restore bumps `updated_at`, so the row syncs back to every device.
@@ -47,19 +47,18 @@ Run, migrate and test commands are at the top of `spaternum/main.py`, `spaternum
 | `spaternum/sync.py` | The reusable pull/push helper; one `SyncTable` per synced table, with optional reject and on-archive hooks |
 | `spaternum/events.py` | The SSE stream: `LISTEN sync`, keepalive every 25 s |
 | `spaternum/core/migrations/` | `sync_notify()`, the trigger function every synced table uses |
-| `spaternum/notes/` | Tables `note_folders` and `notes`. `tables.py`: models, the folder-loop check, archiving a folder archives its contents. `archive.py`: list and restore for the Archive page |
-| `spaternum/voice_notes/` | Table `voice_notes`. `audio.py`: upload (size check, 507 when the disk is full) and streaming with Range. `archive.py`: list and restore |
+| `spaternum/notes/` | Tables `note_folders`, `notes` and `note_recordings`. `tables.py`: models, the folder-loop check, archiving a folder or note archives what's inside. `audio.py`: recording upload (size check, 507 when the disk is full) and streaming with Range. `archive.py`: list and restore for the Archive page |
 | `spaternum/calendar/` | Table `calendar_events` (one-offs, series and their exceptions). `tables.py`: the model, archiving a series archives its exceptions. `archive.py`: list and restore (a series with its exceptions) |
 | `spaternum/archive/` | Owns no tables. `/api/archive` asks each module's `archive.py` |
 | `tests/` | pytest against a real Postgres: one `*_test.py` per module, plus `conftest.py` (database and client fixtures) |
 | `Dockerfile` | Image built on the machine that runs it (see `ops/`) |
 
 ## Client — `client/src/`
-Start reading at `main.tsx`, which starts sync and the voice-notes uploads, then `App.tsx` (routes) and `layout/Layout.tsx`.
+Start reading at `main.tsx`, which starts sync and the recording uploads, then `App.tsx` (routes) and `layout/Layout.tsx`.
 
 | Path | What it does |
 |---|---|
-| `main.tsx` | Starts sync and voice-notes recovery and uploads once for the whole app, then renders `App` |
+| `main.tsx` | Starts sync and recording recovery and uploads once for the whole app, then renders `App` |
 | `App.tsx` | Routes (hash router). Sends you to Settings until a server and token are saved, or when the token is rejected |
 | `App.css` | All styles, plain CSS, one section per screen. The phone layout is under `max-width: 700px` |
 | `layout/Layout.tsx` | The frame: rail or bottom bar (sections), side panel or ☰ drawer (only the list of tools), main, and the tool panel on the right (the tool's navigation and details). On the phone both sliding panels close when the screen changes |
@@ -68,22 +67,22 @@ Start reading at `main.tsx`, which starts sync and the voice-notes uploads, then
 | `api/settings.ts` | Server address and token in `localStorage` |
 | `api/client.ts` | `call()`: every direct server call. It adds the token, reads the clock offset and marks online/offline |
 | `api/schema.ts` | Generated from the server's OpenAPI (`pnpm gen:api`). Never edit by hand |
-| `sync/db.ts` | RxDB: the collections `note_folders`, `notes`, `voice_notes`, `calendar_events`, their replication, and `awaitInSync(table)` |
+| `sync/db.ts` | RxDB: the collections `note_folders`, `notes`, `note_recordings`, `calendar_events`, their replication, and `awaitInSync(table)` |
 | `sync/events.ts` | Reads the SSE stream with fetch, reconnects, 60 s silence watchdog |
 | `sync/clock.ts` | `serverNow()`: the device clock corrected by the server's `Date` header |
 | `sync/status.ts` | Online dot, "token rejected" state, and the modules whose sync the server refuses (the red sync warning under the header); `onStatusChange()` lets code react to coming back online |
-| `notes/notes.ts` | Pure rules: the title (its own, or the first line), what the editor saves (title and body together), order, search, tags, folder tree, allowed moves, hiding what's inside a just-archived folder |
-| `notes/store.ts` | Notes and folders read and written in RxDB. The ids of folders archived on this device are kept in `localStorage` |
-| `voice-notes/logic.ts` | Pure rules: file names, recovery, the 1-hour split, upload state, playback source, labels, tags |
-| `voice-notes/files.ts` | The only code that touches audio files: the `voice-notes/` folder in app storage |
-| `voice-notes/recorder.ts` | MediaRecorder with the phase 0 settings. It lives outside React, so recording continues across screens |
-| `voice-notes/uploads.ts` | Recovery on start and the upload queue (after Stop, on start, when back online), plus the state the list shows |
-| `voice-notes/rows.ts` | Writes to the `voice_notes` collection |
-| `voice-notes/audio.ts` | Reading a file's duration, fetching audio from the server, and the player: one recording at a time, with position kept per recording, seeking and speed |
+| `notes/notes.ts` | Pure rules: the title (its own, the first line, or the first recording's date-time), what the editor saves, order, search, tags and folder tags, the Pinned list, recordings per note, folder tree, allowed moves, hiding what's inside a just-archived folder |
+| `notes/store.ts` | Notes, folders and recordings read from RxDB; notes and folders written. The ids of folders archived on this device are kept in `localStorage` |
+| `notes/recordings/logic.ts` | Pure rules: file names, recovery, the 1-hour split, upload state, playback source, labels |
+| `notes/recordings/files.ts` | The only code that touches audio files: the `voice-notes/` folder in app storage (old name kept) |
+| `notes/recordings/recorder.ts` | MediaRecorder with the phase 0 settings, recording into one note. It lives outside React, so recording continues across screens |
+| `notes/recordings/uploads.ts` | Recovery on start and the upload queue (after Stop, on start, when back online), plus the state the editor shows |
+| `notes/recordings/rows.ts` | Writes to the `note_recordings` collection; creates the note, or marks it edited |
+| `notes/recordings/audio.ts` | Reading a file's duration, fetching audio from the server, and the player: one recording at a time, with position kept per recording, seeking and speed |
 | `calendar/store.ts` | Calendar events read from RxDB, and the writes `calendar.ts` decides (put rows, archive ids) stored |
 | `calendar/display.ts` | Screen rules: the view kept in `localStorage`, days with a dot in the year view, form inputs ↔ stored times, the 30-minute time list, finding an occurrence by its key and again after a save |
 | `archive/archive.ts` | Archive page calls and display rules |
-| `screens/` | One screen per route: `NotesScreen`, `VoiceNotesScreen`, `CalendarScreen` (FullCalendar; the tool panel's day list; the event form, in the tool panel on the PC and its own screen on the phone; the *only this one / following / all* question), `ArchiveScreen`, `FavoritesScreen`, `SettingsScreen`. `Placeholders.tsx` holds Home, Tools, Clients and Projects |
+| `screens/` | One screen per route: `NotesScreen` (with `NoteRecordings.tsx` for Record and the recordings, `NotesTree.tsx` for the settings placeholder and the full tree), `CalendarScreen` (FullCalendar; the tool panel's day list; the event form, in the tool panel on the PC and its own screen on the phone; the *only this one / following / all* question), `ArchiveScreen`, `FavoritesScreen`, `SettingsScreen`. `Placeholders.tsx` holds Home, Tools, Clients and Projects |
 | `*_test.ts` | Vitest tests next to the code they test (`pnpm test`) |
 
 Other client files:
@@ -96,7 +95,7 @@ Other client files:
 
 | File name | Meaning |
 |---|---|
-| `<id>.<recorded_at ms>.part` | Recording, or interrupted; recovered on the next start |
+| `<id>.<recorded_at ms>.<note id>.part` | Recording, or interrupted; recovered on the next start into that note (old files without a note id get a new note) |
 | `<id>.webm` | Finished, not uploaded yet |
 | `<id>.uploaded.webm` | Uploaded |
 
@@ -104,11 +103,11 @@ Other client files:
 - Follow the patterns in [[TECH]]:
   - Modules don't reach into each other's internals.
   - Client types are generated from OpenAPI.
-  - UI code never calls `fs` directly; it goes through `voice-notes/files.ts`.
+  - UI code never calls `fs` directly; it goes through `notes/recordings/files.ts`.
 - Rules without I/O go in plain functions with tests. Screens only wire them up.
 - Package manager for the client: **pnpm** ([[2026-10-20-package-manager-pnpm]]).
 - Every installed package is logged in `wiki/installed.md` and its exact version pinned in [[TECH]].
 - Tests: `feature-name_test.*`.
 
 ## Related
-[[CLAUDE]] · [[TECH]] · [[tasks]] · [[PRD]] · [[client-foundation_spec]] · [[notes_spec]] · [[voice-notes_spec]] · [[archive_spec]] · [[server-foundation_spec]]
+[[CLAUDE]] · [[TECH]] · [[tasks]] · [[PRD]] · [[client-foundation_spec]] · [[notes_spec]] · [[notes-recordings_spec]] · [[voice-notes_spec]] · [[archive_spec]] · [[server-foundation_spec]] · [[calendar_spec]]

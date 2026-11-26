@@ -253,7 +253,7 @@ button.danger { color: var(--error); border-color: var(--error); }
 .search-box input { border: none; padding: 8px 0; }
 .search-box input:focus { outline: none; }
 
-.new-buttons { display: flex; gap: 8px; margin-bottom: 12px; }
+.new-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
 .new-buttons button { display: inline-flex; align-items: center; gap: 6px; }
 .new-buttons + .name-form { margin-bottom: 12px; }
 .location { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; min-width: 0; }
@@ -275,8 +275,21 @@ button.danger { color: var(--error); border-color: var(--error); }
 .note-list a.folder-row { flex-direction: row; align-items: center; gap: 8px; font-weight: 600; }
 .note-list a.note-title { flex-direction: row; align-items: center; gap: 6px; font-weight: 600; }
 .note-title span { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.note-title .mic-mark { flex-shrink: 0; color: var(--muted); }
+.pinned-list { margin-bottom: 16px; }
+.note-search + .panel-label { margin-top: 4px; }
+
+/* Folder tags: worked out from where a note is, so they look different from typed tags */
+.tag.folder-tag { border-style: dashed; gap: 4px; }
+
+/* Tool panel: notes settings and the full tree */
+.panel-empty { font-size: 13px; margin: 0 0 16px; }
+.notes-tree li.tree-folder { display: flex; align-items: center; }
+.notes-tree li.tree-folder a { flex: 1; min-width: 0; }
+.notes-tree a span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 
 .editor { display: flex; flex-direction: column; gap: 8px; height: 100%; }
+.editor-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
 .editor .back { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; border: none; padding: 4px 0; color: var(--muted); }
 .note-title-box { font-size: 17px; font-weight: 600; }
 .editor textarea { flex: 1; min-height: 50vh; resize: none; line-height: 1.5; }
@@ -306,15 +319,13 @@ button.danger { color: var(--error); border-color: var(--error); }
 .archive-list .muted { font-size: 13px; }
 .archive-list button { flex-shrink: 0; }
 
-/* ---- Voice notes ---- */
+/* ---- Recordings (inside notes; the vn- names are from the old Voice notes tool) ---- */
 
-.vn-record { margin-bottom: 16px; }
-.vn-record button { display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; font-size: 17px; }
+.vn-start, .vn-stop { display: inline-flex; align-items: center; gap: 6px; }
 .vn-start { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 .vn-stop { background: var(--error); border-color: var(--error); color: var(--on-accent); font-variant-numeric: tabular-nums; }
 .vn-list { list-style: none; margin: 0; padding: 0; }
 .vn-item { padding: 12px 0; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; }
-.vn-title { font-weight: 600; overflow-wrap: anywhere; }
 .vn-meta { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 13px; }
 .vn-state.vn-local, .vn-state.vn-error, .vn-state.vn-missing { color: var(--error); font-weight: 600; }
 .vn-state.vn-uploaded { color: var(--ok); }
@@ -324,7 +335,6 @@ button.danger { color: var(--error); border-color: var(--error); }
 .vn-player button { display: inline-flex; padding: 6px 8px; }
 .vn-player input[type="range"] { flex: 1; min-width: 0; padding: 0; border: none; accent-color: var(--accent); }
 .vn-time { font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.vn-edit { display: flex; flex-direction: column; gap: 8px; }
 
 /* ---- Favorites ---- */
 

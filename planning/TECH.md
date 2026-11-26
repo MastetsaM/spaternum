@@ -11,7 +11,7 @@ Technical reference. The *why* behind each choice lives in [[PRD]] and the decis
                               |
               Server (Docker, Pi 4 now → home server later)
               ├─ FastAPI app — one module per feature
-              │    notes/  voice_notes/  (later: projects/, clients/, …)
+              │    notes/ (with recordings)  calendar/  archive/  (later: projects/, clients/, …)
               ├─ Postgres + pgvector — structured data, embeddings
               └─ /data on HDD — audio files (Opus)
 ```

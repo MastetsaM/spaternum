@@ -30,6 +30,11 @@ From Mihail on 2026-11-22:
 18. Restoring a recording whose note is archived **restores the note too**.
 19. Folder tags work **by name**: if two folders are both called `Clients`, the tag `Clients` finds notes under both.
 
+From Mihail on 2026-11-26, while building:
+
+20. At the **top level**, a pinned note shows **only in Pinned**, not again in the list below it. Inside folders it stays at the top of its folder (decision 12).
+21. **Unsent changes from the old Voice notes tool are not carried over.** The new app can't send them (the old server address is gone). Accepted because the phone holds only test data; no rescue code.
+
 ## What stays the same
 Everything about recording and audio in [[voice-notes_spec]]: the recorder settings, crash safety and recovery, the upload rules, playback, the player, the file names, and that recording is Android only. Sync, archive and empty-note rules from [[notes_spec]], except where this spec changes them.
 
@@ -105,12 +110,14 @@ CREATE TABLE note_recordings (
 12. Tests pass: server migration (voice notes → notes + recordings, archived ones included), sync of `note_recordings`, recording before its note, archive and restore cascades, upload endpoint; client rules (empty note, title shown, folder tags, Pinned list, held-back recordings).
 
 ## Edge cases and failure modes
-- **Voice note changes not pushed when the app updates** (e.g. a tag edited offline): the RxDB step pushes them before dropping the old collection. If the server can't be reached, the app keeps the old collection and tries again on the next start. The audio upload queue keeps working on the files either way.
-- **Recording not uploaded yet when the app updates:** its file stays under the same name, so it uploads as before.
+- **Voice note changes not pushed when the app updates** (e.g. a tag edited offline): lost (decision 21). The new app no longer opens the old `voice_notes` collection; its data is left untouched in the browser storage.
+- **Recording not uploaded yet when the app updates:** if its row had reached the server, the migration made it a recording with the same id and the file uploads as before. If the row never reached the server, the file has no recording on the server: its upload is refused (404) and retried every 30 s, with no error shown. Accepted with decision 21; it only happens with test data from before the update.
+- **App killed while recording** (recovery on the next start): the unfinished file is named after its note (`<id>.<recorded_at>.<note id>.part`), so the recording goes back into that note. If that note was never created (Record in the list, killed before Stop), it's created at the **top level**, because the file doesn't name the folder. An unfinished file from before the update has no note id and gets a new note at the top level.
 - **Recording whose note never arrives** (note archived on another device meanwhile): stays hidden. Restoring the note brings it back.
 - **Folder renamed on another device while searching by its tag:** the tag disappears from the list, the search shows what still matches.
 - **A note moved out of the folder of a chosen folder tag:** it drops out of the results.
 - **Old app talking to the new server** (PC not rebuilt yet): the old `voice-notes` endpoints are gone, so its Voice notes tool fails to sync and shows the red sync line. Rebuild the PC app with the server update.
+- **Sync warning** for recordings says "Notes isn't syncing": recordings are part of the notes module.
 - **Install-specific audio** (main space vs Second Space): same known limitation as in [[voice-notes_spec]].
 
 ## Out of scope
@@ -123,6 +130,17 @@ CREATE TABLE note_recordings (
 
 ## Open questions
 None — ready to build.
+
+## Results — server (2026-11-22)
+Built in `src/server/spaternum/notes/` (migration `003_note_recordings.sql`, `tables.py`, `archive.py`, `audio.py`); the `voice_notes` module is removed. 67 server tests pass, 18 of them in `tests/note_recordings_test.py`:
+- Migration on a copy of the old schema: voice notes become notes in a "Voice notes" folder with their title and tags, nothing lost, archived ones archived together and restorable; no folder when there are no voice notes; a fresh database gets only the new table.
+- Sync of `note_recordings`, a recording arriving before its note, and the upload/stream rules from [[voice-notes_spec]] (now at `/api/notes/recordings/{id}/audio`).
+- Archive: note → its recordings, folder → recordings inside; a recording archived on its own stays archived when its note is restored; archiving one recording leaves the note; restoring a recording restores its note; an untitled note is named by its first recording.
+- Archive page: type `recording`, titled with its note.
+
+## Results — client (2026-11-26)
+Built in `src/client/src/notes/` (rules in `notes.ts`, recordings in `notes/recordings/`, moved from `voice-notes/`), `screens/NotesScreen.tsx`, `screens/NoteRecordings.tsx` (Record and the recordings list) and `screens/NotesTree.tsx` (settings placeholder and full tree). The Voice notes screen is removed and `/tools/voice-notes` goes to Notes. `pnpm build` and 174 Vitest tests pass; new ones cover the untitled name, a note with recordings kept when its text is cleared, recordings per note (oldest first, held back without their note), the Pinned list, folder tags (top-down, move and rename, by name, at any depth, loops), the new file name with the note id, and the Archive labels.
+- Not run in a browser or on a device yet: everything on screen waits for the N3 device check ([[tasks]]).
 
 ## Related
 [[notes_spec]] · [[voice-notes_spec]] · [[archive_spec]] · [[ui-design_spec]] · [[client-foundation_spec]] · [[PRD]] · [[tasks]] · [[2026-10-20-architecture-modular-monolith]] · [[2026-10-21-sync-rxdb]]

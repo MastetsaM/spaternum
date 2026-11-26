@@ -1,4 +1,4 @@
-"""The two synced tables, with the notes-specific rules hooked into the sync helper."""
+"""The three synced tables, with the notes-specific rules hooked into the sync helper."""
 
 from datetime import datetime
 from uuid import UUID
@@ -19,6 +19,15 @@ class Note(sync.SyncDoc):
     body: str = ""
     tags: list[str] = []
     pinned: bool = False
+
+
+class Recording(sync.SyncDoc):
+    note_id: UUID
+    recorded_at: datetime
+    duration_ms: int
+    size_bytes: int
+    mime_type: str
+    uploaded_at: datetime | None = None
 
 
 def creates_loop(conn: Connection, folder: Folder) -> bool:
@@ -64,16 +73,41 @@ def archive_contents(conn: Connection, folder_id: UUID, archived_at: datetime) -
             {"id": folder_id, "at": archived_at},
         )
     ]
+    note_ids = [
+        r["id"]
+        for r in conn.execute(
+            """
+            UPDATE notes SET archived_at = %(at)s, seq = nextval('notes_seq')
+            WHERE archived_at IS NULL AND folder_id = ANY(%(folders)s)
+            RETURNING id
+            """,
+            {"at": archived_at, "folders": [folder_id, *sub_ids]},
+        )
+    ]
+    archive_recordings(conn, note_ids, archived_at)
+
+
+def archive_recordings(conn: Connection, note_ids: list[UUID], archived_at: datetime) -> None:
+    """Archive the notes' active recordings with the notes' time, so they restore together.
+
+    Recordings archived earlier on their own keep their own time.
+    """
     conn.execute(
         """
-        UPDATE notes SET archived_at = %(at)s, seq = nextval('notes_seq')
-        WHERE archived_at IS NULL AND folder_id = ANY(%(folders)s)
+        UPDATE note_recordings SET archived_at = %(at)s, seq = nextval('note_recordings_seq')
+        WHERE archived_at IS NULL AND note_id = ANY(%(notes)s)
         """,
-        {"at": archived_at, "folders": [folder_id, *sub_ids]},
+        {"at": archived_at, "notes": note_ids},
     )
+
+
+def archive_note(conn: Connection, note_id: UUID, archived_at: datetime) -> None:
+    archive_recordings(conn, [note_id], archived_at)
 
 
 FOLDERS = sync.SyncTable(
     "note_folders", Folder, on_archive=archive_contents, reject=creates_loop
 )
-NOTES = sync.SyncTable("notes", Note)
+NOTES = sync.SyncTable("notes", Note, on_archive=archive_note)
+# uploaded_at is set only when the server has the file; a device can't reset it
+RECORDINGS = sync.SyncTable("note_recordings", Recording, server_owned=["uploaded_at"])

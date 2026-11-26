@@ -1,17 +1,23 @@
-// Notes: folders browsed like a file manager in the main area (sub-folders, then notes), or the
-// editor; the tool panel holds the folder tree, then the folder's or note's details. Rules live in notes/notes.ts, database writes in notes/store.ts.
+// Notes: folders browsed like a file manager in the main area (Pinned at the top level, sub-folders,
+// then notes), or the editor with the note's recordings above its text. The tool panel holds the
+// notes settings, the full tree, then the folder's or note's details. Rules live in notes/notes.ts,
+// database writes in notes/store.ts, recordings in notes/recordings/ and NoteRecordings.tsx.
 
-import { ArrowLeft, ChevronLeft, Folder as FolderIcon, FolderPlus, Pin, PinOff, Plus, Search, X } from "lucide-react";
+import { ArrowLeft, ChevronLeft, Folder as FolderIcon, FolderPlus, Mic, Pin, PinOff, Plus, Search, X } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router";
 import { Layout } from "../layout/Layout";
 import {
   addTags,
+  allFolderTags,
   allTags,
   childFolders,
+  folderTags,
   folderTree,
   moveTargets,
   noteTitle,
+  pinnedNotes,
+  recordingsByNote,
   sameContent,
   searchNotes,
   shownFolder,
@@ -31,10 +37,13 @@ import {
   updateFolder,
   updateNote,
   useNotesAndFolders,
+  useRecordings,
 } from "../notes/store";
-import { getDb, type Folder, type Note } from "../sync/db";
+import { getDb, type Folder, type Note, type Recording } from "../sync/db";
+import { RecordButton, RecordingList, RECORDS_HERE } from "./NoteRecordings";
+import { listUrl, NotesSettings, NotesTree } from "./NotesTree";
 
-const listUrl = (folderId: string | null) => (folderId ? `/tools/notes?folder=${folderId}` : "/tools/notes");
+const NO_RECORDINGS: Recording[] = [];
 
 /** /tools/notes → the list; /tools/notes/<id> → the editor. */
 export function NotesScreen() {
@@ -46,11 +55,13 @@ export function NotesScreen() {
 
 function ListView() {
   const data = useNotesAndFolders();
+  const recordings = useRecordings() ?? NO_RECORDINGS;
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const [naming, setNaming] = useState(false); // the New folder name box is open
   const text = params.get("q") ?? "";
   const tags = params.getAll("tag");
+  const folderTagNames = params.getAll("ftag"); // folder tags: everything below folders with that name
 
   if (!data) {
     return (
@@ -61,25 +72,34 @@ function ListView() {
   }
 
   const { notes, folders } = data;
+  const byNote = recordingsByNote(recordings, notes);
   const folderIds = new Set(folders.map((f) => f.id));
   const current = folders.find((f) => f.id === params.get("folder")) ?? null;
-  const searching = text.trim() !== "" || tags.length > 0;
+  const searching = text.trim() !== "" || tags.length > 0 || folderTagNames.length > 0;
+  const pinned = !current && !searching ? pinnedNotes(notes) : [];
   const shown = sortNotes(
     searching
-      ? searchNotes(notes, text, tags)
-      : notes.filter((n) => shownFolder(n.folder_id, folderIds) === (current?.id ?? null)),
+      ? searchNotes(notes, text, tags, folderTagNames, folders)
+      : notes.filter(
+          (n) =>
+            shownFolder(n.folder_id, folderIds) === (current?.id ?? null) &&
+            // At the top level a pinned note shows once, in Pinned (Mihail, 2026-11-26)
+            !(pinned.length > 0 && n.pinned),
+        ),
   );
 
   // Search lives in the URL, so the back gesture from a note returns to the same results
-  const setSearch = (nextText: string, nextTags: string[]) => {
+  const setSearch = (nextText: string, nextTags: string[], nextFolderTags = folderTagNames) => {
     const next = new URLSearchParams();
     if (current) next.set("folder", current.id);
     if (nextText) next.set("q", nextText);
     nextTags.forEach((tag) => next.append("tag", tag));
+    nextFolderTags.forEach((name) => next.append("ftag", name));
     setParams(next, { replace: true });
   };
-  const toggleTag = (tag: string) =>
-    setSearch(text, tags.includes(tag) ? tags.filter((t) => t !== tag) : [...tags, tag]);
+  const toggle = (list: string[], item: string) => (list.includes(item) ? list.filter((t) => t !== item) : [...list, item]);
+  const toggleTag = (tag: string) => setSearch(text, toggle(tags, tag));
+  const toggleFolderTag = (name: string) => setSearch(text, tags, toggle(folderTagNames, name));
 
   const parentId = current ? shownFolder(current.parent_id, folderIds) : null;
   const parentName = folders.find((f) => f.id === parentId)?.name ?? "Notes";
@@ -95,7 +115,8 @@ function ListView() {
       title="Notes"
       tools={
         <>
-          <FolderTree folders={folders} currentId={current?.id ?? null} />
+          <NotesSettings />
+          <NotesTree folders={folders} notes={notes} byNote={byNote} currentFolderId={current?.id ?? null} />
           {current && <FolderDetails key={current.id} folder={current} folders={folders} notes={notes} />}
         </>
       }
@@ -116,6 +137,8 @@ function ListView() {
         <button onClick={() => setNaming(!naming)}>
           <FolderPlus size={16} /> New folder
         </button>
+        {/* A new note holding the recording, created at Stop in this folder */}
+        {RECORDS_HERE && <RecordButton target={() => ({ noteId: crypto.randomUUID(), folderId: current?.id ?? null })} />}
       </div>
       {naming && (
         <NameForm
@@ -143,8 +166,28 @@ function ListView() {
               {tag}
             </button>
           ))}
+          {allFolderTags(folders).map((name) => (
+            <button
+              key={`folder:${name}`}
+              className={`tag folder-tag ${folderTagNames.includes(name) ? "on" : ""}`}
+              onClick={() => toggleFolderTag(name)}
+            >
+              <FolderIcon size={12} /> {name}
+            </button>
+          ))}
         </div>
       </div>
+
+      {pinned.length > 0 && (
+        <>
+          <h3 className="panel-label">Pinned</h3>
+          <ul className="note-list pinned-list">
+            {pinned.map((note) => (
+              <NoteRow key={note.id} note={note} recordings={byNote.get(note.id)} />
+            ))}
+          </ul>
+        </>
+      )}
 
       {subFolders.length > 0 && (
         <ul className="note-list">
@@ -163,7 +206,7 @@ function ListView() {
       ) : (
         <ul className="note-list">
           {shown.map((note) => (
-            <NoteRow key={note.id} note={note} />
+            <NoteRow key={note.id} note={note} recordings={byNote.get(note.id)} />
           ))}
         </ul>
       )}
@@ -171,41 +214,20 @@ function ListView() {
   );
 }
 
-/** Only the title, on one line; a tap opens the note. */
-function NoteRow({ note }: { note: Note }) {
+/** Only the title, on one line, with a mic if the note has recordings; a tap opens the note. */
+function NoteRow({ note, recordings }: { note: Note; recordings?: Recording[] }) {
   return (
     <li>
       <Link to={`/tools/notes/${note.id}`} className="note-title">
         {note.pinned && <Pin size={14} />}
-        <span>{noteTitle(note)}</span>
+        <span>{noteTitle(note, recordings?.[0]?.recorded_at)}</span>
+        {recordings && <Mic size={14} className="mic-mark" aria-label="Has recordings" />}
       </Link>
     </li>
   );
 }
 
 // ---- Folders ----
-
-function FolderTree({ folders, currentId }: { folders: Folder[]; currentId: string | null }) {
-  return (
-    <>
-      <h3 className="panel-label">Folders</h3>
-      <ul className="folder-tree">
-        <li>
-          <Link to={listUrl(null)} className={currentId === null ? "active" : ""}>
-            Top level
-          </Link>
-        </li>
-        {folderTree(folders).map(({ folder, depth }) => (
-          <li key={folder.id} style={{ paddingLeft: depth * 14 }}>
-            <Link to={listUrl(folder.id)} className={folder.id === currentId ? "active" : ""}>
-              <FolderIcon size={15} /> {folder.name}
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </>
-  );
-}
 
 /** Folder options for a <select>, indented by depth, top level first. */
 function FolderOptions({ folders }: { folders: Folder[] }) {
@@ -295,7 +317,9 @@ const contentOf = (note: Note): Content => ({ title: note.title, body: note.body
 function EditorView({ id }: { id: string }) {
   const [params] = useSearchParams();
   const navigate = useNavigate();
-  const folders = useNotesAndFolders()?.folders ?? null;
+  const data = useNotesAndFolders();
+  const folders = data?.folders ?? null;
+  const recordings = useRecordings() ?? NO_RECORDINGS;
   const [state, setState] = useState<"loading" | "ready" | "missing">("loading");
   const [content, setContent] = useState<Content>(EMPTY);
   const [note, setNote] = useState<Note | null>(null); // the stored row, live; null = none (yet)
@@ -308,6 +332,7 @@ function EditorView({ id }: { id: string }) {
   const archived = useRef(false);
   const queue = useRef(Promise.resolve()); // writes one after another
   const writing = useRef(0); // writes not finished yet
+  const hasRecordings = useRef(false); // a note with recordings isn't empty without text
 
   const run = (action: SaveAction) => {
     if (archived.current || action.kind === "none" || !last.current) return;
@@ -369,22 +394,25 @@ function EditorView({ id }: { id: string }) {
     };
   }, [id]);
 
+  const save = (leaving: boolean) =>
+    run(toSave(contentRef.current, saved.current, opened.current, leaving, hasRecordings.current));
+
   // Save a moment after typing stops
   useEffect(() => {
     if (state !== "ready") return;
-    const timer = setTimeout(() => run(toSave(contentRef.current, saved.current, opened.current, false)), 800);
+    const timer = setTimeout(() => save(false), 800);
     return () => clearTimeout(timer);
   }, [content, state]);
 
   // Save when leaving the editor, and when the app goes to the background (Android may close it)
   useEffect(() => {
     const hidden = () => {
-      if (document.visibilityState === "hidden") run(toSave(contentRef.current, saved.current, opened.current, false));
+      if (document.visibilityState === "hidden") save(false);
     };
     document.addEventListener("visibilitychange", hidden);
     return () => {
       document.removeEventListener("visibilitychange", hidden);
-      run(toSave(contentRef.current, saved.current, opened.current, true));
+      save(true);
     };
   }, []);
 
@@ -395,6 +423,9 @@ function EditorView({ id }: { id: string }) {
 
   const folderId = folders ? shownFolder((note ?? last.current)?.folder_id, new Set(folders.map((f) => f.id))) : null;
   const back = () => navigate(listUrl(folderId));
+  const byNote = data ? recordingsByNote(recordings, data.notes) : new Map<string, Recording[]>();
+  const mine = byNote.get(id) ?? NO_RECORDINGS;
+  hasRecordings.current = mine.length > 0;
 
   if (state === "missing") {
     return (
@@ -416,21 +447,33 @@ function EditorView({ id }: { id: string }) {
       title="Notes"
       tools={
         <>
-          {folders && <FolderTree folders={folders} currentId={folderId} />}
+          <NotesSettings />
+          {data && (
+            <NotesTree folders={data.folders} notes={data.notes} byNote={byNote} currentFolderId={folderId} currentNoteId={id} />
+          )}
           <NoteDetails note={note} folders={folders ?? []} isNew={params.get("new") === "1"} onArchive={archive} />
         </>
       }
     >
       <div className="editor">
-        <button className="back" onClick={back}>
-          <ArrowLeft size={16} /> Notes
-        </button>
+        <div className="editor-top">
+          <button className="back" onClick={back}>
+            <ArrowLeft size={16} /> Notes
+          </button>
+          {/* Into this note; a new note with no text yet is created at Stop, in its folder */}
+          {RECORDS_HERE && state === "ready" && (
+            <RecordButton target={() => ({ noteId: id, folderId: (note ?? last.current)?.folder_id ?? null })} />
+          )}
+        </div>
+        <RecordingList recordings={mine} />
         <input
           className="note-title-box"
           value={content.title}
           disabled={state !== "ready"}
           // Empty title: the first line shows in its place, and is the title the list uses
-          placeholder={content.body.trim() ? title(content.body) : "Title"}
+          placeholder={
+            content.body.trim() ? title(content.body) : mine.length > 0 ? noteTitle({ title: "", body: "" }, mine[0].recorded_at) : "Title"
+          }
           onChange={(e) => edit({ title: e.target.value })}
         />
         <textarea
@@ -487,6 +530,16 @@ function NoteDetails({ note, folders, isNew, onArchive }: DetailsProps) {
           </span>
         ))}
       </div>
+      {/* Folder tags: where the note sits now; they change by moving the note, not here */}
+      {folderTags(note.folder_id, folders).length > 0 && (
+        <div className="tags">
+          {folderTags(note.folder_id, folders).map((name, i) => (
+            <span key={`${i}:${name}`} className="tag folder-tag" title="Folder tag: from where the note is">
+              <FolderIcon size={12} /> {name}
+            </span>
+          ))}
+        </div>
+      )}
       <form className="name-form" onSubmit={add}>
         <input value={typed} onChange={(e) => setTyped(e.target.value)} placeholder="Add tags, comma between" />
         <button disabled={!typed.trim()}>Add</button>

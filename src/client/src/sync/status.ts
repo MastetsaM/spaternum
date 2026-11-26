@@ -37,7 +37,7 @@ export function markSynced(key: string) {
 const MODULES: Record<string, string> = {
   note_folders: "Notes",
   notes: "Notes",
-  voice_notes: "Voice notes",
+  note_recordings: "Notes",
   calendar_events: "Calendar",
 };
 
@@ -58,7 +58,7 @@ export const markTokenRejected = () => set({ online: false, tokenRejected: true 
 
 export const currentStatus = () => status;
 
-/** For code outside React (the voice-notes upload queue): called on every change. */
+/** For code outside React (the recordings upload queue): called on every change. */
 export function onStatusChange(listener: (status: Status) => void): () => void {
   const notify = () => listener(status);
   listeners.add(notify);

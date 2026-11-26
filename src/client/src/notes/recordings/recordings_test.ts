@@ -1,44 +1,50 @@
 import { describe, expect, it } from "vitest";
 import {
-  allTags,
   doneName,
   durationLabel,
   MAX_PART_MS,
   needsUpload,
   parseName,
-  parseTags,
   partName,
   partOver,
   playSource,
   recoveryAction,
   sizeLabel,
+  sortRecordings,
   stateLabel,
-  titleOf,
   uploadedName,
   uploadError,
   uploadState,
-  visibleRows,
 } from "./logic";
 
 const ID = "0b7c2a7e-1f3d-4c5b-9a8e-123456789abc";
+const NOTE = "1c8d3b8f-2a4e-4d6c-8b9f-23456789abcd";
 
 describe("file names", () => {
   it("reads a recording in progress, stopped, and uploaded", () => {
-    expect(parseName(partName(ID, 1761645600000))).toEqual({
-      name: `${ID}.1761645600000.part`,
+    expect(parseName(partName(ID, 1761645600000, NOTE))).toEqual({
+      name: `${ID}.1761645600000.${NOTE}.part`,
       id: ID,
       done: false,
       uploaded: false,
       recordedAtMs: 1761645600000,
+      noteId: NOTE,
     });
-    expect(parseName(doneName(ID))).toEqual({ name: `${ID}.webm`, id: ID, done: true, uploaded: false, recordedAtMs: null });
+    expect(parseName(doneName(ID))).toEqual({
+      name: `${ID}.webm`, id: ID, done: true, uploaded: false, recordedAtMs: null, noteId: null,
+    });
     expect(parseName(uploadedName(ID))).toEqual({
       name: `${ID}.uploaded.webm`,
       id: ID,
       done: true,
       uploaded: true,
       recordedAtMs: null,
+      noteId: null,
     });
+  });
+
+  it("still reads a recording in progress from before notes had recordings", () => {
+    expect(parseName(`${ID}.1761645600000.part`)).toMatchObject({ id: ID, done: false, noteId: null });
   });
 
   it("ignores other files", () => {
@@ -70,7 +76,7 @@ describe("1-hour limit", () => {
 
 describe("upload", () => {
   const done = parseName(doneName(ID))!;
-  const part = parseName(partName(ID, 1))!;
+  const part = parseName(partName(ID, 1, NOTE))!;
   const uploaded = parseName(uploadedName(ID))!;
 
   it("uploads a stopped recording not uploaded yet", () => {
@@ -154,32 +160,14 @@ describe("labels", () => {
     expect(sizeLabel(64 * 1024)).toBe("64 KB");
     expect(sizeLabel(2.5 * 1024 * 1024)).toBe("2.5 MB");
   });
-
-  it("shows the date-time when there's no title", () => {
-    const recorded_at = "2026-10-28T10:00:00.000Z";
-    expect(titleOf({ title: " Idea ", recorded_at })).toBe("Idea");
-    expect(titleOf({ title: "  ", recorded_at })).toBe(new Date(recorded_at).toLocaleString());
-  });
 });
 
-describe("tags and order", () => {
-  const rows = [
-    { id: "a", tags: ["work"], recorded_at: "2026-10-27T10:00:00.000Z" },
-    { id: "b", tags: [], recorded_at: "2026-10-28T10:00:00.000Z" },
-    { id: "c", tags: ["idea", "work"], recorded_at: "2026-10-26T10:00:00.000Z" },
-  ];
-
-  it("reads comma-separated tags, without blanks or repeats", () => {
-    expect(parseTags("idea, work ,, idea")).toEqual(["idea", "work"]);
-    expect(parseTags("  ")).toEqual([]);
-  });
-
-  it("lists the tags in use", () => {
-    expect(allTags(rows)).toEqual(["idea", "work"]);
-  });
-
-  it("filters by one tag, newest first", () => {
-    expect(visibleRows(rows, null).map((r) => r.id)).toEqual(["b", "a", "c"]);
-    expect(visibleRows(rows, "work").map((r) => r.id)).toEqual(["a", "c"]);
+describe("order", () => {
+  it("shows a note's recordings oldest first", () => {
+    const rows = [
+      { id: "b", recorded_at: "2026-10-28T10:00:00.000Z" },
+      { id: "a", recorded_at: "2026-10-27T10:00:00.000Z" },
+    ];
+    expect(sortRecordings(rows).map((r) => r.id)).toEqual(["a", "b"]);
   });
 });
