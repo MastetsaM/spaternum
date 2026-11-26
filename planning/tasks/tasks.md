@@ -165,7 +165,7 @@ Moved ahead of notes with recordings because it's more urgent (Mihail, 2026-10-2
 ## After the calendar (2026-10-30)
 - [x] Sync warning: a red line under the header when the server answers but a module's sync fails ([[client-foundation_spec]])
 - [x] Archive filters: Events and Repeating events ([[archive_spec]])
-- [x] Check both on a device (Mihail, 2026-11-26): Pi, phone and PC updated; the Archive filters list only their own type on the phone; no red sync line in use.
+- [~] Check both on a device: Pi, phone and PC updated; the Archive filters list only their own type on the phone (Mihail, 2026-11-26). Left: no red sync line while using the app day to day.
 - [x] Calendar: + button for a new event, a tap in an occupied slot opens that event, 0.3 s hold on the phone ([[calendar_spec]], "Decided 2026-11-13"). Checked on the phone and the PC (2026-11-13). The PC desktop app still needs a rebuild from `main`.
 
 ## Next: notes with recordings — spec: [[notes-recordings_spec]]
