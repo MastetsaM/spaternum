@@ -193,6 +193,12 @@ Server and client change together: the Pi, the phone and the PC are updated at t
 - [x] Pi updated to `90ddf38`, `spaternum-main-90ddf38.apk` installed on the phone, PC app started from `main` (2026-11-26)
 - [~] Check every acceptance criterion on the phone and the PC; write results in [[notes-recordings_spec]]. Phone done ("looks and feels good", Mihail 2026-11-26); the PC is left
 
+## Next: notes order — spec: [[notes-order_spec]]
+Server and client change together, like notes with recordings: one branch, `feature/notes-order`; the Pi, the phone and the PC are updated at the same time.
+- [ ] Server: migration `004_note_edited_at.sql`, `edited_at` required in the note model, restore leaves it alone; tests
+- [ ] Client: RxDB `notes` v2 with migration; set `edited_at` on create, title/text change and a new recording; sort by it; regenerate client types; Vitest
+- [ ] Check the acceptance criteria on the phone and the PC; write results in [[notes-order_spec]]
+
 ## Later (ideas and loose ends, not scheduled)
 ### Ideas
 - **Transcription (phase 2, [[PRD]]):** talked through with Mihail on 2026-11-26; needs a spec. Ideas so far:
@@ -202,7 +208,6 @@ Server and client change together: the Pi, the phone and the PC are updated at t
   - The transcript stays separate from the note's text, one block with its recording, collapsed to about 3 lines with "Show all", and a ✎ pencil to fix errors.
   - First step before the spec: time tiny/base/small on a 1-minute test recording (mostly Portuguese, one English sentence) with a throwaway Docker script that Mihail runs on the Pi himself. No SSH for Claude.
   - Already decided elsewhere: a "validate transcript" step before the phone deletes its local audio ([[2026-10-21-local-files-location]]); an untitled note gets its title from the transcript ([[voice-notes_spec]]).
-- **Notes order:** pin, tag and move change `updated_at`, so the note jumps up the list. Fixing it needs a separate edited time ([[notes_spec]]).
 - **Housekeeping:**
   - the Starlette `httpx` deprecation warning in server tests
   - the client bundle is over 500 kB (Vite warning)
@@ -218,4 +223,4 @@ Not sure it will be built at all. Look here only when nothing is left in Ideas.
 - **Drag and drop:** for reordering favorites (arrows for now), and for groups if they come.
 
 ## Related
-[[PRD]] · [[TECH]] · [[risks]] · [[notes_spec]] · [[voice-notes_spec]] · [[archive_spec]] · [[client-foundation_spec]] · [[ui-design_spec]] · [[favorites_spec]] · [[notes-recordings_spec]] · [[calendar_spec]] · [[2026-10-21-sync-rxdb]] · [[2026-10-20-git-workflow]]
+[[PRD]] · [[TECH]] · [[risks]] · [[notes_spec]] · [[voice-notes_spec]] · [[archive_spec]] · [[client-foundation_spec]] · [[ui-design_spec]] · [[favorites_spec]] · [[notes-recordings_spec]] · [[calendar_spec]] · [[2026-10-21-sync-rxdb]] · [[2026-10-20-git-workflow]] · [[notes-order_spec]]

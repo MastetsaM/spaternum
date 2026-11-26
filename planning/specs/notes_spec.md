@@ -140,7 +140,7 @@ How the rules above map onto the app's layout ([[client-foundation_spec]]). Adde
 
 **Client database:** the RxDB `notes` schema goes to version 1, with a migration that gives every stored note `title: ""`.
 
-**Known limitation (phase 1):** pinning, tagging or moving a note sets `updated_at`, which is also the "last edited" sort key, so the note moves up the list. Fixing it needs a separate edited time (schema change); left for later (decided 2026-10-28).
+**Known limitation (phase 1):** pinning, tagging or moving a note sets `updated_at`, which is also the "last edited" sort key, so the note moves up the list. Being fixed with a separate edited time, `edited_at` ([[notes-order_spec]], 2026-11-26).
 
 ## Results — server (2026-10-25)
 Server side built (`src/server/spaternum/notes/`); 8 tests in `tests/notes_test.py` pass. Covers criteria 1, 2, 5, 6, 8, 9 and the server part of 10: sync of folders and notes, a note arriving before its folder, folder archive cascade (earlier separate archives keep their own time), one Archive entry per archived folder, restore of a folder or a note, folder-loop refusal, a later edit un-archiving a note. Criteria 3, 4, 7 (list order, search, empty notes) are client work — the server doesn't refuse empty notes.
@@ -161,4 +161,4 @@ Archiving a folder → archives its contents · note in an archived folder → t
 Decided 2026-10-25 (while building the server): no foreign keys inside the module · Archive page shows an archived folder as one entry.
 
 ## Related
-[[PRD]] · [[TECH]] · [[tasks]] · [[2026-10-21-sync-rxdb]] · [[2026-10-21-database-access-plain-sql]] · [[2026-10-20-offline-latest-write-wins]] · [[2026-10-20-architecture-modular-monolith]] · [[sync-spike_spec]] · [[client-foundation_spec]] · [[notes-recordings_spec]]
+[[notes-order_spec]] · [[PRD]] · [[TECH]] · [[tasks]] · [[2026-10-21-sync-rxdb]] · [[2026-10-21-database-access-plain-sql]] · [[2026-10-20-offline-latest-write-wins]] · [[2026-10-20-architecture-modular-monolith]] · [[sync-spike_spec]] · [[client-foundation_spec]] · [[notes-recordings_spec]]
