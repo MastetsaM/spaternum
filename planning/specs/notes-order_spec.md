@@ -61,5 +61,10 @@ Sort order everywhere notes are listed (a folder, the Pinned section, the tree i
 ## Open questions
 None — ready to build. Confirmed by Mihail (2026-11-26): a restored note keeps its old place, and archiving one of its recordings doesn't move the note.
 
+## Results — code (2026-11-26)
+- **Server:** migration `004_note_edited_at.sql`; `edited_at` is a required field of `Note` in `notes/tables.py`; the restore functions in `notes/archive.py` don't touch it. 71 server tests pass, 4 new: `edited_at` kept apart from a later pin, a push without it refused (422), restore leaves it, migration 004 copies `updated_at`.
+- **Client:** RxDB `notes` v2 with the migration (`sync/db.ts`); `saveContent` and `newNote` (`notes/store.ts`) and `createRecording` (`notes/recordings/rows.ts`) set `edited_at`; `updateNote` (pin, tags, move) and the archive writes don't; `sortNotes` (`notes/notes.ts`) sorts by it, which covers the folder list, the Pinned section and the tree. Client types regenerated. 176 Vitest tests pass, 2 new (sort by edited time, migration v2); `pnpm build` passes. The store writes themselves have no unit tests, same as before; the device check covers them.
+- **Device check:** not done yet ([[tasks]]).
+
 ## Related
 [[notes_spec]] · [[notes-recordings_spec]] · [[tasks]] · [[2026-10-20-offline-latest-write-wins]] · [[2026-10-21-sync-rxdb]]

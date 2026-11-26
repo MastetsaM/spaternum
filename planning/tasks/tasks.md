@@ -195,8 +195,8 @@ Server and client change together: the Pi, the phone and the PC are updated at t
 
 ## Next: notes order — spec: [[notes-order_spec]]
 Server and client change together, like notes with recordings: one branch, `feature/notes-order`; the Pi, the phone and the PC are updated at the same time.
-- [ ] Server: migration `004_note_edited_at.sql`, `edited_at` required in the note model, restore leaves it alone; tests
-- [ ] Client: RxDB `notes` v2 with migration; set `edited_at` on create, title/text change and a new recording; sort by it; regenerate client types; Vitest
+- [x] Server: migration `004_note_edited_at.sql`, `edited_at` required in the note model, restore leaves it alone; tests
+- [x] Client: RxDB `notes` v2 with migration; set `edited_at` on create, title/text change and a new recording; sort by it; regenerate client types; Vitest
 - [ ] Check the acceptance criteria on the phone and the PC; write results in [[notes-order_spec]]
 
 ## Later (ideas and loose ends, not scheduled)

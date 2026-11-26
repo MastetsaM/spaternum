@@ -19,8 +19,8 @@ type NewRecording = Target & { id: string; recordedAtMs: number; durationMs: num
 export async function createRecording(db: Db, rec: NewRecording): Promise<void> {
   const now = serverNow();
   const note = await db.notes.findOne(rec.noteId).exec();
-  if (note) await note.incrementalPatch({ updated_at: now });
-  else await db.notes.insert({ ...newNote(rec.noteId, rec.folderId), created_at: now, updated_at: now });
+  if (note) await note.incrementalPatch({ updated_at: now, edited_at: now });
+  else await db.notes.insert({ ...newNote(rec.noteId, rec.folderId), created_at: now, updated_at: now, edited_at: now });
 
   await db.note_recordings.insert({
     id: rec.id,
