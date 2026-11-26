@@ -1,5 +1,6 @@
 // Reading and writing notes and folders in the local database. Sync to the server is
-// RxDB's job (sync/db.ts). Every write sets updated_at, so the latest write wins.
+// RxDB's job (sync/db.ts). Every write sets updated_at, so the latest write wins; only content
+// changes also set edited_at, the "last edited" sort key.
 
 import { useEffect, useState } from "react";
 import { serverNow } from "../sync/clock";
@@ -63,17 +64,17 @@ export async function saveContent({ title, body }: Content, last: Note): Promise
   const db = await getDb();
   const now = serverNow();
   const doc = await db.notes.findOne(last.id).exec();
-  if (doc) await doc.incrementalPatch({ title, body, updated_at: now });
-  else await db.notes.insert({ ...last, title, body, updated_at: now });
+  if (doc) await doc.incrementalPatch({ title, body, updated_at: now, edited_at: now });
+  else await db.notes.insert({ ...last, title, body, updated_at: now, edited_at: now });
 }
 
 /** A note that isn't stored yet: it gets a row at its first save with text. */
 export function newNote(id: string, folderId: string | null): Note {
   const now = serverNow();
-  return { id, title: "", body: "", folder_id: folderId, tags: [], pinned: false, created_at: now, updated_at: now };
+  return { id, title: "", body: "", folder_id: folderId, tags: [], pinned: false, created_at: now, updated_at: now, edited_at: now };
 }
 
-/** Changes tags, pinned or folder. */
+/** Changes tags, pinned or folder. Not an edit: edited_at stays, so the note keeps its place. */
 export async function updateNote(id: string, fields: Partial<Pick<Note, "tags" | "pinned" | "folder_id">>) {
   const db = await getDb();
   const doc = await db.notes.findOne(id).exec();

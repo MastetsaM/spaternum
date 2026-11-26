@@ -423,6 +423,11 @@ export interface components {
              * @default false
              */
             pinned: boolean;
+            /**
+             * Edited At
+             * Format: date-time
+             */
+            edited_at: string;
         };
         /** NotePull */
         NotePull: {

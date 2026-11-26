@@ -44,15 +44,27 @@ const folderSchema: RxJsonSchema<Folder> = {
   required: ["id", "name", "created_at", "updated_at"],
 };
 
-// Version 1 (2026-10-28): optional title
+// Version 1 (2026-10-28): optional title. Version 2 (2026-11-26): edited_at, the "last edited"
+// sort key, which only content changes set (notes-order_spec.md)
 const noteSchema: RxJsonSchema<Note> = {
-  version: 1,
+  version: 2,
   primaryKey: "id",
   type: "object",
-  properties: { ...synced, folder_id: nullableText, title: text, body: text, tags, pinned: { type: "boolean" } },
-  required: ["id", "title", "body", "tags", "pinned", "created_at", "updated_at"],
+  properties: {
+    ...synced,
+    folder_id: nullableText,
+    title: text,
+    body: text,
+    tags,
+    pinned: { type: "boolean" },
+    edited_at: text,
+  },
+  required: ["id", "title", "body", "tags", "pinned", "created_at", "updated_at", "edited_at"],
 };
-const noteMigrations = { 1: (doc: Note) => ({ ...doc, title: "" }) };
+export const noteMigrations = {
+  1: (doc: Note) => ({ ...doc, title: "" }),
+  2: (doc: Note) => ({ ...doc, edited_at: doc.updated_at }), // keeps today's order
+};
 
 // Recordings of a note (notes-recordings_spec.md). Replaced the voice_notes collection on
 // 2026-11-22; that one is no longer opened, and its data is left in the browser storage.

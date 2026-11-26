@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Folder, Note, Recording } from "../sync/db";
+import { noteMigrations } from "../sync/db";
 import {
   addTags,
   allFolderTags,
@@ -25,7 +26,7 @@ const T = "2026-10-28T10:00:00.000Z";
 const c = (body: string, title = ""): Content => ({ title, body });
 
 function note(id: string, fields: Partial<Note> = {}): Note {
-  return { id, title: "", body: id, tags: [], pinned: false, folder_id: null, created_at: T, updated_at: T, ...fields };
+  return { id, title: "", body: id, tags: [], pinned: false, folder_id: null, created_at: T, updated_at: T, edited_at: T, ...fields };
 }
 
 function folder(id: string, parent_id: string | null = null, name = id): Folder {
@@ -77,12 +78,26 @@ describe("empty notes", () => {
 describe("note list", () => {
   it("shows pinned first, then last edited first", () => {
     const notes = [
-      note("old", { updated_at: "2026-10-01T00:00:00.000Z" }),
-      note("new", { updated_at: "2026-10-20T00:00:00.000Z" }),
-      note("pinned-old", { pinned: true, updated_at: "2026-09-01T00:00:00.000Z" }),
-      note("pinned-new", { pinned: true, updated_at: "2026-10-10T00:00:00.000Z" }),
+      note("old", { edited_at: "2026-10-01T00:00:00.000Z" }),
+      note("new", { edited_at: "2026-10-20T00:00:00.000Z" }),
+      note("pinned-old", { pinned: true, edited_at: "2026-09-01T00:00:00.000Z" }),
+      note("pinned-new", { pinned: true, edited_at: "2026-10-10T00:00:00.000Z" }),
     ];
     expect(sortNotes(notes).map((n) => n.id)).toEqual(["pinned-new", "pinned-old", "new", "old"]);
+  });
+
+  it("sorts by the edited time, not by the last write (pin, tags, move)", () => {
+    const notes = [
+      note("pinned-just-now", { edited_at: "2026-10-01T00:00:00.000Z", updated_at: "2026-10-30T00:00:00.000Z" }),
+      note("written-later", { edited_at: "2026-10-20T00:00:00.000Z", updated_at: "2026-10-20T00:00:00.000Z" }),
+    ];
+    expect(sortNotes(notes).map((n) => n.id)).toEqual(["written-later", "pinned-just-now"]);
+  });
+
+  it("gives stored notes their last write as the edited time when the database updates", () => {
+    const stored = note("a", { updated_at: "2026-10-05T00:00:00.000Z" });
+    const { edited_at, ...old } = stored;
+    expect(noteMigrations[2](old as Note).edited_at).toBe("2026-10-05T00:00:00.000Z");
   });
 
   it("shows a note at the top level when its folder isn't on the device", () => {
@@ -261,9 +276,9 @@ describe("notes with recordings", () => {
 describe("pinned section", () => {
   it("gathers pinned notes from every folder, last edited first", () => {
     const notes = [
-      note("a", { pinned: true, folder_id: "f", updated_at: "2026-10-28T09:00:00.000Z" }),
+      note("a", { pinned: true, folder_id: "f", edited_at: "2026-10-28T09:00:00.000Z" }),
       note("b"),
-      note("c", { pinned: true, updated_at: "2026-10-28T11:00:00.000Z" }),
+      note("c", { pinned: true, edited_at: "2026-10-28T11:00:00.000Z" }),
     ];
     expect(pinnedNotes(notes).map((n) => n.id)).toEqual(["c", "a"]);
   });

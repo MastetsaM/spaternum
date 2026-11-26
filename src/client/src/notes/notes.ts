@@ -30,10 +30,10 @@ export function sameContent(a: Content, b: Content | null): boolean {
   return b !== null && a.title === b.title && a.body === b.body;
 }
 
-/** Pinned first, then last edited first. updated_at strings all use toISOString(), so they sort as text. */
+/** Pinned first, then last edited first. edited_at strings all use toISOString(), so they sort as text. */
 export function sortNotes(notes: Note[]): Note[] {
   return [...notes].sort(
-    (a, b) => Number(b.pinned) - Number(a.pinned) || b.updated_at.localeCompare(a.updated_at),
+    (a, b) => Number(b.pinned) - Number(a.pinned) || b.edited_at.localeCompare(a.edited_at),
   );
 }
 

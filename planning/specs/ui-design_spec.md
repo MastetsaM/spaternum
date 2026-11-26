@@ -106,8 +106,8 @@ Added 2026-10-30, after Mihail tried the calendar on the phone. FullCalendar's l
 - Custom fonts, illustrations, animations beyond the drawer slide.
 - Home screen content. Home stays a placeholder plus the Settings gear until its phase.
 
-## Open questions
-- **Name of the first section: Home or Dashboard?** Recommendation: **Home**. "Agile dashboard" is already a module ([[agile-dashboard_spec]]), so "Dashboard" would mean two things. It's also the word already used in the code and routes, and the bottom bar needs short words. Waiting for Mihail.
+## Decided
+- **Name of the first section: Home** (Mihail, 2026-11-26). "Agile dashboard" is already a module ([[agile-dashboard_spec]]), so "Dashboard" would mean two things; Home is also the word in the code and routes, and short enough for the bottom bar.
 
 ## Related
 [[client-foundation_spec]] · [[PRD]] · [[TECH]] · [[tasks]] · [[notes_spec]] · [[voice-notes_spec]] · [[archive_spec]] · [[agile-dashboard_spec]]
