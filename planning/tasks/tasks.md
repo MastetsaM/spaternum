@@ -166,7 +166,7 @@ Moved ahead of notes with recordings because it's more urgent (Mihail, 2026-10-2
 - [x] Sync warning: a red line under the header when the server answers but a module's sync fails ([[client-foundation_spec]])
 - [x] Archive filters: Events and Repeating events ([[archive_spec]])
 - [~] Check both on a device: Pi, phone and PC updated; the Archive filters list only their own type on the phone (Mihail, 2026-11-26). Left: no red sync line while using the app day to day.
-- [x] Calendar: + button for a new event, a tap in an occupied slot opens that event, 0.3 s hold on the phone ([[calendar_spec]], "Decided 2026-11-13"). Checked on the phone and the PC (2026-11-13). The PC desktop app still needs a rebuild from `main`.
+- [x] Calendar: + button for a new event, a tap in an occupied slot opens that event, 0.3 s hold on the phone ([[calendar_spec]], "Decided 2026-11-13"). Checked on the phone and the PC (2026-11-13). The PC app runs from `main` since 2026-11-26 and has the + button (Mihail, from memory).
 
 ## Next: notes with recordings — spec: [[notes-recordings_spec]]
 Server and client change together: the Pi, the phone and the PC are updated at the same time, or the old app loses its voice notes sync. So both are built on one branch, `feature/notes-recordings`, which reaches `main` only after N3's device check.
