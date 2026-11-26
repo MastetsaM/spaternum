@@ -203,7 +203,6 @@ Server and client change together: the Pi, the phone and the PC are updated at t
   - First step before the spec: time tiny/base/small on a 1-minute test recording (mostly Portuguese, one English sentence) with a throwaway Docker script that Mihail runs on the Pi himself. No SSH for Claude.
   - Already decided elsewhere: a "validate transcript" step before the phone deletes its local audio ([[2026-10-21-local-files-location]]); an untitled note gets its title from the transcript ([[voice-notes_spec]]).
 - **Notes order:** pin, tag and move change `updated_at`, so the note jumps up the list. Fixing it needs a separate edited time ([[notes_spec]]).
-- **Name of the first section, Home or Dashboard:** still open in [[ui-design_spec]]. Home is kept for now.
 - **Housekeeping:**
   - the Starlette `httpx` deprecation warning in server tests
   - the client bundle is over 500 kB (Vite warning)
